@@ -1,0 +1,1 @@
+Unofficial F-Droid client that resembles classic F-Droid client.

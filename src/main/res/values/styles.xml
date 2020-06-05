@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+
+  <style name="Theme.Main.Light" parent="Theme.AppCompat.Light.DarkActionBar">
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+    <item name="android:colorBackground">#fffafafa</item>
+    <item name="colorPrimary">@color/primary_light</item>
+    <item name="colorPrimaryDark">@color/primary_dark_light</item>
+    <item name="colorAccent">@color/accent_light</item>
+    <item name="colorControlActivated">@color/accent_default_light</item>
+    <item name="colorError">@color/error_light</item>
+  </style>
+
+  <style name="Theme.Main.Dark" parent="Theme.AppCompat">
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+    <item name="android:colorBackground">#ff111111</item>
+    <item name="colorPrimary">@color/primary_dark</item>
+    <item name="colorPrimaryDark">@color/primary_dark_dark</item>
+    <item name="colorAccent">@color/accent_dark</item>
+    <item name="colorControlActivated">@color/accent_default_dark</item>
+    <item name="colorError">@color/error_dark</item>
+  </style>
+
+</resources>

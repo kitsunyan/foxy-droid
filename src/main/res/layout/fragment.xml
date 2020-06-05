@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nya.kitsunyan.foxydroid.widget.FragmentLinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical">
+
+  <com.google.android.material.appbar.AppBarLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:theme="?attr/actionBarTheme">
+
+    <androidx.appcompat.widget.Toolbar
+      android:id="@+id/toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+    <FrameLayout
+      android:id="@+id/toolbar_extra"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+  </com.google.android.material.appbar.AppBarLayout>
+
+  <FrameLayout
+    android:id="@+id/fragment_content"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:background="?android:attr/colorBackground" />
+
+</nya.kitsunyan.foxydroid.widget.FragmentLinearLayout>

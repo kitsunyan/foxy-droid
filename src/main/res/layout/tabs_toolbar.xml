@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical">
+
+  <com.google.android.material.tabs.TabLayout
+    android:id="@+id/tabs"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:tabGravity="fill"
+    app:tabMaxWidth="0dp" />
+
+  <FrameLayout
+    android:id="@+id/category_layout"
+    android:layout_width="match_parent"
+    android:layout_height="0dp">
+
+    <LinearLayout
+      android:id="@+id/category_change"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:paddingStart="12dp"
+      android:paddingEnd="12dp"
+      android:background="?attr/selectableItemBackground"
+      tools:ignore="UselessParent">
+
+      <TextView
+        android:id="@+id/category_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:gravity="center_vertical"
+        android:fontFamily="sans-serif-medium"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="16sp" />
+
+      <ImageView
+        android:id="@+id/category_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="12dp"
+        android:src="@drawable/ic_arrow_down"
+        tools:ignore="ContentDescription" />
+
+    </LinearLayout>
+
+  </FrameLayout>
+
+</LinearLayout>
