@@ -69,16 +69,16 @@ android {
     ignore 'InvalidVectorPath'
   }
 
-  def signingPropertiesFile = rootProject.file('keystore.properties')
-  if (signingPropertiesFile.exists()) {
-    def signingProperties = new Properties()
-    signingProperties.load(signingPropertiesFile.newDataInputStream())
+  def keystorePropertiesFile = rootProject.file('keystore.properties')
+  if (keystorePropertiesFile.exists()) {
+    def keystoreProperties = new Properties()
+    keystoreProperties.load(keystorePropertiesFile.newDataInputStream())
 
     def signing = [
-      storeFile: signingProperties['store.file'],
-      storePassword: signingProperties['store.password'],
-      keyAlias: signingProperties['key.alias'],
-      keyPassword: signingProperties['key.password']
+      storeFile: keystoreProperties['store.file'],
+      storePassword: keystoreProperties['store.password'],
+      keyAlias: keystoreProperties['key.alias'],
+      keyPassword: keystoreProperties['key.password']
     ]
 
     if (!signing.any { _, v -> v == null }) {

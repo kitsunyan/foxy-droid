@@ -29,9 +29,9 @@ import java.net.Proxy
 
 @Suppress("unused")
 class MainApplication: Application() {
-  private fun PackageInfo.toInstalledItem(): InstalledItem? {
+  private fun PackageInfo.toInstalledItem(): InstalledItem {
     val signatureString = singleSignature?.let(Utils::calculateHash).orEmpty()
-    return InstalledItem(packageName, versionName, versionCodeCompat, signatureString)
+    return InstalledItem(packageName, versionName.orEmpty(), versionCodeCompat, signatureString)
   }
 
   override fun attachBaseContext(base: Context) {
@@ -46,10 +46,52 @@ class MainApplication: Application() {
     ProductPreferences.init(this)
     RepositoryUpdater.init(this)
     listenApplications()
+    listenPreferences()
 
     Coil.setImageLoader(ImageLoader.Builder(this)
       .callFactory(CoilDownloader.Factory(Cache.getImagesDir(this))).build())
 
+    if (databaseUpdated) {
+      forceSyncAll()
+    }
+
+    Cache.cleanup(this)
+    updateSyncJob()
+  }
+
+  private fun listenApplications() {
+    registerReceiver(object: BroadcastReceiver() {
+      override fun onReceive(context: Context, intent: Intent) {
+        val packageName = intent.data?.let { if (it.scheme == "package") it.schemeSpecificPart else null }
+        if (packageName != null) {
+          when (intent.action.orEmpty()) {
+            Intent.ACTION_PACKAGE_ADDED,
+            Intent.ACTION_PACKAGE_REMOVED -> {
+              val packageInfo = try {
+                packageManager.getPackageInfo(packageName, Android.PackageManager.signaturesFlag)
+              } catch (e: Exception) {
+                null
+              }
+              if (packageInfo != null) {
+                Database.InstalledAdapter.put(packageInfo.toInstalledItem())
+              } else {
+                Database.InstalledAdapter.delete(packageName)
+              }
+            }
+          }
+        }
+      }
+    }, IntentFilter().apply {
+      addAction(Intent.ACTION_PACKAGE_ADDED)
+      addAction(Intent.ACTION_PACKAGE_REMOVED)
+      addDataScheme("package")
+    })
+    val installedItems = packageManager.getInstalledPackages(Android.PackageManager.signaturesFlag)
+      .map { it.toInstalledItem() }
+    Database.InstalledAdapter.putAll(installedItems)
+  }
+
+  private fun listenPreferences() {
     updateProxy()
     var lastAutoSync = Preferences[Preferences.Key.AutoSync]
     var lastUpdateUnstable = Preferences[Preferences.Key.UpdateUnstable]
@@ -70,40 +112,6 @@ class MainApplication: Application() {
         }
       }
     }
-
-    if (databaseUpdated) {
-      forceSyncAll()
-    }
-
-    Cache.cleanup(this)
-    updateSyncJob()
-  }
-
-  private fun listenApplications() {
-    registerReceiver(object: BroadcastReceiver() {
-      override fun onReceive(context: Context, intent: Intent) {
-        val packageName = intent.data?.let { if (it.scheme == "package") it.schemeSpecificPart else null }
-        if (packageName != null) {
-          when (intent.action.orEmpty()) {
-            Intent.ACTION_PACKAGE_ADDED -> {
-              val installedItem = packageManager.getPackageInfo(packageName,
-                Android.PackageManager.signaturesFlag)?.toInstalledItem()
-              installedItem?.let(Database.InstalledAdapter::put)
-            }
-            Intent.ACTION_PACKAGE_REMOVED -> {
-              Database.InstalledAdapter.delete(packageName)
-            }
-          }
-        }
-      }
-    }, IntentFilter().apply {
-      addAction(Intent.ACTION_PACKAGE_ADDED)
-      addAction(Intent.ACTION_PACKAGE_REMOVED)
-      addDataScheme("package")
-    })
-    val installedItems = packageManager.getInstalledPackages(Android.PackageManager.signaturesFlag)
-      .mapNotNull { it.toInstalledItem() }
-    Database.InstalledAdapter.putAll(installedItems)
   }
 
   private fun updateSyncJob() {

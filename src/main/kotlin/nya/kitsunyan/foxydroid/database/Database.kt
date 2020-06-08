@@ -1,6 +1,5 @@
 package nya.kitsunyan.foxydroid.database
 
-import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -386,7 +385,6 @@ object Database {
         .use { it.firstOrNull()?.getInt(0) ?: 0 }
     }
 
-    @SuppressLint("Recycle")
     fun query(installed: Boolean, updates: Boolean, searchQuery: String,
       category: String, signal: CancellationSignal?): Cursor {
       val builder = QueryBuilder()
@@ -507,8 +505,10 @@ object Database {
     }
 
     fun delete(packageName: String) {
-      db.delete(Schema.Installed.name, "${Schema.Installed.ROW_PACKAGE_NAME} = ?", arrayOf(packageName))
-      notifyChanged(Subject.Products)
+      val count = db.delete(Schema.Installed.name, "${Schema.Installed.ROW_PACKAGE_NAME} = ?", arrayOf(packageName))
+      if (count > 0) {
+        notifyChanged(Subject.Products)
+      }
     }
 
     private fun transform(cursor: Cursor): InstalledItem {

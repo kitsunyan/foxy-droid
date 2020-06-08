@@ -261,7 +261,7 @@ class ProductFragment(): Fragment(), ProductAdapter.Callbacks {
     if (recyclerView != null) {
       (recyclerView.adapter as ProductAdapter).setStatus(recyclerView, status)
     }
-    if (state is DownloadService.State.Success) {
+    if (state is DownloadService.State.Success && isResumed) {
       state.consume()
       screenActivity.startPackageInstaller(state.release.cacheFileName)
     }
