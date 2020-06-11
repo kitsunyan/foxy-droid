@@ -31,6 +31,7 @@
   <string name="cant_edit_sync_description">Cannot edit repository since it\'s syncing right now.</string>
   <string name="changelog">Changelog</string>
   <string name="checking_repository">Checking repository</string>
+  <string name="compatible_with_only_format">Compatible with %s only</string>
   <string name="confirm_action">Confirm action</string>
   <string name="connecting">Connecting</string>
   <string name="dark">Dark</string>
@@ -65,13 +66,13 @@
   <string name="incompatible_version">Incompatible version</string>
   <string name="incompatible_versions">Incompatible versions</string>
   <string name="incompatible_versions_summary">Show application versions incompatible with the device</string>
+  <string name="incompatible_with_format">Incompatible with %s</string>
   <string name="install">Install</string>
   <string name="installed">Installed</string>
   <string name="installed_empty_summary">No applications installed</string>
   <string name="invalid_address">Invalid address</string>
   <string name="invalid_fingerprint_format">Invalid fingerprint format</string>
   <string name="invalid_username_format">Invalid username format</string>
-  <string name="is_not_supported_format">%s is not supported</string>
   <string name="last_update">Last update</string>
   <string name="launch">Launch</string>
   <string name="license">License</string>

@@ -218,9 +218,9 @@ class IndexHandler(private val repositoryId: Long, private val callback: Callbac
           "obbMainFileSha256" -> releaseBuilder.obbMainHash = content
           "obbPatchFile" -> releaseBuilder.obbPatch = content
           "obbPatchFileSha256" -> releaseBuilder.obbPatchHash = content
-          "permissions" -> releaseBuilder.permissions += content.split(',')
-          "features" -> releaseBuilder.features += content.split(',')
-          "nativecode" -> releaseBuilder.platforms += content.split(',')
+          "permissions" -> releaseBuilder.permissions += content.split(',').filter { it.isNotEmpty() }
+          "features" -> releaseBuilder.features += content.split(',').filter { it.isNotEmpty() }
+          "nativecode" -> releaseBuilder.platforms += content.split(',').filter { it.isNotEmpty() }
         }
       }
       productBuilder != null -> {
@@ -239,9 +239,9 @@ class IndexHandler(private val repositoryId: Long, private val callback: Callbac
           "added" -> productBuilder.added = content.parseDate()
           "lastupdated" -> productBuilder.updated = content.parseDate()
           "marketvercode" -> productBuilder.suggestedVersionCode = content.toLongOrNull() ?: 0L
-          "categories" -> productBuilder.categories += content.split(',')
-          "antifeatures" -> productBuilder.antiFeatures += content.split(',')
-          "license" -> productBuilder.licenses += content.split(',')
+          "categories" -> productBuilder.categories += content.split(',').filter { it.isNotEmpty() }
+          "antifeatures" -> productBuilder.antiFeatures += content.split(',').filter { it.isNotEmpty() }
+          "license" -> productBuilder.licenses += content.split(',').filter { it.isNotEmpty() }
           "donate" -> productBuilder.donates += Product.Donate.Regular(content)
           "bitcoin" -> productBuilder.donates += Product.Donate.Bitcoin(content)
           "litecoin" -> productBuilder.donates += Product.Donate.Litecoin(content)

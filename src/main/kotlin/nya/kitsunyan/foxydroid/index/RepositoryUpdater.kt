@@ -332,9 +332,31 @@ object RepositoryUpdater {
 
     val predicate: (Release) -> Boolean = { unstable || product.suggestedVersionCode <= 0 ||
       it.versionCode <= product.suggestedVersionCode }
-    val compatibleReleaseIndex = releasePairs.indexOfFirst { it.second.isEmpty() && predicate(it.first) }
-    val releaseIndex = if (compatibleReleaseIndex >= 0) compatibleReleaseIndex else
+    val firstCompatibleReleaseIndex = releasePairs.indexOfFirst { it.second.isEmpty() && predicate(it.first) }
+    val releaseIndex = if (firstCompatibleReleaseIndex >= 0) {
+      val versionCode = releasePairs[firstCompatibleReleaseIndex].first.versionCode
+      val candidates = releasePairs.mapIndexedNotNull { index, (product, incompatibilities) ->
+        if (product.versionCode == versionCode && incompatibilities.isEmpty()) index else null
+      }
+      if (product.packageName == "org.telegram.messenger") {
+        val x = candidates
+          .filter { releasePairs[it].first.platforms.contains(Android.primaryPlatform) }
+          .minBy { releasePairs[it].first.platforms.size }
+        val y = candidates.minBy { releasePairs[it].first.platforms.size }
+        debug("telegram $firstCompatibleReleaseIndex $candidates $x $y")
+      }
+      if (candidates.size <= 1) {
+        firstCompatibleReleaseIndex
+      } else {
+        candidates
+          .filter { releasePairs[it].first.platforms.contains(Android.primaryPlatform) }
+          .minBy { releasePairs[it].first.platforms.size }
+          ?: candidates.minBy { releasePairs[it].first.platforms.size }
+          ?: firstCompatibleReleaseIndex
+      }
+    } else {
       releasePairs.indexOfFirst { predicate(it.first) }
+    }
 
     val releases = releasePairs.mapIndexed { index, (release, incompatibilities) -> release
       .copy(incompatibilities = incompatibilities, selected = index == releaseIndex) }

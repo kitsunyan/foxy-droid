@@ -250,8 +250,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         get() = ViewType.SCREENSHOT
     }
 
-    class ReleaseItem(val repository: Repository, val release: Release,
-      val selectedRepository: Boolean): Item() {
+    class ReleaseItem(val repository: Repository, val release: Release, val selectedRepository: Boolean): Item() {
       override val descriptor: String
         get() = "release.${repository.id}.${release.identifier}"
 
@@ -456,10 +455,10 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     val source = itemView.findViewById<TextView>(R.id.source)!!
     val added = itemView.findViewById<TextView>(R.id.added)!!
     val size = itemView.findViewById<TextView>(R.id.size)!!
-    val error = itemView.findViewById<TextView>(R.id.error)!!
+    val compatibility = itemView.findViewById<TextView>(R.id.compatibility)!!
 
     val statefulViews: Sequence<View>
-      get() = sequenceOf(itemView, version, status, source, added, size, error)
+      get() = sequenceOf(itemView, version, status, source, added, size, compatibility)
 
     val setStatusActive: (Boolean) -> Unit
 
@@ -748,18 +747,20 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     }
 
     val incompatible = Preferences[Preferences.Key.IncompatibleVersions]
-    val releases = products.flatMap { (product, repository) -> product.releases
-      .map { Item.ReleaseItem(repository, it, repository.id == productRepository?.second?.id) } }
-      .filter { incompatible || it.release.incompatibilities.isEmpty() }
+    val releaseItems = products.asSequence()
+      .flatMap { (product, repository) -> product.releases.asSequence()
+        .filter { incompatible || it.incompatibilities.isEmpty() }
+        .map { Item.ReleaseItem(repository, it, repository.id == productRepository?.second?.id) } }
       .sortedByDescending { it.release.versionCode }
-    if (releases.isNotEmpty()) {
+      .toList()
+    if (releaseItems.isNotEmpty()) {
       items += Item.SectionItem(SectionType.RELEASES)
       val maxReleases = 5
-      if (releases.size > maxReleases && ExpandType.RELEASES !in expanded) {
-        items += releases.take(maxReleases)
-        items += Item.ExpandItem(ExpandType.RELEASES, false, releases.takeLast(releases.size - maxReleases))
+      if (releaseItems.size > maxReleases && ExpandType.RELEASES !in expanded) {
+        items += releaseItems.take(maxReleases)
+        items += Item.ExpandItem(ExpandType.RELEASES, false, releaseItems.takeLast(releaseItems.size - maxReleases))
       } else {
-        items += releases
+        items += releaseItems
       }
     }
 
@@ -1129,6 +1130,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         holder as ReleaseViewHolder
         item as Item.ReleaseItem
         val incompatibility = item.release.incompatibilities.firstOrNull()
+        val singlePlatform = if (item.release.platforms.size == 1) item.release.platforms.first() else null
         val installed = installedItem?.versionCode == item.release.versionCode &&
           installedItem?.signature == item.release.signature
         val suggested = incompatibility == null && item.release.selected && item.selectedRepository
@@ -1150,15 +1152,20 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         holder.added.text = holder.dateFormat.format(item.release.added)
         holder.added.setTextColor(primarySecondaryColor)
         holder.size.text = item.release.size.formatSize()
-        holder.error.visibility = if (incompatibility != null) View.VISIBLE else View.GONE
+        holder.compatibility.visibility = if (incompatibility != null || singlePlatform != null)
+          View.VISIBLE else View.GONE
         if (incompatibility != null) {
-          holder.error.text = when (incompatibility) {
+          holder.compatibility.setTextColor(context.getColorFromAttr(R.attr.colorError))
+          holder.compatibility.text = when (incompatibility) {
             is Release.Incompatibility.MinSdk,
-            is Release.Incompatibility.MaxSdk -> context.getString(R.string.is_not_supported_format, Android.name)
-            is Release.Incompatibility.Platform -> context.getString(R.string.is_not_supported_format,
+            is Release.Incompatibility.MaxSdk -> context.getString(R.string.incompatible_with_format, Android.name)
+            is Release.Incompatibility.Platform -> context.getString(R.string.incompatible_with_format,
               Android.primaryPlatform ?: context.getString(R.string.unknown))
             is Release.Incompatibility.Feature -> context.getString(R.string.requires_format, incompatibility.feature)
           }
+        } else if (singlePlatform != null) {
+          holder.compatibility.setTextColor(context.getColorFromAttr(android.R.attr.textColorSecondary))
+          holder.compatibility.text = context.getString(R.string.compatible_with_only_format, singlePlatform)
         }
         val enabled = status == null
         holder.statefulViews.forEach { it.isEnabled = enabled }

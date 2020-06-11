@@ -77,6 +77,10 @@ fun JsonParser.collectNotNullStrings(): List<String> {
   return collectNotNull(JsonToken.VALUE_STRING) { valueAsString }
 }
 
+fun JsonParser.collectDistinctNotEmptyStrings(): List<String> {
+  return collectNotNullStrings().asSequence().filter { it.isNotEmpty() }.distinct().toList()
+}
+
 inline fun <T> JsonParser.parseDictionary(callback: JsonParser.() -> T): T {
   if (nextToken() == JsonToken.START_OBJECT) {
     val result = callback()

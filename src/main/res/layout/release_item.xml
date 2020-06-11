@@ -96,10 +96,10 @@
   </LinearLayout>
 
   <TextView
-    android:id="@+id/error"
+    android:id="@+id/compatibility"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:textColor="?attr/colorError"
+    android:textColor="?android:attr/textColorSecondary"
     android:textSize="14sp"
     android:singleLine="true" />
 

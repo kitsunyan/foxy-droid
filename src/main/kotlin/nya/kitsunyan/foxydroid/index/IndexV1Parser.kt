@@ -49,7 +49,7 @@ object IndexV1Parser {
             forEachKey {
               when {
                 it.string("address") -> address = valueAsString
-                it.array("mirrors") -> mirrors = collectNotNullStrings()
+                it.array("mirrors") -> mirrors = collectDistinctNotEmptyStrings()
                 it.string("name") -> name = valueAsString
                 it.string("description") -> description = valueAsString
                 it.number("version") -> version = valueAsInt
@@ -117,9 +117,9 @@ object IndexV1Parser {
         it.number("added") -> added = valueAsLong
         it.number("lastUpdated") -> updated = valueAsLong
         it.string("suggestedVersionCode") -> suggestedVersionCode = valueAsString.toLongOrNull() ?: 0L
-        it.array("categories") -> categories = collectNotNullStrings()
-        it.array("antiFeatures") -> antiFeatures = collectNotNullStrings()
-        it.string("license") -> licenses += valueAsString.split(',')
+        it.array("categories") -> categories = collectDistinctNotEmptyStrings()
+        it.array("antiFeatures") -> antiFeatures = collectDistinctNotEmptyStrings()
+        it.string("license") -> licenses += valueAsString.split(',').filter { it.isNotEmpty() }
         it.string("donate") -> donates += Product.Donate.Regular(valueAsString)
         it.string("bitcoin") -> donates += Product.Donate.Bitcoin(valueAsString)
         it.string("flattrID") -> donates += Product.Donate.Flattr(valueAsString)
@@ -140,9 +140,9 @@ object IndexV1Parser {
                 it.string("summary") -> summary = valueAsString
                 it.string("description") -> description = valueAsString
                 it.string("whatsNew") -> whatsNew = valueAsString
-                it.array("phoneScreenshots") -> phone = collectNotNullStrings()
-                it.array("sevenInchScreenshots") -> smallTablet = collectNotNullStrings()
-                it.array("tenInchScreenshots") -> largeTablet = collectNotNullStrings()
+                it.array("phoneScreenshots") -> phone = collectDistinctNotEmptyStrings()
+                it.array("sevenInchScreenshots") -> smallTablet = collectDistinctNotEmptyStrings()
+                it.array("tenInchScreenshots") -> largeTablet = collectDistinctNotEmptyStrings()
                 else -> skipChildren()
               }
             }
@@ -215,8 +215,8 @@ object IndexV1Parser {
         it.string("obbPatchFileSha256") -> obbPatchHash = valueAsString
         it.array("uses-permission") -> collectPermissions(permissions, 0)
         it.array("uses-permission-sdk-23") -> collectPermissions(permissions, 23)
-        it.array("features") -> features = collectNotNullStrings()
-        it.array("nativecode") -> platforms = collectNotNullStrings()
+        it.array("features") -> features = collectDistinctNotEmptyStrings()
+        it.array("nativecode") -> platforms = collectDistinctNotEmptyStrings()
         else -> skipChildren()
       }
     }
