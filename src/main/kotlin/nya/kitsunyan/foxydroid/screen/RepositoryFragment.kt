@@ -124,7 +124,7 @@ class RepositoryFragment(): Fragment() {
             getString(R.string.unknown)
           }
         })
-        if (repository.enabled && repository.entityTag.isNotEmpty()) {
+        if (repository.enabled && (repository.lastModified.isNotEmpty() || repository.entityTag.isNotEmpty())) {
           layout.addTitleText(R.string.number_of_applications,
             Database.ProductAdapter.getCount(repository.id).toString())
         }

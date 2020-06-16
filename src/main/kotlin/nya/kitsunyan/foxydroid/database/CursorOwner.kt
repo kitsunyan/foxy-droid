@@ -5,22 +5,26 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
+import nya.kitsunyan.foxydroid.entity.ProductItem
 
 class CursorOwner: Fragment(), LoaderManager.LoaderCallbacks<Cursor> {
   sealed class Request {
     internal abstract val id: Int
 
-    data class ProductsAvailable(val searchQuery: String, val category: String): Request() {
+    data class ProductsAvailable(val searchQuery: String, val category: String,
+      val order: ProductItem.Order): Request() {
       override val id: Int
         get() = 1
     }
 
-    data class ProductsInstalled(val searchQuery: String, val category: String): Request() {
+    data class ProductsInstalled(val searchQuery: String, val category: String,
+      val order: ProductItem.Order): Request() {
       override val id: Int
         get() = 2
     }
 
-    data class ProductsUpdates(val searchQuery: String, val category: String): Request() {
+    data class ProductsUpdates(val searchQuery: String, val category: String,
+      val order: ProductItem.Order): Request() {
       override val id: Int
         get() = 3
     }
@@ -75,11 +79,11 @@ class CursorOwner: Fragment(), LoaderManager.LoaderCallbacks<Cursor> {
     return QueryLoader(requireContext()) {
       when (request) {
         is Request.ProductsAvailable -> Database.ProductAdapter
-          .query(false, false, request.searchQuery, request.category, it)
+          .query(false, false, request.searchQuery, request.category, request.order, it)
         is Request.ProductsInstalled -> Database.ProductAdapter
-          .query(true, false, request.searchQuery, request.category, it)
+          .query(true, false, request.searchQuery, request.category, request.order, it)
         is Request.ProductsUpdates -> Database.ProductAdapter
-          .query(true, true, request.searchQuery, request.category, it)
+          .query(true, true, request.searchQuery, request.category, request.order, it)
         is Request.Repositories -> Database.RepositoryAdapter.query(it)
       }
     }

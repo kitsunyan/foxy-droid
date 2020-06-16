@@ -16,6 +16,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.database.CursorOwner
 import nya.kitsunyan.foxydroid.database.Database
+import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
@@ -27,13 +28,14 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
 
     private const val STATE_CURRENT_SEARCH_QUERY = "currentSearchQuery"
     private const val STATE_CURRENT_CATEGORY = "currentCategory"
+    private const val STATE_CURRENT_ORDER = "currentOrder"
     private const val STATE_LAYOUT_MANAGER = "layoutManager"
   }
 
-  enum class Source(val titleResId: Int, val categories: Boolean) {
-    AVAILABLE(R.string.available, true),
-    INSTALLED(R.string.installed, false),
-    UPDATES(R.string.updates, false)
+  enum class Source(val titleResId: Int, val categories: Boolean, val order: Boolean) {
+    AVAILABLE(R.string.available, true, true),
+    INSTALLED(R.string.installed, false, false),
+    UPDATES(R.string.updates, false, false)
   }
 
   constructor(source: Source): this() {
@@ -47,9 +49,11 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
 
   private var searchQuery = ""
   private var category = ""
+  private var order = ProductItem.Order.NAME
 
   private var currentSearchQuery = ""
   private var currentCategory = ""
+  private var currentOrder = ProductItem.Order.NAME
   private var layoutManagerState: Parcelable? = null
 
   private var recyclerView: RecyclerView? = null
@@ -60,10 +64,11 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
     get() {
       val searchQuery = searchQuery
       val category = if (source.categories) category else ""
+      val order = if (source.order) order else ProductItem.Order.NAME
       return when (source) {
-        Source.AVAILABLE -> CursorOwner.Request.ProductsAvailable(searchQuery, category)
-        Source.INSTALLED -> CursorOwner.Request.ProductsInstalled(searchQuery, category)
-        Source.UPDATES -> CursorOwner.Request.ProductsUpdates(searchQuery, category)
+        Source.AVAILABLE -> CursorOwner.Request.ProductsAvailable(searchQuery, category, order)
+        Source.INSTALLED -> CursorOwner.Request.ProductsInstalled(searchQuery, category, order)
+        Source.UPDATES -> CursorOwner.Request.ProductsUpdates(searchQuery, category, order)
       }
     }
 
@@ -87,6 +92,8 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
 
     currentSearchQuery = savedInstanceState?.getString(STATE_CURRENT_SEARCH_QUERY).orEmpty()
     currentCategory = savedInstanceState?.getString(STATE_CURRENT_CATEGORY).orEmpty()
+    currentOrder = savedInstanceState?.getString(STATE_CURRENT_ORDER)
+      ?.let(ProductItem.Order::valueOf) ?: ProductItem.Order.NAME
     layoutManagerState = savedInstanceState?.getParcelable(STATE_LAYOUT_MANAGER)
 
     screenActivity.cursorOwner.attach(this, request)
@@ -114,6 +121,7 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
 
     outState.putString(STATE_CURRENT_SEARCH_QUERY, currentSearchQuery)
     outState.putString(STATE_CURRENT_CATEGORY, currentCategory)
+    outState.putString(STATE_CURRENT_ORDER, currentOrder.name)
     (layoutManagerState ?: recyclerView?.layoutManager?.onSaveInstanceState())
       ?.let { outState.putParcelable(STATE_LAYOUT_MANAGER, it) }
   }
@@ -137,9 +145,10 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
       recyclerView?.layoutManager?.onRestoreInstanceState(it)
     }
 
-    if (currentSearchQuery != searchQuery || currentCategory != category) {
+    if (currentSearchQuery != searchQuery || currentCategory != category || currentOrder != order) {
       currentSearchQuery = searchQuery
       currentCategory = category
+      currentOrder = order
       recyclerView?.scrollToPosition(0)
     }
   }
@@ -156,6 +165,15 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
   internal fun setCategory(category: String) {
     if (this.category != category) {
       this.category = category
+      if (view != null) {
+        screenActivity.cursorOwner.attach(this, request)
+      }
+    }
+  }
+
+  internal fun setOrder(order: ProductItem.Order) {
+    if (this.order != order) {
+      this.order = order
       if (view != null) {
         screenActivity.cursorOwner.attach(this, request)
       }

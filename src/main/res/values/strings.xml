@@ -4,7 +4,7 @@
   <string name="action_failed">Action failed</string>
   <string name="add_repository">Add repository</string>
   <string name="address">Address</string>
-  <string name="all_applications_category">All Applications</string>
+  <string name="all_applications">All applications</string>
   <string name="already_exists">Already exists</string>
   <string name="always">Always</string>
   <string name="anti_feature_advertising">Has advertising</string>
@@ -35,6 +35,7 @@
   <string name="confirm_action">Confirm action</string>
   <string name="connecting">Connecting</string>
   <string name="dark">Dark</string>
+  <string name="date_added">Date added</string>
   <string name="delete">Delete</string>
   <string name="delete_repository_confirm">Are you sure you want to delete the repository?</string>
   <string name="description">Description</string>
@@ -124,6 +125,7 @@
   <string name="show_older_releases">Show older releases</string>
   <string name="skip">Skip</string>
   <string name="socks_proxy">SOCKS proxy</string>
+  <string name="sort_order">Sort order</string>
   <string name="source_code">Source code</string>
   <string name="suggested">Suggested</string>
   <string name="sync_repositories">Sync repositories</string>

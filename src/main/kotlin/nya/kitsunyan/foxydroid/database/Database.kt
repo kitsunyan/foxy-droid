@@ -75,6 +75,8 @@ object Database {
       const val ROW_PACKAGE_NAME = "package_name"
       const val ROW_NAME = "name"
       const val ROW_SUMMARY = "summary"
+      const val ROW_ADDED = "added"
+      const val ROW_UPDATED = "updated"
       const val ROW_VERSION_CODE = "version_code"
       const val ROW_SIGNATURE = "signature"
       const val ROW_COMPATIBLE = "compatible"
@@ -88,6 +90,8 @@ object Database {
         $ROW_PACKAGE_NAME TEXT NOT NULL,
         $ROW_NAME TEXT NOT NULL,
         $ROW_SUMMARY TEXT NOT NULL,
+        $ROW_ADDED INTEGER NOT NULL,
+        $ROW_UPDATED INTEGER NOT NULL,
         $ROW_VERSION_CODE INTEGER NOT NULL,
         $ROW_SIGNATURE TEXT NOT NULL,
         $ROW_COMPATIBLE INTEGER NOT NULL,
@@ -386,7 +390,7 @@ object Database {
     }
 
     fun query(installed: Boolean, updates: Boolean, searchQuery: String,
-      category: String, signal: CancellationSignal?): Cursor {
+      category: String, order: ProductItem.Order, signal: CancellationSignal?): Cursor {
       val builder = QueryBuilder()
 
       builder += """SELECT product.rowid AS _id, product.${Schema.Product.ROW_REPOSITORY_ID},
@@ -432,7 +436,13 @@ object Database {
       if (updates) {
         builder += "AND ${Schema.Synthetic.ROW_CAN_UPDATE}"
       }
-      builder += "ORDER BY product.${Schema.Product.ROW_NAME} COLLATE LOCALIZED ASC"
+      builder += "ORDER BY"
+      when (order) {
+        ProductItem.Order.NAME -> Unit
+        ProductItem.Order.DATE_ADDED -> builder += "product.${Schema.Product.ROW_ADDED} DESC,"
+        ProductItem.Order.LAST_UPDATE -> builder += "product.${Schema.Product.ROW_UPDATED} DESC,"
+      }::class
+      builder += "product.${Schema.Product.ROW_NAME} COLLATE LOCALIZED ASC"
 
       return builder.query(db, signal).observable(Subject.Products)
     }
@@ -569,6 +579,8 @@ object Database {
             put(Schema.Product.ROW_PACKAGE_NAME, product.packageName)
             put(Schema.Product.ROW_NAME, product.name)
             put(Schema.Product.ROW_SUMMARY, product.summary)
+            put(Schema.Product.ROW_ADDED, product.added)
+            put(Schema.Product.ROW_UPDATED, product.updated)
             put(Schema.Product.ROW_VERSION_CODE, product.versionCode)
             put(Schema.Product.ROW_SIGNATURE, product.signature)
             put(Schema.Product.ROW_COMPATIBLE, if (product.compatible) 1 else 0)

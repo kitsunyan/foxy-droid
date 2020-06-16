@@ -2,11 +2,18 @@ package nya.kitsunyan.foxydroid.entity
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
+import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.utility.extension.json.*
 
 data class ProductItem(val repositoryId: Long, val packageName: String,
   val name: String, val summary: String, val icon: String, val version: String, val installedVersion: String,
   val compatible: Boolean, val canUpdate: Boolean) {
+  enum class Order(val titleResId: Int) {
+    NAME(R.string.name),
+    DATE_ADDED(R.string.date_added),
+    LAST_UPDATE(R.string.last_update)
+  }
+
   fun serialize(generator: JsonGenerator) {
     generator.writeNumberField("serialVersion", 1)
     generator.writeStringField("icon", icon)

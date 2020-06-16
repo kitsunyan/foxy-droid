@@ -23,4 +23,8 @@
     <item name="colorError">@color/error_dark</item>
   </style>
 
+  <style name="Theme.Toolbar.Popup" parent="Theme.Main.Dark">
+    <item name="android:colorBackground">?attr/colorPrimaryDark</item>
+  </style>
+
 </resources>
