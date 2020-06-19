@@ -3,7 +3,6 @@ package nya.kitsunyan.foxydroid.utility.extension.android
 
 import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.Signature
 import android.database.Cursor
@@ -24,14 +23,6 @@ fun SQLiteDatabase.execWithResult(sql: String) {
 
 val Context.notificationManager: NotificationManager
   get() = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-fun Context.startAnyService(intent: Intent) {
-  if (Android.sdk(26)) {
-    startForegroundService(intent)
-  } else {
-    startService(intent)
-  }
-}
 
 val PackageInfo.versionCodeCompat: Long
   get() = if (Android.sdk(28)) longVersionCode else @Suppress("DEPRECATION") versionCode.toLong()

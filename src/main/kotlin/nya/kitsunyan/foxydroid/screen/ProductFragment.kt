@@ -72,10 +72,10 @@ class ProductFragment(): Fragment(), ProductAdapter.Callbacks {
 
   private var productDisposable: Disposable? = null
   private var downloadDisposable: Disposable? = null
-  private val downloadConnection = Connection<DownloadService.Binder>(DownloadService::class.java, onBind = {
-    updateDownloadState(it.binder.getState(packageName))
-    downloadDisposable = it.binder.events(packageName).subscribe { updateDownloadState(it) }
-  }, onUnbind = {
+  private val downloadConnection = Connection(DownloadService::class.java, onBind = { _, binder ->
+    updateDownloadState(binder.getState(packageName))
+    downloadDisposable = binder.events(packageName).subscribe { updateDownloadState(it) }
+  }, onUnbind = { _, _ ->
     downloadDisposable?.dispose()
     downloadDisposable = null
   })

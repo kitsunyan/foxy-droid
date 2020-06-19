@@ -43,7 +43,7 @@ class RepositoryFragment(): Fragment() {
 
   private var layout: LinearLayout? = null
 
-  private val syncConnection = Connection<SyncService.Binder>(SyncService::class.java)
+  private val syncConnection = Connection(SyncService::class.java)
   private var repositoryDisposable: Disposable? = null
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

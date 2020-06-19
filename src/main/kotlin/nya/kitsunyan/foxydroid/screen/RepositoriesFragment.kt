@@ -20,7 +20,7 @@ import nya.kitsunyan.foxydroid.utility.Utils
 class RepositoriesFragment: Fragment(), CursorOwner.Callback {
   private var recyclerView: RecyclerView? = null
 
-  private val syncConnection = Connection<SyncService.Binder>(SyncService::class.java)
+  private val syncConnection = Connection(SyncService::class.java)
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
     return inflater.inflate(R.layout.fragment, container, false).apply {

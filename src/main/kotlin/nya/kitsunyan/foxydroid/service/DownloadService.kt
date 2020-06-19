@@ -3,7 +3,6 @@ package nya.kitsunyan.foxydroid.service
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -31,7 +30,7 @@ import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
 
-class DownloadService: Service() {
+class DownloadService: ConnectionService<DownloadService.Binder>() {
   companion object {
     private const val ACTION_OPEN = "${BuildConfig.APPLICATION_ID}.intent.action.OPEN"
     private const val ACTION_INSTALL = "${BuildConfig.APPLICATION_ID}.intent.action.INSTALL"
@@ -326,7 +325,7 @@ class DownloadService: Service() {
         val task = tasks.removeAt(0)
         if (!started) {
           started = true
-          startAnyService(Intent(this, this::class.java))
+          startSelf()
         }
         val initialState = State.Connecting(task.packageName, task.name)
         stateNotificationBuilder.setWhen(System.currentTimeMillis())

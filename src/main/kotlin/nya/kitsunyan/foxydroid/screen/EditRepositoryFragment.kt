@@ -80,7 +80,7 @@ class EditRepositoryFragment(): Fragment() {
   private var saveMenuItem: MenuItem? = null
   private var layout: Layout? = null
 
-  private val syncConnection = Connection<SyncService.Binder>(SyncService::class.java)
+  private val syncConnection = Connection(SyncService::class.java)
   private var repositoriesDisposable: Disposable? = null
   private var checkDisposable: Disposable? = null
 

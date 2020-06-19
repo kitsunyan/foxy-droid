@@ -80,7 +80,7 @@ class TabsFragment: Fragment() {
   private var category = ""
   private var order = ProductItem.Order.NAME
 
-  private val syncConnection = Connection<SyncService.Binder>(SyncService::class.java, onBind = {
+  private val syncConnection = Connection(SyncService::class.java, onBind = { _, _ ->
     viewPager?.let {
       val source = ProductsFragment.Source.values()[it.currentItem]
       updateUpdateNotificationBlocker(source)

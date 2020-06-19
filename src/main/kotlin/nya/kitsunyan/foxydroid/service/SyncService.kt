@@ -3,7 +3,6 @@ package nya.kitsunyan.foxydroid.service
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.app.job.JobParameters
 import android.app.job.JobService
 import android.content.Intent
@@ -35,7 +34,7 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
 
-class SyncService: Service() {
+class SyncService: ConnectionService<SyncService.Binder>() {
   companion object {
     private const val ACTION_CANCEL = "${BuildConfig.APPLICATION_ID}.intent.action.CANCEL"
 
@@ -77,6 +76,7 @@ class SyncService: Service() {
       handleNextTask(cancelledTask?.hasUpdates == true)
       if (request != SyncRequest.AUTO && started == Started.AUTO) {
         started = Started.MANUAL
+        startSelf()
         handleSetStarted()
         currentTask?.lastState?.let { publishForegroundState(true, it) }
       }
@@ -273,7 +273,6 @@ class SyncService: Service() {
   }
 
   private fun handleSetStarted() {
-    startAnyService(Intent(this, this::class.java))
     stateNotificationBuilder.setWhen(System.currentTimeMillis())
   }
 
@@ -287,6 +286,7 @@ class SyncService: Service() {
           val newStarted = if (task.manual || lastStarted == Started.MANUAL) Started.MANUAL else Started.AUTO
           started = newStarted
           if (newStarted == Started.MANUAL && lastStarted != Started.MANUAL) {
+            startSelf()
             handleSetStarted()
           }
           val initialState = State.Connecting(repository.name)
@@ -379,22 +379,22 @@ class SyncService: Service() {
   class Job: JobService() {
     private var syncParams: JobParameters? = null
     private var syncDisposable: Disposable? = null
-    private val syncConnection = Connection<Binder>(SyncService::class.java, onBind = {
-      syncDisposable = it.binder.finish.subscribe { _ ->
+    private val syncConnection = Connection(SyncService::class.java, onBind = { connection, binder ->
+      syncDisposable = binder.finish.subscribe {
         val params = syncParams
         if (params != null) {
           syncParams = null
           syncDisposable?.dispose()
           syncDisposable = null
-          it.connection.unbind(this)
+          connection.unbind(this)
           jobFinished(params, false)
         }
       }
-      it.binder.sync(SyncRequest.AUTO)
-    }, onUnbind = {
+      binder.sync(SyncRequest.AUTO)
+    }, onUnbind = { _, binder ->
       syncDisposable?.dispose()
       syncDisposable = null
-      it.binder.cancelAuto()
+      binder.cancelAuto()
       val params = syncParams
       if (params != null) {
         syncParams = null

@@ -174,9 +174,9 @@ class MainApplication: Application() {
         Database.RepositoryAdapter.put(it.copy(lastModified = "", entityTag = ""))
       }
     }
-    Connection<SyncService.Binder>(SyncService::class.java, onBind = {
-      it.binder.sync(SyncService.SyncRequest.FORCE)
-      it.connection.unbind(this)
+    Connection(SyncService::class.java, onBind = { connection, binder ->
+      binder.sync(SyncService.SyncRequest.FORCE)
+      connection.unbind(this)
     }).bind(this)
   }
 
