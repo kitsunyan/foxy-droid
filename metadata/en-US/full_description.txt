@@ -1,1 +1,10 @@
-Unofficial F-Droid client that resembles classic F-Droid client.
+Unofficial F-Droid client that resembles the classic F-Droid client.
+
+The client supports all basic F-Droid features, such as repository management and package installation. It doesn't support privileged extension, root installation, or local repositories.
+
+Features:
+
+* Classic F-Droid style, without cards or inappropriate animations
+* Fast repositories synchronization under good network conditions
+* Built upon standard Android components and a minimal set of dependencies
+* Made with attention to details, both in program logic and design
