@@ -23,6 +23,7 @@ class RecyclerFastScroller(private val recyclerView: RecyclerView) {
 
   private val thumbDrawable = recyclerView.context.getDrawableFromAttr(android.R.attr.fastScrollThumbDrawable)
   private val trackDrawable = recyclerView.context.getDrawableFromAttr(android.R.attr.fastScrollTrackDrawable)
+  private val minTrackSize = recyclerView.resources.sizeScaled(32)
 
   private data class FastScrolling(val startAtThumbOffset: Float?, val startY: Float, val currentY: Float)
 
@@ -129,8 +130,8 @@ class RecyclerFastScroller(private val recyclerView: RecyclerView) {
         }
         event.action == MotionEvent.ACTION_DOWN -> {
           val rtl = recyclerView.layoutDirection == RecyclerView.LAYOUT_DIRECTION_RTL
-          val maxWidth = max(thumbDrawable.intrinsicWidth, trackDrawable.intrinsicWidth)
-          val atThumbVertical = if (rtl) event.x <= maxWidth else event.x >= recyclerView.width - maxWidth
+          val trackWidth = max(minTrackSize, max(thumbDrawable.intrinsicWidth, trackDrawable.intrinsicWidth))
+          val atThumbVertical = if (rtl) event.x <= trackWidth else event.x >= recyclerView.width - trackWidth
           atThumbVertical && run {
             withScroll { itemHeight, thumbHeight, range ->
               val offset = currentOffset(itemHeight, range)

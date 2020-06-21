@@ -79,6 +79,7 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
       isMotionEventSplittingEnabled = false
       isVerticalScrollBarEnabled = false
       setHasFixedSize(true)
+      recycledViewPool.setMaxRecycledViews(ProductsAdapter.ViewType.PRODUCT.ordinal, 30)
       adapter = ProductsAdapter { screenActivity.navigateProduct(it.packageName) }
       addItemDecoration(DividerItemDecoration(context,
         DividerItemDecoration.fixed(context.resources.sizeScaled(72), 0)))
