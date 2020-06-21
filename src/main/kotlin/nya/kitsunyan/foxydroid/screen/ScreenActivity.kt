@@ -176,9 +176,23 @@ abstract class ScreenActivity: AppCompatActivity() {
     get() {
       val uri = data
       return when {
-        uri?.scheme == "package" || uri?.scheme == "fdroid.app" -> uri.schemeSpecificPart?.nullIfEmpty()
-        uri?.scheme == "market" && uri.host == "details" -> uri.getQueryParameter("id")?.nullIfEmpty()
-        else -> null
+        uri?.scheme == "package" || uri?.scheme == "fdroid.app" -> {
+          uri.schemeSpecificPart?.nullIfEmpty()
+        }
+        uri?.scheme == "market" && uri.host == "details" -> {
+          uri.getQueryParameter("id")?.nullIfEmpty()
+        }
+        uri != null && uri.scheme in setOf("http", "https") -> {
+          val host = uri.host.orEmpty()
+          if (host == "f-droid.org" || host.endsWith(".f-droid.org")) {
+            uri.lastPathSegment?.nullIfEmpty()
+          } else {
+            null
+          }
+        }
+        else -> {
+          null
+        }
       }
     }
 
