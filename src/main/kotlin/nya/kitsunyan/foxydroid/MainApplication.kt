@@ -10,16 +10,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
-import coil.Coil
-import coil.ImageLoader
+import com.squareup.picasso.OkHttp3Downloader
+import com.squareup.picasso.Picasso
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.content.ProductPreferences
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.InstalledItem
 import nya.kitsunyan.foxydroid.index.RepositoryUpdater
-import nya.kitsunyan.foxydroid.network.CoilDownloader
 import nya.kitsunyan.foxydroid.network.Downloader
+import nya.kitsunyan.foxydroid.network.PicassoDownloader
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.SyncService
 import nya.kitsunyan.foxydroid.utility.Utils
@@ -48,8 +48,8 @@ class MainApplication: Application() {
     listenApplications()
     listenPreferences()
 
-    Coil.setImageLoader(ImageLoader.Builder(this)
-      .callFactory(CoilDownloader.Factory(Cache.getImagesDir(this))).build())
+    Picasso.setSingletonInstance(Picasso.Builder(this)
+      .downloader(OkHttp3Downloader(PicassoDownloader.Factory(Cache.getImagesDir(this)))).build())
 
     if (databaseUpdated) {
       forceSyncAll()

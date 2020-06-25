@@ -122,5 +122,5 @@ dependencies {
   implementation 'io.reactivex.rxjava3:rxjava:3.0.4'
   implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
   implementation 'com.fasterxml.jackson.core:jackson-core:2.11.0'
-  implementation 'io.coil-kt:coil:0.11.0'
+  implementation 'com.squareup.picasso:picasso:2.71828'
 }

@@ -40,7 +40,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.text.util.LinkifyCompat
 import androidx.recyclerview.widget.RecyclerView
-import coil.api.*
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.content.ProductPreferences
@@ -50,7 +49,7 @@ import nya.kitsunyan.foxydroid.entity.ProductPreference
 import nya.kitsunyan.foxydroid.entity.Release
 import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.graphics.PaddingDrawable
-import nya.kitsunyan.foxydroid.network.CoilDownloader
+import nya.kitsunyan.foxydroid.network.PicassoDownloader
 import nya.kitsunyan.foxydroid.utility.KParcelable
 import nya.kitsunyan.foxydroid.utility.PackageItemResolver
 import nya.kitsunyan.foxydroid.utility.Utils
@@ -953,7 +952,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         item as Item.HeaderItem
         val installedItem = installedItem
         if (item.product.icon.isNotEmpty()) {
-          holder.icon.load(CoilDownloader.createIconUri(holder.icon, item.product.icon, item.repository)) {
+          holder.icon.load(PicassoDownloader.createIconUri(holder.icon, item.product.icon, item.repository)) {
             placeholder(holder.progressIcon)
             error(holder.defaultIcon)
           }
@@ -1122,12 +1121,12 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         val outer = context.resources.sizeScaled(GRID_SPACING_OUTER_DP)
         val inner = context.resources.sizeScaled(GRID_SPACING_INNER_DP)
         val cellSize = (screenWidth - 2 * outer - (columns - 1) * inner) / columns
-        holder.image.load(CoilDownloader.createScreenshotUri(item.repository, item.packageName, item.screenshot)) {
-          size(cellSize)
+        holder.image.load(PicassoDownloader.createScreenshotUri(item.repository, item.packageName, item.screenshot)) {
           placeholder(holder.placeholder)
           error(holder.placeholder)
+          resize(cellSize, cellSize)
+          centerCrop()
         }
-        Unit
       }
       ViewType.RELEASE -> {
         holder as ReleaseViewHolder

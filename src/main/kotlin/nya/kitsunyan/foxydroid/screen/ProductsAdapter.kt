@@ -11,13 +11,11 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import coil.api.clear
-import coil.api.load
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.entity.Repository
-import nya.kitsunyan.foxydroid.network.CoilDownloader
+import nya.kitsunyan.foxydroid.network.PicassoDownloader
 import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
@@ -127,7 +125,7 @@ class ProductsAdapter(private val onClick: (ProductItem) -> Unit):
         holder.summary.visibility = if (holder.summary.text.isNotEmpty()) View.VISIBLE else View.GONE
         val repository: Repository? = repositories[productItem.repositoryId]
         if (productItem.icon.isNotEmpty() && repository != null) {
-          holder.icon.load(CoilDownloader.createIconUri(holder.icon, productItem.icon, repository)) {
+          holder.icon.load(PicassoDownloader.createIconUri(holder.icon, productItem.icon, repository)) {
             placeholder(holder.progressIcon)
             error(holder.defaultIcon)
           }

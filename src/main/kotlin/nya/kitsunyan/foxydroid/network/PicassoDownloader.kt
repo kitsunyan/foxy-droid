@@ -12,7 +12,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.io.File
 import kotlin.math.*
 
-object CoilDownloader {
+object PicassoDownloader {
   private const val HOST_ICON = "icon"
   private const val HOST_SCREENSHOT = "screenshot"
   private const val QUERY_ADDRESS = "address"

@@ -6,12 +6,16 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.RequestCreator
 import kotlin.math.*
 
 object TypefaceExtra {
@@ -50,4 +54,12 @@ fun TextView.setTextSizeScaled(size: Int) {
 
 fun ViewGroup.inflate(layoutResId: Int): View {
   return LayoutInflater.from(context).inflate(layoutResId, this, false)
+}
+
+fun ImageView.load(uri: Uri, builder: RequestCreator.() -> Unit) {
+  Picasso.get().load(uri).noFade().apply(builder).into(this)
+}
+
+fun ImageView.clear() {
+  Picasso.get().cancelRequest(this)
 }

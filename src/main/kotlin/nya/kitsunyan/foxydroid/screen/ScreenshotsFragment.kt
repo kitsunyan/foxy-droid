@@ -15,7 +15,6 @@ import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
-import coil.api.*
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -25,7 +24,7 @@ import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.Product
 import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.graphics.PaddingDrawable
-import nya.kitsunyan.foxydroid.network.CoilDownloader
+import nya.kitsunyan.foxydroid.network.PicassoDownloader
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.widget.StableRecyclerAdapter
@@ -101,6 +100,9 @@ class ScreenshotsFragment(): DialogFragment() {
     val viewPager = ViewPager2(dialog.context)
     viewPager.adapter = Adapter(packageName) { decorView.performClick() }
     viewPager.setPageTransformer(MarginPageTransformer(resources.sizeScaled(16)))
+    viewPager.viewTreeObserver.addOnGlobalLayoutListener {
+      (viewPager.adapter as Adapter).size = Pair(viewPager.width, viewPager.height)
+    }
     dialog.addContentView(viewPager, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
       ViewGroup.LayoutParams.MATCH_PARENT))
     this.viewPager = viewPager
@@ -181,6 +183,14 @@ class ScreenshotsFragment(): DialogFragment() {
       notifyDataSetChanged()
     }
 
+    var size = Pair(0, 0)
+      set(value) {
+        if (field != value) {
+          field = value
+          notifyDataSetChanged()
+        }
+      }
+
     fun getCurrentIdentifier(viewPager: ViewPager2): String? {
       val position = viewPager.currentItem
       return screenshots.getOrNull(position)?.identifier
@@ -202,9 +212,16 @@ class ScreenshotsFragment(): DialogFragment() {
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
       holder as ViewHolder
       val screenshot = screenshots[position]
-      holder.image.load(CoilDownloader.createScreenshotUri(repository!!, packageName, screenshot)) {
-        placeholder(holder.placeholder)
-        error(holder.placeholder)
+      val (width, height) = size
+      if (width > 0 && height > 0) {
+        holder.image.load(PicassoDownloader.createScreenshotUri(repository!!, packageName, screenshot)) {
+          placeholder(holder.placeholder)
+          error(holder.placeholder)
+          resize(width, height)
+          centerInside()
+        }
+      } else {
+        holder.image.clear()
       }
     }
   }
