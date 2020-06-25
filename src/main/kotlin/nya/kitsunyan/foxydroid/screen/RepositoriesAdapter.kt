@@ -2,8 +2,8 @@ package nya.kitsunyan.foxydroid.screen
 
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Switch
 import android.widget.TextView
-import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.RecyclerView
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.database.Database
@@ -18,7 +18,7 @@ class RepositoriesAdapter(private val onClick: (Repository) -> Unit,
 
   private class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
     val name = itemView.findViewById<TextView>(R.id.name)!!
-    val enabled = itemView.findViewById<SwitchCompat>(R.id.enabled)!!
+    val enabled = itemView.findViewById<Switch>(R.id.enabled)!!
 
     var listenSwitch = true
   }

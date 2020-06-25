@@ -8,7 +8,7 @@
   android:paddingStart="14dp"
   android:paddingEnd="16dp"
   android:gravity="center_vertical"
-  android:background="?attr/selectableItemBackground">
+  android:background="?android:attr/selectableItemBackground">
 
   <ImageView
     android:id="@+id/icon"

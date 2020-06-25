@@ -2,7 +2,6 @@ package nya.kitsunyan.foxydroid.content
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.preference.PreferenceManager
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import nya.kitsunyan.foxydroid.R
@@ -17,7 +16,7 @@ object Preferences {
     Key.Theme, Key.UpdateNotify, Key.UpdateUnstable).map { Pair(it.name, it) }.toMap()
 
   fun init(context: Context) {
-    preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    preferences = context.getSharedPreferences("${context.packageName}_preferences", Context.MODE_PRIVATE)
     preferences.registerOnSharedPreferenceChangeListener { _, keyString -> keys[keyString]?.let(subject::onNext) }
   }
 

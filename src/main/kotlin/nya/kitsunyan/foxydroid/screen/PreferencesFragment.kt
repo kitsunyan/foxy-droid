@@ -1,38 +1,56 @@
 package nya.kitsunyan.foxydroid.screen
 
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.Context
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import android.widget.EditText
 import android.widget.FrameLayout
-import androidx.appcompat.widget.Toolbar
-import androidx.preference.EditTextPreference
-import androidx.preference.ListPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceCategory
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceGroup
-import androidx.preference.SwitchPreference
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.Switch
+import android.widget.TextView
+import android.widget.Toolbar
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
 import io.reactivex.rxjava3.disposables.Disposable
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
+import nya.kitsunyan.foxydroid.utility.extension.resources.*
 
-class PreferencesFragment: PreferenceFragmentCompat() {
+class PreferencesFragment: Fragment() {
+  private val preferences = mutableMapOf<Preferences.Key<*>, Preference<*>>()
   private var disposable: Disposable? = null
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-    val view = inflater.inflate(R.layout.fragment, container, false)
-    val content = view.findViewById<FrameLayout>(R.id.fragment_content)
-    val child = super.onCreateView(LayoutInflater.from(content.context), content, savedInstanceState)
-    content.addView(child, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
-    return view
+    return inflater.inflate(R.layout.fragment, container, false)
   }
 
-  override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-    preferenceScreen = preferenceManager.createPreferenceScreen(requireContext())
-    preferenceScreen.addCategory(getString(R.string.updates)).apply {
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+
+    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
+    screenActivity.onFragmentViewCreated(toolbar)
+    toolbar.setTitle(R.string.preferences)
+
+    val content = view.findViewById<FrameLayout>(R.id.fragment_content)
+    val scroll = ScrollView(content.context)
+    scroll.id = R.id.preferences_list
+    scroll.isFillViewport = true
+    content.addView(scroll, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    val scrollLayout = FrameLayout(content.context)
+    scroll.addView(scrollLayout, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    val preferences = LinearLayout(scrollLayout.context)
+    preferences.orientation = LinearLayout.VERTICAL
+    scrollLayout.addView(preferences, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+
+    preferences.addCategory(getString(R.string.updates)) {
       addEnumeration(Preferences.Key.AutoSync, getString(R.string.sync_repositories_automatically)) {
         when (it) {
           Preferences.AutoSync.Never -> getString(R.string.never)
@@ -45,7 +63,7 @@ class PreferencesFragment: PreferenceFragmentCompat() {
       addSwitch(Preferences.Key.UpdateUnstable, getString(R.string.unstable_updates),
         getString(R.string.unstable_updates_summary))
     }
-    preferenceScreen.addCategory(getString(R.string.proxy)).apply {
+    preferences.addCategory(getString(R.string.proxy)) {
       addEnumeration(Preferences.Key.ProxyType, getString(R.string.proxy_type)) {
         when (it) {
           is Preferences.ProxyType.Direct -> getString(R.string.no_proxy)
@@ -56,7 +74,7 @@ class PreferencesFragment: PreferenceFragmentCompat() {
       addEditString(Preferences.Key.ProxyHost, getString(R.string.proxy_host))
       addEditInt(Preferences.Key.ProxyPort, getString(R.string.proxy_port), 1 .. 65535)
     }
-    preferenceScreen.addCategory(getString(R.string.other)).apply {
+    preferences.addCategory(getString(R.string.other)) {
       addEnumeration(Preferences.Key.Theme, getString(R.string.theme)) {
         when (it) {
           is Preferences.Theme.Light -> getString(R.string.light)
@@ -66,14 +84,6 @@ class PreferencesFragment: PreferenceFragmentCompat() {
       addSwitch(Preferences.Key.IncompatibleVersions, getString(R.string.incompatible_versions),
         getString(R.string.incompatible_versions_summary))
     }
-  }
-
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-
-    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-    screenActivity.onFragmentViewCreated(toolbar)
-    toolbar.setTitle(R.string.preferences)
 
     disposable = Preferences.observable.subscribe(this::updatePreference)
     updatePreference(null)
@@ -82,75 +92,107 @@ class PreferencesFragment: PreferenceFragmentCompat() {
   override fun onDestroyView() {
     super.onDestroyView()
 
+    preferences.clear()
     disposable?.dispose()
     disposable = null
   }
 
   private fun updatePreference(key: Preferences.Key<*>?) {
+    if (key != null) {
+      preferences[key]?.update()
+    }
     if (key == null || key == Preferences.Key.ProxyType) {
       val enabled = when (Preferences[Preferences.Key.ProxyType]) {
         is Preferences.ProxyType.Direct -> false
         is Preferences.ProxyType.Http, is Preferences.ProxyType.Socks -> true
       }
-      findPreference<Preference>(Preferences.Key.ProxyHost.name)!!.isEnabled = enabled
-      findPreference<Preference>(Preferences.Key.ProxyPort.name)!!.isEnabled = enabled
+      preferences[Preferences.Key.ProxyHost]?.setEnabled(enabled)
+      preferences[Preferences.Key.ProxyPort]?.setEnabled(enabled)
     }
     if (key == Preferences.Key.Theme) {
       requireActivity().recreate()
     }
   }
 
-  private fun PreferenceGroup.addCategory(title: String): PreferenceCategory {
-    val preference = PreferenceCategory(context)
-    preference.isIconSpaceReserved = false
-    preference.title = title
-    addPreference(preference)
+  private fun LinearLayout.addDivider(full: Boolean): View {
+    val divider = View(context)
+    divider.background = context.getDrawableFromAttr(android.R.attr.listDivider)
+    addView(divider, LinearLayout.LayoutParams.MATCH_PARENT, divider.background.intrinsicHeight)
+    if (!full) {
+      (divider.layoutParams as LinearLayout.LayoutParams).apply {
+        marginStart = divider.resources.sizeScaled(16)
+      }
+    }
+    return divider
+  }
+
+  private fun LinearLayout.addCategory(title: String, callback: LinearLayout.() -> Unit) {
+    val text = TextView(context)
+    text.typeface = TypefaceExtra.medium
+    text.setTextSizeScaled(14)
+    text.setTextColor(text.context.getColorFromAttr(android.R.attr.colorAccent))
+    text.text = title
+    resources.sizeScaled(16).let { text.setPadding(it, it, it, 0) }
+    addView(text, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+    callback()
+    val divider = addDivider(true)
+    // Negative margin for last divider
+    (layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = -divider.layoutParams.height
+  }
+
+  private fun <T> LinearLayout.addPreference(key: Preferences.Key<T>, title: String,
+    summaryProvider: () -> String, dialogProvider: ((Context) -> AlertDialog)?): Preference<T> {
+    if (childCount > 0 && getChildAt(childCount - 1) !is TextView) {
+      addDivider(false)
+    }
+    val preference = Preference(key, this@PreferencesFragment, this, title, summaryProvider, dialogProvider)
+    preferences[key] = preference
     return preference
   }
 
-  private fun PreferenceGroup.addSwitch(key: Preferences.Key<Boolean>, title: String, summary: String?) {
-    val preference = SwitchPreference(context)
-    preference.isIconSpaceReserved = false
-    preference.title = title
-    preference.summary = summary
-    preference.key = key.name
-    preference.setDefaultValue(key.default.value)
-    addPreference(preference)
+  private fun LinearLayout.addSwitch(key: Preferences.Key<Boolean>, title: String, summary: String) {
+    val preference = addPreference(key, title, { summary }, null)
+    preference.check.visibility = View.VISIBLE
+    preference.view.setOnClickListener { Preferences[key] = !Preferences[key] }
+    preference.setCallback { preference.check.isChecked = Preferences[key] }
   }
 
-  private fun PreferenceGroup.addEditString(key: Preferences.Key<String>, title: String) {
-    val preference = EditTextPreference(context)
-    preference.isIconSpaceReserved = false
-    preference.title = title
-    preference.dialogTitle = title
-    preference.summaryProvider = Preference.SummaryProvider<EditTextPreference> { it.text }
-    preference.key = key.name
-    preference.setDefaultValue(key.default.value)
-    addPreference(preference)
-  }
-
-  private fun PreferenceGroup.addEditInt(key: Preferences.Key<Int>, title: String, range: IntRange?) {
-    val preference = object: EditTextPreference(context) {
-      override fun persistString(value: String?): Boolean {
-        val intValue = value.orEmpty().toIntOrNull() ?: key.default.value
-        val result = persistInt(intValue)
-        if (intValue.toString() != value) {
-          text = intValue.toString()
+  private fun <T> LinearLayout.addEdit(key: Preferences.Key<T>, title: String, valueToString: (T) -> String,
+    stringToValue: (String) -> T?, configureEdit: (EditText) -> Unit) {
+    addPreference(key, title, { valueToString(Preferences[key]) }) {
+      val scroll = ScrollView(it)
+      scroll.resources.sizeScaled(20).let { scroll.setPadding(it, 0, it, 0) }
+      val edit = EditText(it)
+      configureEdit(edit)
+      edit.id = android.R.id.edit
+      edit.setTextSizeScaled(16)
+      edit.resources.sizeScaled(16).let { edit.setPadding(edit.paddingLeft, it, edit.paddingRight, it) }
+      edit.setText(valueToString(Preferences[key]))
+      edit.hint = edit.text.toString()
+      edit.setSelection(edit.text.length)
+      edit.requestFocus()
+      scroll.addView(edit, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+      AlertDialog.Builder(it)
+        .setTitle(title)
+        .setView(scroll)
+        .setPositiveButton(R.string.ok) { _, _ ->
+          val value = stringToValue(edit.text.toString()) ?: key.default.value
+          post { Preferences[key] = value }
         }
-        return result
-      }
-
-      override fun onSetInitialValue(defaultValue: Any?) {
-        text = getPersistedInt((defaultValue as? Int) ?: key.default.value).toString()
-      }
+        .setNegativeButton(R.string.cancel, null)
+        .create()
+        .apply {
+          window!!.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        }
     }
-    preference.isIconSpaceReserved = false
-    preference.title = title
-    preference.dialogTitle = title
-    preference.summaryProvider = Preference.SummaryProvider<EditTextPreference> { it.text }
-    preference.key = key.name
-    preference.setDefaultValue(key.default.value)
-    preference.setOnBindEditTextListener {
+  }
+
+  private fun LinearLayout.addEditString(key: Preferences.Key<String>, title: String) {
+    addEdit(key, title, { it }, { it }, { })
+  }
+
+  private fun LinearLayout.addEditInt(key: Preferences.Key<Int>, title: String, range: IntRange?) {
+    addEdit(key, title, { it.toString() }, { it.toIntOrNull() }) {
       it.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
       if (range != null) {
         it.filters = arrayOf(InputFilter { source, start, end, dest, dstart, dend ->
@@ -160,23 +202,84 @@ class PreferencesFragment: PreferenceFragmentCompat() {
         })
       }
     }
-    addPreference(preference)
   }
 
-  private fun <T: Preferences.Enumeration<T>> PreferenceGroup
-    .addEnumeration(key: Preferences.Key<T>, title: String, valueString: (T) -> String) {
-    val preference = ListPreference(context)
-    preference.isIconSpaceReserved = false
-    preference.title = title
-    preference.dialogTitle = title
-    preference.summaryProvider = Preference.SummaryProvider<ListPreference> { p ->
-      val index = p.entryValues.indexOfFirst { it == p.value }
-      if (index >= 0) p.entries[index] else valueString(key.default.value)
+  private fun <T: Preferences.Enumeration<T>> LinearLayout
+    .addEnumeration(key: Preferences.Key<T>, title: String, valueToString: (T) -> String) {
+    addPreference(key, title, { valueToString(Preferences[key]) }) {
+      val values = key.default.value.values
+      AlertDialog.Builder(it)
+        .setTitle(title)
+        .setSingleChoiceItems(values.map(valueToString).toTypedArray(),
+          values.indexOf(Preferences[key])) { dialog, which ->
+          dialog.dismiss()
+          post { Preferences[key] = values[which] }
+        }
+        .setNegativeButton(R.string.cancel, null)
+        .create()
     }
-    preference.key = key.name
-    preference.setDefaultValue(key.default.value.valueString)
-    preference.entryValues = key.default.value.values.map { it.valueString }.toTypedArray()
-    preference.entries = key.default.value.values.map(valueString).toTypedArray()
-    addPreference(preference)
+  }
+
+  private class Preference<T>(private val key: Preferences.Key<T>,
+    fragment: Fragment, parent: ViewGroup, titleText: String,
+    private val summaryProvider: () -> String, private val dialogProvider: ((Context) -> AlertDialog)?) {
+    val view = parent.inflate(R.layout.preference_item)
+    val title = view.findViewById<TextView>(R.id.title)!!
+    val summary = view.findViewById<TextView>(R.id.summary)!!
+    val check = view.findViewById<Switch>(R.id.check)!!
+
+    private var callback: (() -> Unit)? = null
+
+    init {
+      title.text = titleText
+      parent.addView(view)
+      if (dialogProvider != null) {
+        view.setOnClickListener { PreferenceDialog(key.name)
+          .show(fragment.childFragmentManager, "${PreferenceDialog::class.java.name}.${key.name}") }
+      }
+      update()
+    }
+
+    fun setCallback(callback: () -> Unit) {
+      this.callback = callback
+      update()
+    }
+
+    fun setEnabled(enabled: Boolean) {
+      view.isEnabled = enabled
+      title.isEnabled = enabled
+      summary.isEnabled = enabled
+      check.isEnabled = enabled
+    }
+
+    fun update() {
+      summary.text = summaryProvider()
+      summary.visibility = if (summary.text.isNotEmpty()) View.VISIBLE else View.GONE
+      callback?.invoke()
+    }
+
+    fun createDialog(context: Context): AlertDialog {
+      return dialogProvider!!(context)
+    }
+  }
+
+  class PreferenceDialog(): DialogFragment() {
+    companion object {
+      private const val EXTRA_KEY = "key"
+    }
+
+    constructor(key: String): this() {
+      arguments = Bundle().apply {
+        putString(EXTRA_KEY, key)
+      }
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+      val preferences = (parentFragment as PreferencesFragment).preferences
+      val key = requireArguments().getString(EXTRA_KEY)!!
+        .let { name -> preferences.keys.find { it.name == name }!! }
+      val preference = preferences[key]!!
+      return preference.createDialog(requireContext())
+    }
   }
 }

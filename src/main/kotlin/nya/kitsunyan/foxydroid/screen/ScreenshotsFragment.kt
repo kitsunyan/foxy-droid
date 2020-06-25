@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.DialogFragment
@@ -75,7 +74,7 @@ class ScreenshotsFragment(): DialogFragment() {
       format = PixelFormat.TRANSLUCENT
       windowAnimations = run {
         val typedArray = dialog.context.obtainStyledAttributes(null,
-          intArrayOf(android.R.attr.windowAnimationStyle), R.attr.dialogTheme, 0)
+          intArrayOf(android.R.attr.windowAnimationStyle), android.R.attr.dialogTheme, 0)
         try {
           typedArray.getResourceId(0, 0)
         } finally {
@@ -156,7 +155,7 @@ class ScreenshotsFragment(): DialogFragment() {
     StableRecyclerAdapter<Adapter.ViewType, RecyclerView.ViewHolder>() {
     enum class ViewType { SCREENSHOT }
 
-    private class ViewHolder(context: Context): RecyclerView.ViewHolder(AppCompatImageView(context)) {
+    private class ViewHolder(context: Context): RecyclerView.ViewHolder(ImageView(context)) {
       val image: ImageView
         get() = itemView as ImageView
 

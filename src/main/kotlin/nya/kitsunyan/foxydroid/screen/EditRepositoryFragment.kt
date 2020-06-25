@@ -1,5 +1,6 @@
 package nya.kitsunyan.foxydroid.screen
 
+import android.app.AlertDialog
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.PorterDuff
@@ -17,8 +18,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.Toolbar
+import android.widget.Toolbar
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers

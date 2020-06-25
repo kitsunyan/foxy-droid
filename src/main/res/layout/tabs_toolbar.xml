@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LinearLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
   android:orientation="vertical">
 
-  <com.google.android.material.tabs.TabLayout
+  <LinearLayout
     android:id="@+id/tabs"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    app:tabGravity="fill"
-    app:tabMaxWidth="0dp" />
+    android:layout_height="48dp"
+    android:orientation="horizontal" />
 
   <FrameLayout
     android:id="@+id/category_layout"
@@ -27,7 +25,7 @@
       android:gravity="center_vertical"
       android:paddingStart="12dp"
       android:paddingEnd="12dp"
-      android:background="?attr/selectableItemBackground"
+      android:background="?android:attr/selectableItemBackground"
       tools:ignore="UselessParent">
 
       <TextView

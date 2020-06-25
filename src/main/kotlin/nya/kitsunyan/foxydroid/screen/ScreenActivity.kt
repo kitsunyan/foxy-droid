@@ -9,9 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
+import android.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
@@ -23,7 +23,7 @@ import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
 import java.lang.ref.WeakReference
 
-abstract class ScreenActivity: AppCompatActivity() {
+abstract class ScreenActivity: FragmentActivity() {
   companion object {
     private const val STATE_FRAGMENT_STACK = "fragmentStack"
   }
@@ -162,7 +162,7 @@ abstract class ScreenActivity: AppCompatActivity() {
   internal fun onFragmentViewCreated(toolbar: Toolbar?) {
     this.toolbar = toolbar?.let(::WeakReference)
     if (fragmentStack.isNotEmpty() && toolbar != null) {
-      toolbar.navigationIcon = toolbar.context.getDrawableFromAttr(R.attr.homeAsUpIndicator)
+      toolbar.navigationIcon = toolbar.context.getDrawableFromAttr(android.R.attr.homeAsUpIndicator)
       toolbar.setNavigationOnClickListener { onBackPressed() }
     }
   }

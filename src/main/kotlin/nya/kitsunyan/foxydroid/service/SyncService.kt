@@ -9,7 +9,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
-import androidx.appcompat.view.ContextThemeWrapper
+import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -200,7 +200,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       .Builder(this, Common.NOTIFICATION_CHANNEL_SYNCING)
       .setSmallIcon(android.R.drawable.stat_sys_warning)
       .setColor(ContextThemeWrapper(this, R.style.Theme_Main_Light)
-        .getColorFromAttr(R.attr.colorAccent).defaultColor)
+        .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
       .setContentTitle(getString(R.string.error_syncing_format, repository.name))
       .setContentText(getString(when (exception) {
         is RepositoryUpdater.UpdateException -> when (exception.errorType) {
@@ -218,7 +218,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     .Builder(this, Common.NOTIFICATION_CHANNEL_SYNCING)
     .setSmallIcon(R.drawable.ic_sync)
     .setColor(ContextThemeWrapper(this, R.style.Theme_Main_Light)
-      .getColorFromAttr(R.attr.colorAccent).defaultColor)
+      .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
     .addAction(0, getString(R.string.cancel), PendingIntent.getService(this, 0,
       Intent(this, this::class.java).setAction(ACTION_CANCEL), PendingIntent.FLAG_UPDATE_CURRENT)) }
 
@@ -353,7 +353,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       .setContentText(resources.getQuantityString(R.plurals.new_updates_description_format,
         productItems.size, productItems.size))
       .setColor(ContextThemeWrapper(this, R.style.Theme_Main_Light)
-        .getColorFromAttr(R.attr.colorAccent).defaultColor)
+        .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
       .setContentIntent(PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java)
         .setAction(MainActivity.ACTION_UPDATES), PendingIntent.FLAG_UPDATE_CURRENT))
       .setStyle(NotificationCompat.InboxStyle().applyHack {

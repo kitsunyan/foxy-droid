@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Rect
 import android.os.SystemClock
 import android.view.MotionEvent
+import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
@@ -23,7 +24,7 @@ class RecyclerFastScroller(private val recyclerView: RecyclerView) {
 
   private val thumbDrawable = recyclerView.context.getDrawableFromAttr(android.R.attr.fastScrollThumbDrawable)
   private val trackDrawable = recyclerView.context.getDrawableFromAttr(android.R.attr.fastScrollTrackDrawable)
-  private val minTrackSize = recyclerView.resources.sizeScaled(32)
+  private val minTrackSize = recyclerView.resources.sizeScaled(16)
 
   private data class FastScrolling(val startAtThumbOffset: Float?, val startY: Float, val currentY: Float)
 
@@ -134,6 +135,7 @@ class RecyclerFastScroller(private val recyclerView: RecyclerView) {
           val atThumbVertical = if (rtl) event.x <= trackWidth else event.x >= recyclerView.width - trackWidth
           atThumbVertical && run {
             withScroll { itemHeight, thumbHeight, range ->
+              (recyclerView.parent as? ViewGroup)?.requestDisallowInterceptTouchEvent(true)
               val offset = currentOffset(itemHeight, range)
               val thumbY = ((recyclerView.height - thumbHeight) * offset).roundToInt()
               val atThumb = event.y >= thumbY && event.y <= thumbY + thumbHeight
@@ -153,6 +155,7 @@ class RecyclerFastScroller(private val recyclerView: RecyclerView) {
           }
           val cancel = event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL
           if (!success || cancel) {
+            (recyclerView.parent as? ViewGroup)?.requestDisallowInterceptTouchEvent(false)
             updateState(scrolling, null)
             recyclerView.invalidate()
           }

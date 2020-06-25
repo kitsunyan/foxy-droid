@@ -33,11 +33,9 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.AppCompatImageView
-import androidx.appcompat.widget.AppCompatTextView
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.text.util.LinkifyCompat
@@ -106,12 +104,12 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
 
   private enum class SectionType(val titleResId: Int, val colorAttrResId: Int) {
     ANTI_FEATURES(R.string.anti_features, R.attr.colorError),
-    WHATS_NEW(R.string.whats_new, R.attr.colorAccent),
-    LINKS(R.string.links, R.attr.colorAccent),
-    DONATE(R.string.donate, R.attr.colorAccent),
-    PERMISSIONS(R.string.permissions, R.attr.colorAccent),
-    SCREENSHOTS(R.string.screenshots, R.attr.colorAccent),
-    RELEASES(R.string.releases, R.attr.colorAccent)
+    WHATS_NEW(R.string.whats_new, android.R.attr.colorAccent),
+    LINKS(R.string.links, android.R.attr.colorAccent),
+    DONATE(R.string.donate, android.R.attr.colorAccent),
+    PERMISSIONS(R.string.permissions, android.R.attr.colorAccent),
+    SCREENSHOTS(R.string.screenshots, android.R.attr.colorAccent),
+    RELEASES(R.string.releases, android.R.attr.colorAccent)
   }
 
   internal enum class ExpandType { NOTHING, DESCRIPTION, WHATS_NEW,
@@ -300,10 +298,13 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     val progressIcon: Drawable
     val defaultIcon: Drawable
 
-    val actionTintNormal = action.context.getColorFromAttr(R.attr.colorAccent)
+    val actionTintNormal = action.context.getColorFromAttr(android.R.attr.colorAccent)
     val actionTintCancel = action.context.getColorFromAttr(R.attr.colorError)
 
     init {
+      if (Android.sdk(22)) {
+        action.setTextColor(action.context.getColorFromAttr(android.R.attr.colorBackground))
+      }
       val (progressIcon, defaultIcon) = Utils.getDefaultApplicationIcons(icon.context)
       this.progressIcon = progressIcon
       this.defaultIcon = defaultIcon
@@ -312,7 +313,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
 
   private class SwitchViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
     val title = itemView.findViewById<TextView>(R.id.title)!!
-    val enabled = itemView.findViewById<SwitchCompat>(R.id.enabled)!!
+    val enabled = itemView.findViewById<Switch>(R.id.enabled)!!
 
     val statefulViews: Sequence<View>
       get() = sequenceOf(itemView, title, enabled)
@@ -323,7 +324,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     val icon = itemView.findViewById<ImageView>(R.id.icon)!!
   }
 
-  private class ExpandViewHolder(context: Context): RecyclerView.ViewHolder(AppCompatTextView(context)) {
+  private class ExpandViewHolder(context: Context): RecyclerView.ViewHolder(TextView(context)) {
     val text: TextView
       get() = itemView as TextView
 
@@ -331,8 +332,8 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
       itemView as TextView
       itemView.typeface = TypefaceExtra.medium
       itemView.setTextSizeScaled(14)
-      itemView.setTextColor(itemView.context.getColorFromAttr(R.attr.colorAccent))
-      itemView.background = itemView.context.getDrawableFromAttr(R.attr.selectableItemBackground)
+      itemView.setTextColor(itemView.context.getColorFromAttr(android.R.attr.colorAccent))
+      itemView.background = itemView.context.getDrawableFromAttr(android.R.attr.selectableItemBackground)
       itemView.gravity = Gravity.CENTER
       itemView.isAllCaps = true
       itemView.layoutParams = RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT,
@@ -340,7 +341,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     }
   }
 
-  private class TextViewHolder(context: Context): RecyclerView.ViewHolder(AppCompatTextView(context)) {
+  private class TextViewHolder(context: Context): RecyclerView.ViewHolder(TextView(context)) {
     val text: TextView
       get() = itemView as TextView
 
@@ -423,12 +424,12 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
 
     init {
       itemView as FrameLayout
-      itemView.foreground = itemView.context.getDrawableFromAttr(R.attr.selectableItemBackground)
+      itemView.foreground = itemView.context.getDrawableFromAttr(android.R.attr.selectableItemBackground)
       val backgroundColor = itemView.context.getColorFromAttr(android.R.attr.colorBackground).defaultColor
-      val accentColor = itemView.context.getColorFromAttr(R.attr.colorAccent).defaultColor
+      val accentColor = itemView.context.getColorFromAttr(android.R.attr.colorAccent).defaultColor
       val primaryColor = itemView.context.getColorFromAttr(android.R.attr.textColorPrimary).defaultColor
 
-      image = object: AppCompatImageView(context) {
+      image = object: ImageView(context) {
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
           super.onMeasure(widthMeasureSpec, heightMeasureSpec)
           setMeasuredDimension(measuredWidth, measuredWidth)
@@ -465,7 +466,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     init {
       status.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, null).apply {
         setStatusActive = { active -> color = itemView.context.getColorFromAttr(if (active)
-          R.attr.colorAccent else android.R.attr.textColorSecondary) }
+          android.R.attr.colorAccent else android.R.attr.textColorSecondary) }
         cornerRadius = itemView.resources.sizeScaled(2).toFloat()
       }
     }
@@ -479,14 +480,14 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
       itemView.orientation = LinearLayout.VERTICAL
       itemView.gravity = Gravity.CENTER
       itemView.resources.sizeScaled(20).let { itemView.setPadding(it, it, it, it) }
-      val title = AppCompatTextView(itemView.context)
+      val title = TextView(itemView.context)
       title.gravity = Gravity.CENTER
       title.typeface = TypefaceExtra.light
       title.setTextColor(context.getColorFromAttr(android.R.attr.textColorPrimary))
       title.setTextSizeScaled(20)
       title.setText(R.string.application_not_found)
       itemView.addView(title, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-      val packageName = AppCompatTextView(itemView.context)
+      val packageName = TextView(itemView.context)
       packageName.gravity = Gravity.CENTER
       packageName.setTextColor(context.getColorFromAttr(android.R.attr.textColorPrimary))
       packageName.setTextSizeScaled(16)
@@ -974,8 +975,10 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         if (action != null) {
           holder.action.setText(action.titleResId)
         }
-        holder.action.backgroundTintList = if (action == Action.CANCEL)
-          holder.actionTintCancel else holder.actionTintNormal
+        if (Android.sdk(22)) {
+          holder.action.backgroundTintList = if (action == Action.CANCEL)
+            holder.actionTintCancel else holder.actionTintNormal
+        }
         holder.statusLayout.visibility = if (status != null) View.VISIBLE else View.GONE
         if (status != null) {
           when (status) {

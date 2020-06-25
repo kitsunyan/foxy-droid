@@ -55,7 +55,8 @@
           android:scaleType="center"
           android:src="@drawable/ic_arrow_down"
           android:tint="?android:attr/textColorSecondary"
-          android:background="?attr/actionBarItemBackground"
+          android:tintMode="src_in"
+          android:background="?android:attr/actionBarItemBackground"
           android:visibility="gone"
           tools:ignore="ContentDescription" />
 
@@ -91,7 +92,7 @@
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
         android:gravity="top"
-        android:typeface="monospace"
+        android:fontFamily="monospace"
         android:textSize="16sp"
         android:inputType="textNoSuggestions|textMultiLine"
         tools:ignore="Autofill,LabelFor" />
@@ -208,7 +209,7 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_marginTop="4dp"
-      style="@style/Widget.AppCompat.Button.Borderless.Colored"
+      style="@android:style/Widget.Material.Button.Borderless.Colored"
       android:text="@string/skip" />
 
   </LinearLayout>

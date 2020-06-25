@@ -73,7 +73,7 @@ class ProductsFragment(): Fragment(), CursorOwner.Callback {
     }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-    return RecyclerView(container!!.context).apply {
+    return RecyclerView(requireContext()).apply {
       id = android.R.id.list
       layoutManager = LinearLayoutManager(context)
       isMotionEventSplittingEnabled = false

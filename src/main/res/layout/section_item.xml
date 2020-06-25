@@ -6,7 +6,7 @@
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
   android:padding="16dp"
-  android:background="?attr/selectableItemBackground">
+  android:background="?android:attr/selectableItemBackground">
 
   <TextView
     android:id="@+id/title"
@@ -25,6 +25,7 @@
     android:scaleType="center"
     android:src="@drawable/ic_arrow_down"
     android:tint="?android:attr/textColorPrimary"
+    android:tintMode="src_in"
     tools:ignore="ContentDescription" />
 
 </LinearLayout>

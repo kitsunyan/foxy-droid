@@ -2,6 +2,12 @@ package nya.kitsunyan.foxydroid.screen
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Canvas
+import android.graphics.ColorFilter
+import android.graphics.Paint
+import android.graphics.PixelFormat
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -12,17 +18,15 @@ import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.SearchView
 import android.widget.TextView
-import androidx.appcompat.widget.AppCompatTextView
-import androidx.appcompat.widget.SearchView
-import androidx.appcompat.widget.Toolbar
-import androidx.core.view.MenuCompat
+import android.widget.Toolbar
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager.widget.ViewPager
-import com.google.android.material.tabs.TabLayout
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -34,6 +38,7 @@ import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.SyncService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.Utils
+import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
 import nya.kitsunyan.foxydroid.widget.EnumRecyclerAdapter
@@ -49,7 +54,7 @@ class TabsFragment: Fragment() {
   }
 
   private class Layout(view: View) {
-    val tabLayout = view.findViewById<TabLayout>(R.id.tabs)!!
+    val tabs = view.findViewById<LinearLayout>(R.id.tabs)!!
     val categoryLayout = view.findViewById<ViewGroup>(R.id.category_layout)!!
     val categoryChange = view.findViewById<View>(R.id.category_change)!!
     val categoryName = view.findViewById<TextView>(R.id.category_name)!!
@@ -57,17 +62,18 @@ class TabsFragment: Fragment() {
   }
 
   private var sortOrderMenu: Pair<MenuItem, List<MenuItem>>? = null
+  private var syncRepositoriesMenuItem: MenuItem? = null
   private var layout: Layout? = null
   private var categoriesList: RecyclerView? = null
-  private var viewPager: ViewPager? = null
+  private var viewPager: ViewPager2? = null
 
   private var showCategories = false
     set(value) {
       if (field != value) {
         field = value
         val layout = layout
-        layout?.tabLayout?.let { (0 until it.tabCount)
-          .forEach { index -> it.getTabAt(index)!!.view.isEnabled = !value } }
+        layout?.tabs?.let { (0 until it.childCount)
+          .forEach { index -> it.getChildAt(index)!!.isEnabled = !value } }
         layout?.categoryIcon?.scaleY = if (value) -1f else 1f
         if ((categoriesList?.parent as? View)?.height ?: 0 > 0) {
           animateCategoriesList()
@@ -127,7 +133,9 @@ class TabsFragment: Fragment() {
     })
 
     toolbar.menu.apply {
-      MenuCompat.setGroupDividerEnabled(this, true)
+      if (Android.sdk(28)) {
+        setGroupDividerEnabled(true)
+      }
 
       add(0, R.id.toolbar_search, 0, R.string.search)
         .setIcon(Utils.getToolbarIcon(toolbar.context, R.drawable.ic_search))
@@ -138,21 +146,22 @@ class TabsFragment: Fragment() {
         .setIcon(Utils.getToolbarIcon(toolbar.context, R.drawable.ic_sort))
         .let { menu ->
           menu.item.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS)
-          val items = ProductItem.Order.values().map { order -> menu
-            .add(order.titleResId)
-            .setOnMenuItemClickListener { item ->
-              this@TabsFragment.order = order
-              item.isChecked = true
-              productFragments.forEach { it.setOrder(order) }
-              true
-            } }
+          val items = ProductItem.Order.values().map { order ->
+            menu
+              .add(order.titleResId)
+              .setOnMenuItemClickListener { item ->
+                this@TabsFragment.order = order
+                item.isChecked = true
+                productFragments.forEach { it.setOrder(order) }
+                true
+              }
+          }
           menu.setGroupCheckable(0, true, true)
           Pair(menu.item, items)
         }
 
-      add(0, 0, 0, R.string.sync_repositories)
+      syncRepositoriesMenuItem = add(0, 0, 0, R.string.sync_repositories)
         .setIcon(Utils.getToolbarIcon(toolbar.context, R.drawable.ic_sync))
-        .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM)
         .setOnMenuItemClickListener {
           syncConnection.binder?.sync(SyncService.SyncRequest.MANUAL)
           true
@@ -179,16 +188,27 @@ class TabsFragment: Fragment() {
     val layout = Layout(view)
     this.layout = layout
 
-    ProductsFragment.Source.values().forEach { layout.tabLayout
-      .addTab(layout.tabLayout.newTab().setText(it.titleResId)) }
-    layout.tabLayout.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
-      override fun onTabSelected(tab: TabLayout.Tab) {
-        viewPager!!.currentItem = tab.position
+    layout.tabs.background = TabsBackgroundDrawable(layout.tabs.context,
+      layout.tabs.layoutDirection == View.LAYOUT_DIRECTION_RTL)
+    ProductsFragment.Source.values().forEach {
+      val tab = TextView(layout.tabs.context)
+      val selectedColor = tab.context.getColorFromAttr(android.R.attr.textColorPrimary).defaultColor
+      val normalColor = tab.context.getColorFromAttr(android.R.attr.textColorSecondary).defaultColor
+      tab.gravity = Gravity.CENTER
+      tab.typeface = TypefaceExtra.medium
+      tab.setTextColor(ColorStateList(arrayOf(intArrayOf(android.R.attr.state_selected), intArrayOf()),
+        intArrayOf(selectedColor, normalColor)))
+      tab.setTextSizeScaled(14)
+      tab.isAllCaps = true
+      tab.text = getString(it.titleResId)
+      tab.background = tab.context.getDrawableFromAttr(android.R.attr.selectableItemBackground)
+      tab.setOnClickListener { _ ->
+        setSelectedTab(it)
+        viewPager!!.currentItem = it.ordinal
       }
-
-      override fun onTabUnselected(tab: TabLayout.Tab) = Unit
-      override fun onTabReselected(tab: TabLayout.Tab) = Unit
-    })
+      layout.tabs.addView(tab, 0, LinearLayout.LayoutParams.MATCH_PARENT)
+      (tab.layoutParams as LinearLayout.LayoutParams).weight = 1f
+    }
 
     showCategories = savedInstanceState?.getByte(STATE_SHOW_CATEGORIES)?.toInt() ?: 0 != 0
     categories = savedInstanceState?.getStringArrayList(STATE_CATEGORIES).orEmpty()
@@ -201,14 +221,16 @@ class TabsFragment: Fragment() {
 
     val content = view.findViewById<FrameLayout>(R.id.fragment_content)
 
-    viewPager = ViewPager(content.context).apply {
+    viewPager = ViewPager2(content.context).apply {
       id = R.id.fragment_pager
-      adapter = object: FragmentStatePagerAdapter(childFragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-        override fun getItem(position: Int): Fragment = ProductsFragment(ProductsFragment.Source.values()[position])
-        override fun getCount(): Int = ProductsFragment.Source.values().size
+      adapter = object: FragmentStateAdapter(this@TabsFragment) {
+        override fun getItemCount(): Int = ProductsFragment.Source.values().size
+        override fun createFragment(position: Int): Fragment = ProductsFragment(ProductsFragment
+          .Source.values()[position])
       }
       content.addView(this, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
-      addOnPageChangeListener(pageChangeListener)
+      registerOnPageChangeCallback(pageChangeCallback)
+      offscreenPageLimit = 1
     }
 
     categoriesDisposable = Observable.just(Unit)
@@ -238,7 +260,7 @@ class TabsFragment: Fragment() {
           updateCategory()
         }
       }
-      setBackgroundColor(context.getColorFromAttr(R.attr.colorPrimaryDark).defaultColor)
+      setBackgroundColor(context.getColorFromAttr(android.R.attr.colorPrimaryDark).defaultColor)
       elevation = resources.sizeScaled(4).toFloat()
       content.addView(this, FrameLayout.LayoutParams.MATCH_PARENT, 0)
       visibility = View.GONE
@@ -268,6 +290,7 @@ class TabsFragment: Fragment() {
     super.onDestroyView()
 
     sortOrderMenu = null
+    syncRepositoriesMenuItem = null
     layout = null
     categoriesList = null
     viewPager = null
@@ -294,7 +317,7 @@ class TabsFragment: Fragment() {
 
     if (needSelectUpdates) {
       needSelectUpdates = false
-      selectUpdates()
+      selectUpdatesInternal(false)
     }
   }
 
@@ -308,11 +331,19 @@ class TabsFragment: Fragment() {
     }
   }
 
-  internal fun selectUpdates() {
-    if (view == null) {
-      needSelectUpdates = true
+  private fun setSelectedTab(source: ProductsFragment.Source) {
+    val layout = layout!!
+    (0 until layout.tabs.childCount).forEach { layout.tabs.getChildAt(it).isSelected = it == source.ordinal }
+  }
+
+  internal fun selectUpdates() = selectUpdatesInternal(true)
+
+  private fun selectUpdatesInternal(allowSmooth: Boolean) {
+    if (view != null) {
+      val viewPager = viewPager
+      viewPager?.setCurrentItem(ProductsFragment.Source.UPDATES.ordinal, allowSmooth && viewPager.isLaidOut)
     } else {
-      layout?.tabLayout?.getTabAt(ProductsFragment.Source.UPDATES.ordinal)!!.select()
+      needSelectUpdates = true
     }
   }
 
@@ -369,7 +400,7 @@ class TabsFragment: Fragment() {
     }
   }
 
-  private val pageChangeListener = object: ViewPager.OnPageChangeListener {
+  private val pageChangeCallback = object: ViewPager2.OnPageChangeCallback() {
     override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
       val layout = layout!!
       val fromCategories = ProductsFragment.Source.values()[position].categories
@@ -380,14 +411,12 @@ class TabsFragment: Fragment() {
       } else {
         if (fromCategories) 1f else 0f
       }
-      if (layout.categoryLayout.childCount != 1) {
-        throw RuntimeException()
-      }
+      (layout.tabs.background as TabsBackgroundDrawable)
+        .update(position + positionOffset, layout.tabs.childCount)
+      assert(layout.categoryLayout.childCount == 1)
       val child = layout.categoryLayout.getChildAt(0)
       val height = child.layoutParams.height
-      if (height <= 0) {
-        throw RuntimeException()
-      }
+      assert(height > 0)
       val currentHeight = (offset * height).roundToInt()
       if (layout.categoryLayout.layoutParams.height != currentHeight) {
         layout.categoryLayout.layoutParams.height = currentHeight
@@ -396,27 +425,63 @@ class TabsFragment: Fragment() {
     }
 
     override fun onPageSelected(position: Int) {
-      val layout = layout!!
       val source = ProductsFragment.Source.values()[position]
       updateUpdateNotificationBlocker(source)
       sortOrderMenu!!.first.isVisible = source.order
-      layout.tabLayout.selectTab(layout.tabLayout.getTabAt(source.ordinal))
+      syncRepositoriesMenuItem!!.setShowAsActionFlags(if (!source.order ||
+        resources.configuration.screenWidthDp >= 480) MenuItem.SHOW_AS_ACTION_ALWAYS else 0)
+      setSelectedTab(source)
       if (showCategories && !source.categories) {
         showCategories = false
       }
     }
 
     override fun onPageScrollStateChanged(state: Int) {
-      layout!!.categoryChange.isEnabled = state != ViewPager.SCROLL_STATE_DRAGGING &&
+      layout!!.categoryChange.isEnabled = state != ViewPager2.SCROLL_STATE_DRAGGING &&
         ProductsFragment.Source.values()[viewPager!!.currentItem].categories
     }
+  }
+
+  private class TabsBackgroundDrawable(context: Context, private val rtl: Boolean): Drawable() {
+    private val height = context.resources.sizeScaled(2)
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+      color = context.getColorFromAttr(android.R.attr.colorAccent).defaultColor
+    }
+
+    private var position = 0f
+    private var total = 0
+
+    fun update(position: Float, total: Int) {
+      this.position = position
+      this.total = total
+      invalidateSelf()
+    }
+
+    override fun draw(canvas: Canvas) {
+      if (total > 0) {
+        val bounds = bounds
+        val width = bounds.width() / total.toFloat()
+        val x = width * position
+        if (rtl) {
+          canvas.drawRect(bounds.right - width - x, (bounds.bottom - height).toFloat(),
+            bounds.right - x, bounds.bottom.toFloat(), paint)
+        } else {
+          canvas.drawRect(bounds.left + x, (bounds.bottom - height).toFloat(),
+            bounds.left + x + width, bounds.bottom.toFloat(), paint)
+        }
+      }
+    }
+
+    override fun setAlpha(alpha: Int) = Unit
+    override fun setColorFilter(colorFilter: ColorFilter?) = Unit
+    override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
   }
 
   private class CategoriesAdapter(private val categories: () -> List<String>, private val onClick: (String) -> Unit):
     EnumRecyclerAdapter<CategoriesAdapter.ViewType, RecyclerView.ViewHolder>() {
     enum class ViewType { CATEGORY }
 
-    private class CategoryViewHolder(context: Context): RecyclerView.ViewHolder(AppCompatTextView(context)) {
+    private class CategoryViewHolder(context: Context): RecyclerView.ViewHolder(TextView(context)) {
       val title: TextView
         get() = itemView as TextView
 
@@ -426,7 +491,7 @@ class TabsFragment: Fragment() {
         itemView.resources.sizeScaled(16).let { itemView.setPadding(it, 0, it, 0) }
         itemView.setTextColor(context.getColorFromAttr(android.R.attr.textColorPrimary))
         itemView.setTextSizeScaled(16)
-        itemView.background = context.getDrawableFromAttr(R.attr.selectableItemBackground)
+        itemView.background = context.getDrawableFromAttr(android.R.attr.selectableItemBackground)
         itemView.layoutParams = RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT,
           itemView.resources.sizeScaled(48))
       }

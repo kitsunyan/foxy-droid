@@ -10,7 +10,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.clear
 import coil.api.load
@@ -55,7 +54,7 @@ class ProductsAdapter(private val onClick: (ProductItem) -> Unit):
     }
   }
 
-  private class EmptyViewHolder(context: Context): RecyclerView.ViewHolder(AppCompatTextView(context)) {
+  private class EmptyViewHolder(context: Context): RecyclerView.ViewHolder(TextView(context)) {
     val text: TextView
       get() = itemView as TextView
 
@@ -143,7 +142,7 @@ class ProductsAdapter(private val onClick: (ProductItem) -> Unit):
               resources.sizeScaled(4).let { setPadding(it, 0, it, 0) }
               setTextColor(holder.status.context.getColorFromAttr(android.R.attr.colorBackground))
               background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, null).apply {
-                color = holder.status.context.getColorFromAttr(R.attr.colorAccent)
+                color = holder.status.context.getColorFromAttr(android.R.attr.colorAccent)
                 cornerRadius = holder.status.resources.sizeScaled(2).toFloat()
               }
             }

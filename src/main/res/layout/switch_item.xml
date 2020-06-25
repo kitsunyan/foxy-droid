@@ -5,7 +5,7 @@
   android:layout_height="48dp"
   android:orientation="horizontal"
   android:gravity="center_vertical"
-  android:background="?attr/selectableItemBackground">
+  android:background="?android:attr/selectableItemBackground">
 
   <TextView
     android:id="@+id/title"
@@ -17,7 +17,7 @@
     android:textSize="16sp"
     android:singleLine="true" />
 
-  <androidx.appcompat.widget.SwitchCompat
+  <Switch
     android:id="@+id/enabled"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
