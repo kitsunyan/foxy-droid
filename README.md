@@ -7,17 +7,17 @@ Yet another F-Droid client.
 
 ## Description
 
-Unofficial F-Droid client that resembles the classic F-Droid client.
+Unofficial F-Droid client in the style of the classic one.
 
-The client supports all basic F-Droid features, such as repository management and package installation. It doesn't
-support privileged extension, root installation, or local repositories.
+Jump over the lazy dog, manage repositories, and install software quickly. No privileged extension, root installation,
+or sharing local repositories nearby.
 
 ### Features
 
-* Classic F-Droid style, without cards or inappropriate animations
-* Fast repositories synchronization under good network conditions
-* Built upon standard Android components and a minimal set of dependencies
-* Made with attention to details, both in program logic and design
+* Classic F-Droid style
+* No cards or inappropriate animations
+* Fast repository syncing
+* Standard Android components and minimal dependencies
 
 ### Screenshots
 
@@ -32,8 +32,8 @@ support privileged extension, root installation, or local repositories.
 
 ## Building and Installing
 
-Android SDK path should be specified either using `ANDROID_HOME` environment variable or using `sdk.dir` property in
-`local.properties`.
+Specify your Android SDK path either using the `ANDROID_HOME` environment variable, or by filling out the `sdk.dir`
+property in `local.properties`.
 
 Signing can be done automatically using `keystore.properties` as follows:
 
@@ -44,8 +44,8 @@ key.alias=key-alias
 key.password=key-password
 ```
 
-Run `./gradlew assembleRelease` to build the package. The package can be installed using Android package manager.
+Run `./gradlew assembleRelease` to build the package, which can be installed using the Android package manager.
 
 ## License
 
-Foxy Droid is available under the terms of GNU General Public License v3 or later. Copyright (C) 2020 kitsunyan.
+Foxy Droid is available under the terms of the GNU General Public License v3 or later. Copyright © 2020 kitsunyan.
