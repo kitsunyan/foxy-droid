@@ -32,8 +32,8 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import nya.kitsunyan.foxydroid.R
+import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.database.Database
-import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.SyncService
 import nya.kitsunyan.foxydroid.utility.RxUtils
@@ -52,7 +52,6 @@ class TabsFragment: ScreenFragment() {
     private const val STATE_SHOW_CATEGORIES = "showCategories"
     private const val STATE_CATEGORIES = "categories"
     private const val STATE_CATEGORY = "category"
-    private const val STATE_ORDER = "order"
   }
 
   private class Layout(view: View) {
@@ -87,7 +86,6 @@ class TabsFragment: ScreenFragment() {
   private var searchQuery = ""
   private var categories = emptyList<String>()
   private var category = ""
-  private var order = ProductItem.Order.NAME
 
   private val syncConnection = Connection(SyncService::class.java, onBind = { _, _ ->
     viewPager?.let {
@@ -96,6 +94,7 @@ class TabsFragment: ScreenFragment() {
     }
   })
 
+  private var sortOrderDisposable: Disposable? = null
   private var categoriesDisposable: Disposable? = null
   private var categoriesAnimator: ValueAnimator? = null
 
@@ -152,16 +151,13 @@ class TabsFragment: ScreenFragment() {
         .setIcon(Utils.getToolbarIcon(toolbar.context, R.drawable.ic_sort))
         .let { menu ->
           menu.item.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS)
-          val items = ProductItem.Order.values().map { order ->
-            menu
-              .add(order.titleResId)
-              .setOnMenuItemClickListener { item ->
-                this@TabsFragment.order = order
-                item.isChecked = true
-                productFragments.forEach { it.setOrder(order) }
+          val items = Preferences.Key.SortOrder.default.value.values
+            .map { sortOrder -> menu
+              .add(sortOrder.order.titleResId)
+              .setOnMenuItemClickListener {
+                Preferences[Preferences.Key.SortOrder] = sortOrder
                 true
-              }
-          }
+              } }
           menu.setGroupCheckable(0, true, true)
           Pair(menu.item, items)
         }
@@ -221,9 +217,12 @@ class TabsFragment: ScreenFragment() {
     category = savedInstanceState?.getString(STATE_CATEGORY).orEmpty()
     layout.categoryChange.setOnClickListener { showCategories = categories.isNotEmpty() && !showCategories }
 
-    order = savedInstanceState?.getString(STATE_ORDER)?.let(ProductItem.Order::valueOf) ?: ProductItem.Order.NAME
-    sortOrderMenu!!.second[order.ordinal].isChecked = true
-    productFragments.forEach { it.setOrder(order) }
+    updateOrder()
+    sortOrderDisposable = Preferences.observable.subscribe {
+      if (it == Preferences.Key.SortOrder) {
+        updateOrder()
+      }
+    }
 
     val content = view.findViewById<FrameLayout>(R.id.fragment_content)!!
 
@@ -303,6 +302,8 @@ class TabsFragment: ScreenFragment() {
     viewPager = null
 
     syncConnection.unbind(requireContext())
+    sortOrderDisposable?.dispose()
+    sortOrderDisposable = null
     categoriesDisposable?.dispose()
     categoriesDisposable = null
     categoriesAnimator?.cancel()
@@ -317,7 +318,6 @@ class TabsFragment: ScreenFragment() {
     outState.putByte(STATE_SHOW_CATEGORIES, if (showCategories) 1 else 0)
     outState.putStringArrayList(STATE_CATEGORIES, ArrayList(categories))
     outState.putString(STATE_CATEGORY, category)
-    outState.putString(STATE_ORDER, order.name)
   }
 
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
@@ -336,7 +336,7 @@ class TabsFragment: ScreenFragment() {
     if (view != null && childFragment is ProductsFragment) {
       childFragment.setSearchQuery(searchQuery)
       childFragment.setCategory(category)
-      childFragment.setOrder(order)
+      childFragment.setOrder(Preferences[Preferences.Key.SortOrder].order)
     }
   }
 
@@ -379,6 +379,12 @@ class TabsFragment: ScreenFragment() {
       null
     }
     syncConnection.binder?.setUpdateNotificationBlocker(blockerFragment)
+  }
+
+  private fun updateOrder() {
+    val order = Preferences[Preferences.Key.SortOrder].order
+    sortOrderMenu!!.second[order.ordinal].isChecked = true
+    productFragments.forEach { it.setOrder(order) }
   }
 
   private fun updateCategory() {
