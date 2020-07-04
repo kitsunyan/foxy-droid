@@ -13,7 +13,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toolbar
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,7 +34,7 @@ import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 
-class ProductFragment(): Fragment(), ProductAdapter.Callbacks {
+class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
   companion object {
     private const val EXTRA_PACKAGE_NAME = "packageName"
 
@@ -87,8 +86,8 @@ class ProductFragment(): Fragment(), ProductAdapter.Callbacks {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 
-    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-    screenActivity.onFragmentViewCreated(toolbar)
+    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
+    screenActivity.onToolbarCreated(toolbar)
     toolbar.setTitle(R.string.application)
     this.toolbar = toolbar
 
@@ -105,7 +104,7 @@ class ProductFragment(): Fragment(), ProductAdapter.Callbacks {
       }
     }
 
-    val content = view.findViewById<FrameLayout>(R.id.fragment_content)
+    val content = view.findViewById<FrameLayout>(R.id.fragment_content)!!
     content.addView(RecyclerView(content.context).apply {
       id = android.R.id.list
       val columns = (resources.configuration.screenWidthDp / 120).coerceIn(3, 5)

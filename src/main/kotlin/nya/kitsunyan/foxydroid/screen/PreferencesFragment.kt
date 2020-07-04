@@ -24,7 +24,7 @@ import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 
-class PreferencesFragment: Fragment() {
+class PreferencesFragment: ScreenFragment() {
   private val preferences = mutableMapOf<Preferences.Key<*>, Preference<*>>()
   private var disposable: Disposable? = null
 
@@ -35,11 +35,11 @@ class PreferencesFragment: Fragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 
-    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-    screenActivity.onFragmentViewCreated(toolbar)
+    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
+    screenActivity.onToolbarCreated(toolbar)
     toolbar.setTitle(R.string.preferences)
 
-    val content = view.findViewById<FrameLayout>(R.id.fragment_content)
+    val content = view.findViewById<FrameLayout>(R.id.fragment_content)!!
     val scroll = ScrollView(content.context)
     scroll.id = R.id.preferences_list
     scroll.isFillViewport = true

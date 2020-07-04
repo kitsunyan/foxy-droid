@@ -14,7 +14,6 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toolbar
-import androidx.fragment.app.Fragment
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -27,7 +26,7 @@ import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import java.util.Date
 import java.util.Locale
 
-class RepositoryFragment(): Fragment() {
+class RepositoryFragment(): ScreenFragment() {
   companion object {
     private const val EXTRA_REPOSITORY_ID = "repositoryId"
   }
@@ -59,8 +58,8 @@ class RepositoryFragment(): Fragment() {
       .observeOn(AndroidSchedulers.mainThread())
       .subscribe { updateRepositoryView() }
 
-    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-    screenActivity.onFragmentViewCreated(toolbar)
+    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
+    screenActivity.onToolbarCreated(toolbar)
     toolbar.setTitle(R.string.repository)
 
     toolbar.menu.apply {
@@ -81,7 +80,7 @@ class RepositoryFragment(): Fragment() {
         }
     }
 
-    val content = view.findViewById<FrameLayout>(R.id.fragment_content)
+    val content = view.findViewById<FrameLayout>(R.id.fragment_content)!!
     val scroll = ScrollView(content.context)
     scroll.id = android.R.id.list
     scroll.isFillViewport = true
@@ -151,9 +150,9 @@ class RepositoryFragment(): Fragment() {
   private fun LinearLayout.addTitleText(titleResId: Int, text: CharSequence) {
     if (text.isNotEmpty()) {
       val layout = inflate(R.layout.title_text_item)
-      val titleView = layout.findViewById<TextView>(R.id.title)
+      val titleView = layout.findViewById<TextView>(R.id.title)!!
       titleView.setText(titleResId)
-      val textView = layout.findViewById<TextView>(R.id.text)
+      val textView = layout.findViewById<TextView>(R.id.text)!!
       textView.text = text
       addView(layout)
     }

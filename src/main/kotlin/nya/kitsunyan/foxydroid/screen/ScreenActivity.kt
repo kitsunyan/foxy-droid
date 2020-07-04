@@ -21,7 +21,6 @@ import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
-import java.lang.ref.WeakReference
 
 abstract class ScreenActivity: FragmentActivity() {
   companion object {
@@ -58,7 +57,6 @@ abstract class ScreenActivity: FragmentActivity() {
     private set
 
   private val fragmentStack = mutableListOf<FragmentStackItem>()
-  private var toolbar: WeakReference<Toolbar>? = null
 
   private val currentFragment: Fragment?
     get() {
@@ -105,10 +103,8 @@ abstract class ScreenActivity: FragmentActivity() {
   }
 
   override fun onBackPressed() {
-    val menuItem = toolbar?.get()?.menu?.findItem(R.id.toolbar_search)
-    if (menuItem != null && menuItem.isActionViewExpanded) {
-      menuItem.collapseActionView()
-    } else {
+    val currentFragment = currentFragment
+    if (!(currentFragment is ScreenFragment && currentFragment.onBackPressed())) {
       hideKeyboard()
       if (!popFragment()) {
         super.onBackPressed()
@@ -159,9 +155,8 @@ abstract class ScreenActivity: FragmentActivity() {
     hideKeyboard()
   }
 
-  internal fun onFragmentViewCreated(toolbar: Toolbar?) {
-    this.toolbar = toolbar?.let(::WeakReference)
-    if (fragmentStack.isNotEmpty() && toolbar != null) {
+  internal fun onToolbarCreated(toolbar: Toolbar) {
+    if (fragmentStack.isNotEmpty()) {
       toolbar.navigationIcon = toolbar.context.getDrawableFromAttr(android.R.attr.homeAsUpIndicator)
       toolbar.setNavigationOnClickListener { onBackPressed() }
     }

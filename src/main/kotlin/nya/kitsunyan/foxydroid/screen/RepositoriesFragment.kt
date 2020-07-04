@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toolbar
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import nya.kitsunyan.foxydroid.R
@@ -17,14 +16,14 @@ import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.SyncService
 import nya.kitsunyan.foxydroid.utility.Utils
 
-class RepositoriesFragment: Fragment(), CursorOwner.Callback {
+class RepositoriesFragment: ScreenFragment(), CursorOwner.Callback {
   private var recyclerView: RecyclerView? = null
 
   private val syncConnection = Connection(SyncService::class.java)
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
     return inflater.inflate(R.layout.fragment, container, false).apply {
-      val content = findViewById<FrameLayout>(R.id.fragment_content)
+      val content = findViewById<FrameLayout>(R.id.fragment_content)!!
       content.addView(RecyclerView(content.context).apply {
         id = android.R.id.list
         layoutManager = LinearLayoutManager(context)
@@ -44,8 +43,8 @@ class RepositoriesFragment: Fragment(), CursorOwner.Callback {
     syncConnection.bind(requireContext())
     screenActivity.cursorOwner.attach(this, CursorOwner.Request.Repositories)
 
-    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-    screenActivity.onFragmentViewCreated(toolbar)
+    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
+    screenActivity.onToolbarCreated(toolbar)
     toolbar.setTitle(R.string.repositories)
 
     toolbar.menu.apply {

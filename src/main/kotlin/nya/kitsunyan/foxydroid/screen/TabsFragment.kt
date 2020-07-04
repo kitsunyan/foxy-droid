@@ -44,7 +44,7 @@ import nya.kitsunyan.foxydroid.utility.extension.text.*
 import nya.kitsunyan.foxydroid.widget.EnumRecyclerAdapter
 import kotlin.math.*
 
-class TabsFragment: Fragment() {
+class TabsFragment: ScreenFragment() {
   companion object {
     private const val STATE_SEARCH_QUERY = "searchQuery"
     private const val STATE_SHOW_CATEGORIES = "showCategories"
@@ -61,6 +61,7 @@ class TabsFragment: Fragment() {
     val categoryIcon = view.findViewById<ImageView>(R.id.category_icon)!!
   }
 
+  private var searchMenuItem: MenuItem? = null
   private var sortOrderMenu: Pair<MenuItem, List<MenuItem>>? = null
   private var syncRepositoriesMenuItem: MenuItem? = null
   private var layout: Layout? = null
@@ -111,8 +112,8 @@ class TabsFragment: Fragment() {
 
     syncConnection.bind(requireContext())
 
-    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-    screenActivity.onFragmentViewCreated(toolbar)
+    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
+    screenActivity.onToolbarCreated(toolbar)
     toolbar.setTitle(R.string.app_name)
 
     val searchView = SearchView(toolbar.context)
@@ -137,7 +138,7 @@ class TabsFragment: Fragment() {
         setGroupDividerEnabled(true)
       }
 
-      add(0, R.id.toolbar_search, 0, R.string.search)
+      searchMenuItem = add(0, R.id.toolbar_search, 0, R.string.search)
         .setIcon(Utils.getToolbarIcon(toolbar.context, R.drawable.ic_search))
         .setActionView(searchView)
         .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW)
@@ -183,7 +184,7 @@ class TabsFragment: Fragment() {
     searchQuery = savedInstanceState?.getString(STATE_SEARCH_QUERY).orEmpty()
     productFragments.forEach { it.setSearchQuery(searchQuery) }
 
-    val toolbarExtra = view.findViewById<FrameLayout>(R.id.toolbar_extra)
+    val toolbarExtra = view.findViewById<FrameLayout>(R.id.toolbar_extra)!!
     toolbarExtra.addView(toolbarExtra.inflate(R.layout.tabs_toolbar))
     val layout = Layout(view)
     this.layout = layout
@@ -219,7 +220,7 @@ class TabsFragment: Fragment() {
     sortOrderMenu!!.second[order.ordinal].isChecked = true
     productFragments.forEach { it.setOrder(order) }
 
-    val content = view.findViewById<FrameLayout>(R.id.fragment_content)
+    val content = view.findViewById<FrameLayout>(R.id.fragment_content)!!
 
     viewPager = ViewPager2(content.context).apply {
       id = R.id.fragment_pager
@@ -289,6 +290,7 @@ class TabsFragment: Fragment() {
   override fun onDestroyView() {
     super.onDestroyView()
 
+    searchMenuItem = null
     sortOrderMenu = null
     syncRepositoriesMenuItem = null
     layout = null
@@ -328,6 +330,22 @@ class TabsFragment: Fragment() {
       childFragment.setSearchQuery(searchQuery)
       childFragment.setCategory(category)
       childFragment.setOrder(order)
+    }
+  }
+
+  override fun onBackPressed(): Boolean {
+    return when {
+      searchMenuItem?.isActionViewExpanded == true -> {
+        searchMenuItem?.collapseActionView()
+        true
+      }
+      showCategories -> {
+        showCategories = false
+        true
+      }
+      else -> {
+        super.onBackPressed()
+      }
     }
   }
 

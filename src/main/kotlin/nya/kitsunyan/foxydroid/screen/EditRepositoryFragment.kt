@@ -20,7 +20,6 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toolbar
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.Fragment
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
@@ -44,7 +43,7 @@ import java.nio.charset.Charset
 import java.util.Locale
 import kotlin.math.*
 
-class EditRepositoryFragment(): Fragment() {
+class EditRepositoryFragment(): ScreenFragment() {
   companion object {
     private const val EXTRA_REPOSITORY_ID = "repositoryId"
 
@@ -95,8 +94,8 @@ class EditRepositoryFragment(): Fragment() {
 
     syncConnection.bind(requireContext())
 
-    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-    screenActivity.onFragmentViewCreated(toolbar)
+    val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
+    screenActivity.onToolbarCreated(toolbar)
     if (repositoryId != null) {
       toolbar.setTitle(R.string.edit_repository)
     } else {
@@ -114,7 +113,7 @@ class EditRepositoryFragment(): Fragment() {
         }
     }
 
-    val content = view.findViewById<FrameLayout>(R.id.fragment_content)
+    val content = view.findViewById<FrameLayout>(R.id.fragment_content)!!
     errorColorFilter = PorterDuffColorFilter(content.context
       .getColorFromAttr(R.attr.colorError).defaultColor, PorterDuff.Mode.SRC_IN)
 
