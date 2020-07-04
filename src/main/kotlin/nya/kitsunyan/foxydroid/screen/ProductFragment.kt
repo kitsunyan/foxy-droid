@@ -148,8 +148,12 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         if (firstChanged || productChanged || installedItemChanged) {
           layoutManagerState?.let { recyclerView?.layoutManager!!.onRestoreInstanceState(it) }
           layoutManagerState = null
-          this.products = products
-          this.installedItem = installedItem.value
+          if (firstChanged || productChanged) {
+            this.products = products
+          }
+          if (firstChanged || installedItemChanged) {
+            this.installedItem = installedItem.value
+          }
           val recyclerView = recyclerView!!
           val adapter = recyclerView.adapter as ProductAdapter
           if (firstChanged || productChanged) {
@@ -231,7 +235,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         installedItem != null -> ProductAdapter.Action.DETAILS
         else -> null
       }
-      (recyclerView.adapter as ProductAdapter).setAction(recyclerView, adapterAction)
+      (recyclerView.adapter as ProductAdapter).setAction(adapterAction)
       Action.values().find { it.adapterAction == adapterAction }?.let { actions -= it }
     }
 
@@ -256,10 +260,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       this.downloading = downloading
       updateButtons()
     }
-    val recyclerView = recyclerView
-    if (recyclerView != null) {
-      (recyclerView.adapter as ProductAdapter).setStatus(recyclerView, status)
-    }
+    (recyclerView?.adapter as? ProductAdapter)?.setStatus(status)
     if (state is DownloadService.State.Success && isResumed) {
       state.consume()
       screenActivity.startPackageInstaller(state.release.cacheFileName)

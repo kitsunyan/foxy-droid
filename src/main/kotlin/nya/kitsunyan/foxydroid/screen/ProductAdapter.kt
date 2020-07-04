@@ -284,6 +284,8 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     }
   }
 
+  private enum class Payload { REFRESH, STATUS }
+
   private class HeaderViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
     val icon = itemView.findViewById<ImageView>(R.id.icon)!!
     val name = itemView.findViewById<TextView>(R.id.name)!!
@@ -781,33 +783,39 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
 
   private var action: Action? = null
 
-  fun setAction(recyclerView: RecyclerView, action: Action?) {
+  fun setAction(action: Action?) {
     if (this.action != action) {
+      val translate = this.action == null || action == null ||
+        this.action == Action.CANCEL || action == Action.CANCEL
       this.action = action
-      if (items.getOrNull(0) is Item.HeaderItem) {
-        val holder = recyclerView.findViewHolderForAdapterPosition(0)
-        holder?.let { bindViewHolder(holder, 0) }
+      val index = items.indexOfFirst { it is Item.HeaderItem }
+      if (index >= 0) {
+        if (translate) {
+          notifyItemChanged(index)
+        } else {
+          notifyItemChanged(index, Payload.REFRESH)
+        }
       }
     }
   }
 
   private var status: Status? = null
 
-  fun setStatus(recyclerView: RecyclerView, status: Status?) {
-    val notify = (this.status == null) != (status == null)
+  fun setStatus(status: Status?) {
+    val translate = (this.status == null) != (status == null)
     if (this.status != status) {
       this.status = status
-      if (items.getOrNull(0) is Item.HeaderItem) {
-        if (notify) {
-          notifyItemChanged(0)
+      val index = items.indexOfFirst { it is Item.HeaderItem }
+      if (index >= 0) {
+        if (translate) {
+          notifyItemChanged(index)
           val from = items.indexOfFirst { it is Item.ReleaseItem }
           val to = items.indexOfLast { it is Item.ReleaseItem }
           if (from in 0 .. to) {
             notifyItemRangeChanged(from, to - from + 1)
           }
         } else {
-          val holder = recyclerView.findViewHolderForAdapterPosition(0)
-          holder?.let { bindViewHolder(holder, 0) }
+          notifyItemChanged(index, Payload.STATUS)
         }
       }
     }
@@ -840,8 +848,6 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
       }
       ViewType.SWITCH -> SwitchViewHolder(parent.inflate(R.layout.switch_item)).apply {
         itemView.setOnClickListener {
-          val positions = items.asSequence().mapIndexedNotNull { index, item -> if (item is Item.HeaderItem ||
-            item is Item.SwitchItem) index else null }
           val switchItem = items[adapterPosition] as Item.SwitchItem
           val productPreference = when (switchItem.switchType) {
             SwitchType.IGNORE_ALL_UPDATES -> {
@@ -853,13 +859,8 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
             }
           }
           ProductPreferences[switchItem.packageName] = productPreference
-          val recyclerView = itemView.parent as RecyclerView
-          positions.forEach {
-            val holder = recyclerView.findViewHolderForAdapterPosition(it)
-            if (holder != null) {
-              bindViewHolder(holder, it)
-            }
-          }
+          items.asSequence().mapIndexedNotNull { index, item -> if (item is Item.HeaderItem ||
+            item is Item.SectionItem) index else null }.forEach { notifyItemChanged(it, Payload.REFRESH) }
           callbacks.onPreferenceChanged(productPreference)
         }
       }
@@ -871,14 +872,14 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
             expanded += sectionItem.expandType
             items[position] = Item.SectionItem(sectionItem.sectionType, sectionItem.expandType, emptyList(),
               sectionItem.items.size + sectionItem.collapseCount)
-            bindViewHolder(this, position)
+            notifyItemChanged(adapterPosition, Payload.REFRESH)
             items.addAll(position + 1, sectionItem.items)
             notifyItemRangeInserted(position + 1, sectionItem.items.size)
           } else if (sectionItem.collapseCount > 0) {
             expanded -= sectionItem.expandType
             items[position] = Item.SectionItem(sectionItem.sectionType, sectionItem.expandType,
               items.subList(position + 1, position + 1 + sectionItem.collapseCount).toList(), 0)
-            bindViewHolder(this, position)
+            notifyItemChanged(adapterPosition, Payload.REFRESH)
             repeat(sectionItem.collapseCount) { items.removeAt(position + 1) }
             notifyItemRangeRemoved(position + 1, sectionItem.collapseCount)
           }
@@ -900,7 +901,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
             items.addAll(position, expandItem.items)
             if (position > 0) {
               // Update decorations
-              notifyItemChanged(position - 1)
+              notifyItemChanged(position - 1, Payload.REFRESH)
             }
             notifyItemRemoved(position)
             notifyItemRangeInserted(position, expandItem.items.size)
@@ -944,6 +945,10 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
   }
 
   override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    onBindViewHolder(holder, position, emptyList())
+  }
+
+  override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: List<Any>) {
     val context = holder.itemView.context
     val item = items[position]
     when (getItemEnumViewType(position)) {
@@ -951,54 +956,60 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         holder as HeaderViewHolder
         item as Item.HeaderItem
         val installedItem = installedItem
-        if (item.product.icon.isNotEmpty()) {
-          holder.icon.load(PicassoDownloader.createIconUri(holder.icon, item.product.icon, item.repository)) {
-            placeholder(holder.progressIcon)
-            error(holder.defaultIcon)
+        val updateStatus = Payload.STATUS in payloads
+        val updateAll = !updateStatus
+        if (updateAll) {
+          if (item.product.icon.isNotEmpty()) {
+            holder.icon.load(PicassoDownloader.createIconUri(holder.icon, item.product.icon, item.repository)) {
+              placeholder(holder.progressIcon)
+              error(holder.defaultIcon)
+            }
+          } else {
+            holder.icon.clear()
+            holder.icon.setImageDrawable(holder.defaultIcon)
           }
-        } else {
-          holder.icon.clear()
-          holder.icon.setImageDrawable(holder.defaultIcon)
+          holder.name.text = item.product.name
+          val canUpdate = item.product.canUpdate(installedItem) &&
+            !ProductPreferences[item.product.packageName].shouldIgnoreUpdate(item.product.versionCode)
+          val version = (if (canUpdate) item.product.version else installedItem?.version)?.nullIfEmpty()
+            ?: item.product.version.nullIfEmpty()
+          holder.version.text = version?.let { context.getString(R.string.version_format, it) }
+            ?: context.getString(R.string.unknown)
+          holder.packageName.text = item.product.packageName
+          val action = action
+          holder.action.visibility = if (action == null) View.GONE else View.VISIBLE
+          if (action != null) {
+            holder.action.setText(action.titleResId)
+          }
+          if (Android.sdk(22)) {
+            holder.action.backgroundTintList = if (action == Action.CANCEL)
+              holder.actionTintCancel else holder.actionTintNormal
+          }
         }
-        holder.name.text = item.product.name
-        val canUpdate = item.product.canUpdate(installedItem) &&
-          !ProductPreferences[item.product.packageName].shouldIgnoreUpdate(item.product.versionCode)
-        val version = (if (canUpdate) item.product.version else installedItem?.version)?.nullIfEmpty()
-          ?: item.product.version.nullIfEmpty()
-        holder.version.text = version?.let { context.getString(R.string.version_format, it) }
-          ?: context.getString(R.string.unknown)
-        holder.packageName.text = item.product.packageName
-        val action = action
-        val status = status
-        holder.action.visibility = if (action == null) View.GONE else View.VISIBLE
-        if (action != null) {
-          holder.action.setText(action.titleResId)
-        }
-        if (Android.sdk(22)) {
-          holder.action.backgroundTintList = if (action == Action.CANCEL)
-            holder.actionTintCancel else holder.actionTintNormal
-        }
-        holder.statusLayout.visibility = if (status != null) View.VISIBLE else View.GONE
-        if (status != null) {
-          when (status) {
-            is Status.Pending -> {
-              holder.status.setText(R.string.waiting_to_start_download)
-              holder.progress.isIndeterminate = true
-            }
-            is Status.Connecting -> {
-              holder.status.setText(R.string.connecting)
-              holder.progress.isIndeterminate = true
-            }
-            is Status.Downloading -> {
-              holder.status.text = context.getString(R.string.downloading_format, if (status.total == null)
-                status.read.formatSize() else "${status.read.formatSize()} / ${status.total.formatSize()}")
-              holder.progress.isIndeterminate = status.total == null
-              if (status.total != null) {
-                holder.progress.progress = (holder.progress.max.toFloat() * status.read / status.total).roundToInt()
+        if (updateAll || updateStatus) {
+          val status = status
+          holder.statusLayout.visibility = if (status != null) View.VISIBLE else View.GONE
+          if (status != null) {
+            when (status) {
+              is Status.Pending -> {
+                holder.status.setText(R.string.waiting_to_start_download)
+                holder.progress.isIndeterminate = true
               }
-              Unit
-            }
-          }::class
+              is Status.Connecting -> {
+                holder.status.setText(R.string.connecting)
+                holder.progress.isIndeterminate = true
+              }
+              is Status.Downloading -> {
+                holder.status.text = context.getString(R.string.downloading_format, if (status.total == null)
+                  status.read.formatSize() else "${status.read.formatSize()} / ${status.total.formatSize()}")
+                holder.progress.isIndeterminate = status.total == null
+                if (status.total != null) {
+                  holder.progress.progress = (holder.progress.max.toFloat() * status.read / status.total).roundToInt()
+                }
+                Unit
+              }
+            }::class
+          }
         }
         Unit
       }
