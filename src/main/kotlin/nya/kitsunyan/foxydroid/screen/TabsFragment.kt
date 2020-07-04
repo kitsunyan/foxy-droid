@@ -42,10 +42,12 @@ import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
 import nya.kitsunyan.foxydroid.widget.EnumRecyclerAdapter
+import nya.kitsunyan.foxydroid.widget.FocusSearchView
 import kotlin.math.*
 
 class TabsFragment: ScreenFragment() {
   companion object {
+    private const val STATE_SEARCH_FOCUSED = "searchFocused"
     private const val STATE_SEARCH_QUERY = "searchQuery"
     private const val STATE_SHOW_CATEGORIES = "showCategories"
     private const val STATE_CATEGORIES = "categories"
@@ -115,8 +117,11 @@ class TabsFragment: ScreenFragment() {
     val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
     screenActivity.onToolbarCreated(toolbar)
     toolbar.setTitle(R.string.app_name)
+    // Move focus from SearchView to Toolbar
+    toolbar.isFocusableInTouchMode = true
 
-    val searchView = SearchView(toolbar.context)
+    val searchView = FocusSearchView(toolbar.context)
+    searchView.allowFocus = savedInstanceState?.getBoolean(STATE_SEARCH_FOCUSED) == true
     searchView.maxWidth = Int.MAX_VALUE
     searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
       override fun onQueryTextSubmit(query: String?): Boolean {
@@ -307,6 +312,7 @@ class TabsFragment: ScreenFragment() {
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
 
+    outState.putBoolean(STATE_SEARCH_FOCUSED, searchMenuItem?.actionView!!.hasFocus())
     outState.putString(STATE_SEARCH_QUERY, searchQuery)
     outState.putByte(STATE_SHOW_CATEGORIES, if (showCategories) 1 else 0)
     outState.putStringArrayList(STATE_CATEGORIES, ArrayList(categories))
@@ -317,6 +323,7 @@ class TabsFragment: ScreenFragment() {
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
     super.onViewStateRestored(savedInstanceState)
 
+    (searchMenuItem?.actionView as FocusSearchView).allowFocus = true
     if (needSelectUpdates) {
       needSelectUpdates = false
       selectUpdatesInternal(false)
