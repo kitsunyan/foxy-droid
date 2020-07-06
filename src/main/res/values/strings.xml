@@ -53,7 +53,7 @@
   <string name="http_error_description">Invalid server response.</string>
   <string name="http_proxy">HTTP proxy</string>
   <string name="ignore_all_updates">Ignore all future versions</string>
-  <string name="ignore_this_update">Ignore this</string>
+  <string name="ignore_this_update">Ignore</string>
   <string name="incompatible_features_description">Missing features:</string>
   <string name="incompatible_older_description">Older than the version installed on your device.
     Uninstall the current application to install the older version.</string>
