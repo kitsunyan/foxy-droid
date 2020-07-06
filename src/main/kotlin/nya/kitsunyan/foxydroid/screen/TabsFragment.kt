@@ -206,7 +206,7 @@ class TabsFragment: ScreenFragment() {
       tab.background = tab.context.getDrawableFromAttr(android.R.attr.selectableItemBackground)
       tab.setOnClickListener { _ ->
         setSelectedTab(it)
-        viewPager!!.currentItem = it.ordinal
+        viewPager!!.setCurrentItem(it.ordinal, Utils.areAnimationsEnabled(tab.context))
       }
       layout.tabs.addView(tab, 0, LinearLayout.LayoutParams.MATCH_PARENT)
       (tab.layoutParams as LinearLayout.LayoutParams).weight = 1f

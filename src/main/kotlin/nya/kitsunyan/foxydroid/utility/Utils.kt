@@ -1,10 +1,12 @@
 package nya.kitsunyan.foxydroid.utility
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.pm.Signature
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.os.LocaleList
+import android.provider.Settings
 import androidx.core.content.ContextCompat
 import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.R
@@ -87,5 +89,13 @@ object Utils {
       newConfiguration.locale = compatibleLocales.first()
     }
     return context.createConfigurationContext(newConfiguration)
+  }
+
+  fun areAnimationsEnabled(context: Context): Boolean {
+    return if (Android.sdk(26)) {
+      ValueAnimator.areAnimatorsEnabled()
+    } else {
+      Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+    }
   }
 }
