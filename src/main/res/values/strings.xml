@@ -96,7 +96,7 @@
     the applications it provides.</string>
   <string name="number_of_applications">Number of applications</string>
   <string name="ok">OK</string>
-  <string name="open_link_confirm_format">Open the link \"%s\"?</string>
+  <string name="open_link_confirm_format">Open the %s link?</string>
   <string name="other">Other</string>
   <string name="over_wifi">Only on Wi-Fi</string>
   <string name="parsing_index_error_description">Could not parse the index file.</string>
