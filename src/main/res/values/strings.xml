@@ -88,7 +88,7 @@
   <string name="new_updates_available">New updates available</string>
   <plurals name="new_updates_description_format">
     <item quantity="one">%d new update.</item>
-    <item quantity="other">%d applications have newer versions available.</item>
+    <item quantity="other">%d new updates.</item>
   </plurals>
   <string name="no_description_available_description">No description available.</string>
   <string name="no_proxy">No proxy</string>
