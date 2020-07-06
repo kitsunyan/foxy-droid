@@ -56,7 +56,7 @@
   <string name="ignore_this_update">Ignore this</string>
   <string name="incompatible_features_description">Missing features:</string>
   <string name="incompatible_older_description">Older than the version installed on your device.
-    You\'ll have to uninstall the application to install it.</string>
+    Uninstall the current application to install the older version.</string>
   <string name="incompatible_platforms_description_format">Your %1$s platform is not supported.
     Supported platforms: %2$s.</string>
   <string name="incompatible_sdk_description_format">Your %1$s (SDK version %2$d) is not supported. %3$s</string>
