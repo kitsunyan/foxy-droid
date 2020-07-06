@@ -17,7 +17,7 @@
   <string name="anti_feature_non_free_dependencies">Depends on non-free applications</string>
   <string name="anti_feature_non_free_network">Promotes non-free network services</string>
   <string name="anti_feature_tracking">Tracks or reports your activity</string>
-  <string name="anti_feature_upstream_non_free">Upstream source code is not libre</string>
+  <string name="anti_feature_upstream_non_free">Upstream source code is not free</string>
   <string name="anti_features">Anti-features</string>
   <string name="app_name">Foxy Droid</string>
   <string name="application">Application</string>
@@ -45,15 +45,15 @@
   <string name="downloading_format">Downloading %s</string>
   <string name="edit_repository">Edit repository</string>
   <string name="empty_search_summary">No matching applications found</string>
-  <string name="error_downloading_format">Could not download \"%s\"</string>
-  <string name="error_syncing_format">Could not sync \"%s\"</string>
-  <string name="error_validating_format">Could not validate \"%s\"</string>
+  <string name="error_downloading_format">Could not download %s</string>
+  <string name="error_syncing_format">Could not sync %s</string>
+  <string name="error_validating_format">Could not validate %s</string>
   <string name="fingerprint">Fingerprint</string>
   <string name="finished_downloading_format">%s downloaded</string>
   <string name="http_error_description">Invalid server response.</string>
   <string name="http_proxy">HTTP proxy</string>
-  <string name="ignore_all_updates">Ignore all new versions</string>
-  <string name="ignore_this_update">Ignore this new version</string>
+  <string name="ignore_all_updates">Ignore all future versions</string>
+  <string name="ignore_this_update">Ignore this</string>
   <string name="incompatible_features_description">Missing features:</string>
   <string name="incompatible_older_description">Older than the one installed on your device.
     You\'ll have to uninstall the application to install it.</string>
@@ -85,7 +85,7 @@
   <string name="name">Name</string>
   <string name="network_error_description">Network error.</string>
   <string name="never">Never</string>
-  <string name="new_updates_available">New application versions available</string>
+  <string name="new_updates_available">New updates available</string>
   <plurals name="new_updates_description_format">
     <item quantity="one">%d new update.</item>
     <item quantity="other">%d applications have newer versions available.</item>
@@ -121,7 +121,7 @@
   <string name="screenshots">Screenshots</string>
   <string name="search">Search</string>
   <string name="select_the_mirror">Select a mirror</string>
-  <string name="show_more">More</string>
+  <string name="show_more">Show more</string>
   <string name="show_older_releases">Show older versions</string>
   <string name="skip">Skip</string>
   <string name="socks_proxy">SOCKS proxy</string>
@@ -129,7 +129,7 @@
   <string name="source_code">Source code</string>
   <string name="suggested">Suggested</string>
   <string name="sync_repositories">Sync repositories</string>
-  <string name="sync_repositories_automatically">Automatically</string>
+  <string name="sync_repositories_automatically">Sync repositories automatically</string>
   <string name="syncing">Syncing…</string>
   <string name="syncing_format">Syncing %s…</string>
   <string name="tap_to_install_description">Tap to install.</string>
