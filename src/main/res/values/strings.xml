@@ -146,7 +146,7 @@
   <string name="unverified">Unverified</string>
   <string name="update">Update</string>
   <string name="update_notifications">Notifications about newer application versions</string>
-  <string name="update_notifications_summary">Show a notification when new versions are available</string>
+  <string name="update_notifications_summary">Announce applications awaiting installation</string>
   <string name="updates">Updates</string>
   <string name="updates_empty_summary">All applications up to date</string>
   <string name="username">Username</string>
