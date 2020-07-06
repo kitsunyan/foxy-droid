@@ -49,7 +49,7 @@
   <string name="error_syncing_format">Could not sync %s</string>
   <string name="error_validating_format">Could not validate %s</string>
   <string name="fingerprint">Fingerprint</string>
-  <string name="finished_downloading_format">%s downloaded</string>
+  <string name="finished_downloading_format">Downloaded %s</string>
   <string name="http_error_description">Invalid server response.</string>
   <string name="http_proxy">HTTP proxy</string>
   <string name="ignore_all_updates">Ignore all future versions</string>
