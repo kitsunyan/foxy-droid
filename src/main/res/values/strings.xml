@@ -153,11 +153,11 @@
   <string name="username_is_not_specified">Username missing</string>
   <string name="validation_index_error_description">Could not validate the index.</string>
   <string name="validation_package_error_description_format">Could not validate the package: %s.</string>
-  <string name="validation_error_hash_lower">Invalid checksum</string>
-  <string name="validation_error_integrity_lower">Could not check integrity</string>
-  <string name="validation_error_permissions_lower">Add required permissions</string>
-  <string name="validation_error_signature_lower">Invalid signature</string>
-  <string name="validation_error_structure_lower">Invalid file format</string>
+  <string name="validation_error_hash_lower">invalid checksum</string>
+  <string name="validation_error_integrity_lower">could not check integrity</string>
+  <string name="validation_error_permissions_lower">add required permissions</string>
+  <string name="validation_error_signature_lower">invalid signature</string>
+  <string name="validation_error_structure_lower">invalid file format</string>
   <string name="version_format">Version %s</string>
   <string name="waiting_to_start_download">Waiting to start download</string>
   <string name="website">Website</string>
