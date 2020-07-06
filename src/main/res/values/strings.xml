@@ -101,7 +101,7 @@
   <string name="over_wifi">Only on Wi-Fi</string>
   <string name="parsing_index_error_description">Could not parse the index file.</string>
   <string name="password">Password</string>
-  <string name="password_is_not_specified">Type in the password first</string>
+  <string name="password_is_not_specified">Password missing</string>
   <string name="permissions">Permissions</string>
   <string name="plus_more_format">+%d more</string>
   <string name="preferences">Preferences</string>
