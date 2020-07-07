@@ -210,6 +210,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
             is Product.Donate.Litecoin -> R.drawable.ic_donate_litecoin
             is Product.Donate.Flattr -> R.drawable.ic_donate_flattr
             is Product.Donate.Liberapay -> R.drawable.ic_donate_liberapay
+            is Product.Donate.OpenCollective -> R.drawable.ic_donate_opencollective
           }
 
         override fun getTitle(context: Context): String = when (donate) {
@@ -218,14 +219,16 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
           is Product.Donate.Litecoin -> "Litecoin"
           is Product.Donate.Flattr -> "Flattr"
           is Product.Donate.Liberapay -> "Liberapay"
+          is Product.Donate.OpenCollective -> "Open Collective"
         }
 
         override val uri: Uri? = when (donate) {
           is Product.Donate.Regular -> Uri.parse(donate.url)
           is Product.Donate.Bitcoin -> Uri.parse("bitcoin:${donate.address}")
-          is Product.Donate.Litecoin -> Uri.parse("liberapay:${donate.address}")
+          is Product.Donate.Litecoin -> Uri.parse("litecoin:${donate.address}")
           is Product.Donate.Flattr -> Uri.parse("https://flattr.com/thing/${donate.id}")
           is Product.Donate.Liberapay -> Uri.parse("https://liberapay.com/~${donate.id}")
+          is Product.Donate.OpenCollective -> Uri.parse("https://opencollective.com/${donate.id}")
         }
       }
     }

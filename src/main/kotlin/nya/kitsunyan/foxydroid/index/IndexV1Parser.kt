@@ -124,6 +124,7 @@ object IndexV1Parser {
         it.string("bitcoin") -> donates += Product.Donate.Bitcoin(valueAsString)
         it.string("flattrID") -> donates += Product.Donate.Flattr(valueAsString)
         it.string("liberapayID") -> donates += Product.Donate.Liberapay(valueAsString)
+        it.string("openCollective") -> donates += Product.Donate.OpenCollective(valueAsString)
         it.dictionary("localized") -> forEachKey {
           if (it.token == JsonToken.START_OBJECT) {
             val locale = it.key

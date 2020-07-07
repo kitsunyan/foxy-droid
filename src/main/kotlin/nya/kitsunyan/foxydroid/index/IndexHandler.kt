@@ -31,7 +31,8 @@ class IndexHandler(private val repositoryId: Long, private val callback: Callbac
 
   internal object DonateComparator: Comparator<Product.Donate> {
     private val classes = listOf(Product.Donate.Regular::class, Product.Donate.Bitcoin::class,
-      Product.Donate.Litecoin::class, Product.Donate.Flattr::class, Product.Donate.Liberapay::class)
+      Product.Donate.Litecoin::class, Product.Donate.Flattr::class, Product.Donate.Liberapay::class,
+      Product.Donate.OpenCollective::class)
 
     override fun compare(donate1: Product.Donate, donate2: Product.Donate): Int {
       val index1 = classes.indexOf(donate1::class)
@@ -247,6 +248,7 @@ class IndexHandler(private val repositoryId: Long, private val callback: Callbac
           "litecoin" -> productBuilder.donates += Product.Donate.Litecoin(content)
           "flattr" -> productBuilder.donates += Product.Donate.Flattr(content)
           "liberapay" -> productBuilder.donates += Product.Donate.Liberapay(content)
+          "openCollective" -> productBuilder.donates += Product.Donate.OpenCollective(content)
         }
       }
     }

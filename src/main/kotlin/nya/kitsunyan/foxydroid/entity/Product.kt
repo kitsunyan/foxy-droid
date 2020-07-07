@@ -19,6 +19,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
     data class Litecoin(val address: String): Donate()
     data class Flattr(val id: String): Donate()
     data class Liberapay(val id: String): Donate()
+    data class OpenCollective(val id: String): Donate()
   }
 
   class Screenshot(val locale: String, val type: Type, val path: String) {
@@ -102,6 +103,10 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
             }
             is Donate.Liberapay -> {
               writeStringField("type", "liberapay")
+              writeStringField("id", it.id)
+            }
+            is Donate.OpenCollective -> {
+              writeStringField("type", "openCollective")
               writeStringField("id", it.id)
             }
           }::class
@@ -189,6 +194,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
               "litecoin" -> Donate.Litecoin(address)
               "flattr" -> Donate.Flattr(id)
               "liberapay" -> Donate.Liberapay(id)
+              "openCollective" -> Donate.OpenCollective(id)
               else -> null
             }
           }
