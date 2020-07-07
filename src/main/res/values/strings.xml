@@ -155,7 +155,7 @@
   <string name="validation_package_error_description_format">Package could not be validated: %s.</string>
   <string name="validation_error_hash_lower">invalid checksum</string>
   <string name="validation_error_integrity_lower">could not check integrity</string>
-  <string name="validation_error_permissions_lower">the application metadata permissions are wrong</string>
+  <string name="validation_error_permissions_lower">missing permissions</string>
   <string name="validation_error_signature_lower">invalid signature</string>
   <string name="validation_error_structure_lower">invalid file format</string>
   <string name="version_format">Version %s</string>
