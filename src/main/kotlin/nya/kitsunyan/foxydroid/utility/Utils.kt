@@ -7,7 +7,6 @@ import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.os.LocaleList
 import android.provider.Settings
-import androidx.core.content.ContextCompat
 import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.utility.extension.android.*
@@ -20,7 +19,7 @@ import java.util.Locale
 
 object Utils {
   private fun createDefaultApplicationIcon(context: Context, tintAttrResId: Int): Drawable {
-    return ContextCompat.getDrawable(context, R.drawable.ic_application_default)!!.mutate()
+    return context.getDrawableCompat(R.drawable.ic_application_default).mutate()
       .apply { setTintList(context.getColorFromAttr(tintAttrResId)) }
   }
 
@@ -31,7 +30,7 @@ object Utils {
   }
 
   fun getToolbarIcon(context: Context, resId: Int): Drawable {
-    val drawable = ContextCompat.getDrawable(context, resId)!!.mutate()
+    val drawable = context.getDrawableCompat(resId).mutate()
     drawable.setTintList(context.getColorFromAttr(android.R.attr.textColorPrimary))
     return drawable
   }

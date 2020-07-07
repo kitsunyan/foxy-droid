@@ -8,19 +8,48 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.util.TypedValue
+import android.util.Xml
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.RequestCreator
+import nya.kitsunyan.foxydroid.utility.extension.android.*
+import org.xmlpull.v1.XmlPullParser
 import kotlin.math.*
 
 object TypefaceExtra {
   val medium = Typeface.create("sans-serif-medium", Typeface.NORMAL)!!
   val light = Typeface.create("sans-serif-light", Typeface.NORMAL)!!
+}
+
+fun Context.getDrawableCompat(resId: Int): Drawable {
+  val drawable = if (!Android.sdk(24)) {
+    val fileName = TypedValue().apply { resources.getValue(resId, this, true) }.string
+    if (fileName.endsWith(".xml")) {
+      resources.getXml(resId).use {
+        val eventType = generateSequence { it.next() }
+          .find { it == XmlPullParser.START_TAG || it == XmlPullParser.END_DOCUMENT }
+        if (eventType == XmlPullParser.START_TAG) {
+          when (it.name) {
+            "vector" -> VectorDrawableCompat.createFromXmlInner(resources, it, Xml.asAttributeSet(it), theme)
+            else -> null
+          }
+        } else {
+          null
+        }
+      }
+    } else {
+      null
+    }
+  } else {
+    null
+  }
+  return drawable ?: ContextCompat.getDrawable(this, resId)!!
 }
 
 fun Context.getColorFromAttr(attrResId: Int): ColorStateList {
@@ -40,7 +69,7 @@ fun Context.getDrawableFromAttr(attrResId: Int): Drawable {
   } finally {
     typedArray.recycle()
   }
-  return ContextCompat.getDrawable(this, resId)!!
+  return getDrawableCompat(resId)
 }
 
 fun Resources.sizeScaled(size: Int): Int {

@@ -36,7 +36,6 @@ import android.widget.ProgressBar
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.text.util.LinkifyCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -445,7 +444,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
       itemView.layoutParams = RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT,
         RecyclerView.LayoutParams.WRAP_CONTENT)
 
-      val placeholder = ContextCompat.getDrawable(image.context, R.drawable.ic_photo_camera)!!.mutate()
+      val placeholder = image.context.getDrawableCompat(R.drawable.ic_photo_camera).mutate()
       placeholder.setTint(ColorUtils.blendARGB(primaryColor, accentColor, 0.5f)
         .let { ColorUtils.blendARGB(0x00ffffff and it, it, 0.2f) })
       this.placeholder = PaddingDrawable(placeholder, 2f)
@@ -1068,7 +1067,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         layoutParams.topMargin = if (position > 0 && items[position - 1] !is Item.LinkItem)
           -context.resources.sizeScaled(8) else 0
         holder.itemView.isEnabled = item.uri != null
-        holder.icon.setImageResource(item.iconResId)
+        holder.icon.setImageDrawable(holder.icon.context.getDrawableCompat(item.iconResId))
         holder.text.text = item.getTitle(context)
         holder.link.visibility = if (item.uri != null) View.VISIBLE else View.GONE
         holder.link.text = item.displayLink
@@ -1088,7 +1087,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
           }
         } else {
           null
-        } ?: ContextCompat.getDrawable(context, R.drawable.ic_perm_device_information))
+        } ?: context.getDrawableCompat(R.drawable.ic_perm_device_information))
         val localCache = PackageItemResolver.LocalCache()
         val labels = item.permissions.map { permission ->
           val labelFromPackage = PackageItemResolver.loadLabel(context, localCache, permission)

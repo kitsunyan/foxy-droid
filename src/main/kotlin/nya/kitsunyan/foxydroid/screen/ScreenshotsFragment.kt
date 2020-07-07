@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
@@ -167,7 +166,7 @@ class ScreenshotsFragment(): DialogFragment() {
         itemView.layoutParams = RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT,
           RecyclerView.LayoutParams.MATCH_PARENT)
 
-        val placeholder = ContextCompat.getDrawable(itemView.context, R.drawable.ic_photo_camera)!!.mutate()
+        val placeholder = itemView.context.getDrawableCompat(R.drawable.ic_photo_camera).mutate()
         placeholder.setTint(itemView.context.getColorFromAttr(android.R.attr.textColorPrimary).defaultColor
           .let { ColorUtils.blendARGB(0x00ffffff and it, it, 0.25f) })
         this.placeholder = PaddingDrawable(placeholder, 4f)
