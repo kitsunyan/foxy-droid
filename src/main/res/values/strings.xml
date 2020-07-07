@@ -23,7 +23,7 @@
   <string name="application">Application</string>
   <string name="application_not_found">Application not found</string>
   <string name="authors_website">Author website</string>
-  <string name="authors_email">Author e-mail</string>
+  <string name="authors_email">Author email</string>
   <string name="available">Available</string>
   <string name="available_empty_summary">No applications available</string>
   <string name="bug_tracker">Bug tracker</string>
