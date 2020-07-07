@@ -152,7 +152,7 @@
   <string name="username">Username</string>
   <string name="username_is_not_specified">Username missing</string>
   <string name="validation_index_error_description">Index could not be validated:</string>
-  <string name="validation_package_error_description_format">APK package could not be validated: %s.</string>
+  <string name="validation_package_error_description_format">Package could not be validated: %s.</string>
   <string name="validation_error_hash_lower">invalid checksum</string>
   <string name="validation_error_integrity_lower">could not check integrity</string>
   <string name="validation_error_permissions_lower">the application metadata permissions are wrong</string>
