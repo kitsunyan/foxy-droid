@@ -34,7 +34,7 @@ No privileged extension, root installation, or sharing local repositories nearby
 
 ## Building and Installing
 
-Specify your Android SDK path either using the `ANDROID_HOME` environment variable, or filling out the `sdk.dir` property in `local.properties`.
+To join the development, specify your Android SDK path either using the `ANDROID_HOME` environment variable, or by filling out the `sdk.dir` property in `local.properties`.
 
 Signing can be done automatically using `keystore.properties` as follows:
 
