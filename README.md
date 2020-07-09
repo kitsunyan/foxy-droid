@@ -20,7 +20,6 @@ No privileged extension, root installation, or sharing local repositories nearby
 * Fast repository syncing.
 * Standard Android components and minimal dependencies.
 * Attention to detail in programming logic and design.
-* New-and-shiny, _and_ "old one was better".
 
 ## Screenshots
 
