@@ -10,7 +10,7 @@ Yet another F-Droid client.
 Unofficial F-Droid client resembling the classic F-Droid client.
 
 Jump over the lazy dog, manage repositories and install software quickly.
-No privileged extension, root installation, or sharing local repositories nearby yet.
+No privileged extension, root installation, or sharing local repositories nearby.
 
 ## Features
 
