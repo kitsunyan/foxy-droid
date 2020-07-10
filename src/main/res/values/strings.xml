@@ -61,7 +61,7 @@
     Supported platforms: %2$s.</string>
   <string name="incompatible_sdk_description_format">Your %1$s (SDK version %2$d) is not supported. %3$s</string>
   <string name="incompatible_sdk_max_description_format">Maximum SDK version is %d.</string>
-  <string name="incompatible_sdk_min_description_format">No SDK version below %d is allowed.</string>
+  <string name="incompatible_sdk_min_description_format">Minimum SDK version is %d.</string>
   <string name="incompatible_signature_description">This version is signed with a different certificate.
     You\'ll have to uninstall the application to proceed.</string>
   <string name="incompatible_version">Incompatible version</string>
