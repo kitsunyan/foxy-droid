@@ -468,8 +468,12 @@ class TabsFragment: ScreenFragment() {
     }
 
     override fun onPageScrollStateChanged(state: Int) {
-      layout!!.categoryChange.isEnabled = state != ViewPager2.SCROLL_STATE_DRAGGING &&
-        ProductsFragment.Source.values()[viewPager!!.currentItem].categories
+      val source = ProductsFragment.Source.values()[viewPager!!.currentItem]
+      layout!!.categoryChange.isEnabled = state != ViewPager2.SCROLL_STATE_DRAGGING && source.categories
+      if (state == ViewPager2.SCROLL_STATE_IDLE) {
+        // onPageSelected can be called earlier than fragments created
+        updateUpdateNotificationBlocker(source)
+      }
     }
   }
 
