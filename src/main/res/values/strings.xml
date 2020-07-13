@@ -145,7 +145,7 @@
   <string name="unstable_updates_summary">Suggest installing unstable versions</string>
   <string name="unverified">Unverified</string>
   <string name="update">Update</string>
-  <string name="update_notifications">Notifications about updates</string>
+  <string name="update_notifications">Notify about updates</string>
   <string name="update_notifications_summary">Show a notification when updates are available</string>
   <string name="updates">Updates</string>
   <string name="updates_empty_summary">All applications up to date</string>
