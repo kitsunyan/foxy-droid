@@ -12,16 +12,15 @@ Unofficial F-Droid client in the style of the classic one.
 Jump over the lazy dog, manage repositories and install software quickly.
 No privileged extension, root installation, or sharing local repositories nearby.
 
-## Features
+### Features
 
 * Classic F-Droid style.
 * No cards or inappropriate animations.
-* All apps shown in "Available".
 * Fast repository syncing.
 * Standard Android components and minimal dependencies.
 * Attention to detail in programming logic and design.
 
-## Screenshots
+### Screenshots
 
 <p>
 <img src="metadata/en-US/images/phoneScreenshots/1.png" width="15%" />
@@ -34,7 +33,7 @@ No privileged extension, root installation, or sharing local repositories nearby
 
 ## Building and Installing
 
-To join the development, specify your Android SDK path either using the `ANDROID_HOME` environment variable,
+To build FoxyDroid, specify your Android SDK path either using the `ANDROID_HOME` environment variable,
 or by filling out the `sdk.dir` property in `local.properties`.
 
 Signing can be done automatically using `keystore.properties` as follows:
@@ -51,3 +50,4 @@ Run `./gradlew assembleRelease` to build the package, which can be installed usi
 ## License
 
 GPLv3+ copylefted libre software. Copyright © 2020 kitsunyan.
+Use, study, change and share FoxyDroid on the condition that these requirements are kept, and adopted for anything you make of it.
