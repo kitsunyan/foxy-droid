@@ -102,24 +102,24 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
 
   private enum class SectionType(val titleResId: Int, val colorAttrResId: Int) {
     ANTI_FEATURES(R.string.anti_features, R.attr.colorError),
-    WHATS_NEW(R.string.whats_new, android.R.attr.colorAccent),
+    CHANGES(R.string.changes, android.R.attr.colorAccent),
     LINKS(R.string.links, android.R.attr.colorAccent),
     DONATE(R.string.donate, android.R.attr.colorAccent),
     PERMISSIONS(R.string.permissions, android.R.attr.colorAccent),
     SCREENSHOTS(R.string.screenshots, android.R.attr.colorAccent),
-    RELEASES(R.string.releases, android.R.attr.colorAccent)
+    VERSIONS(R.string.versions, android.R.attr.colorAccent)
   }
 
-  internal enum class ExpandType { NOTHING, DESCRIPTION, WHATS_NEW,
-    LINKS, DONATES, PERMISSIONS, SCREENSHOTS, RELEASES }
-  private enum class TextType { DESCRIPTION, ANTI_FEATURES, WHATS_NEW }
+  internal enum class ExpandType { NOTHING, DESCRIPTION, CHANGES,
+    LINKS, DONATES, PERMISSIONS, SCREENSHOTS, VERSIONS }
+  private enum class TextType { DESCRIPTION, ANTI_FEATURES, CHANGES }
 
   private enum class LinkType(val iconResId: Int, val titleResId: Int,
     val format: ((Context, String) -> String)? = null) {
-    AUTHOR(R.drawable.ic_person, R.string.authors_website),
-    EMAIL(R.drawable.ic_email, R.string.authors_email),
+    AUTHOR(R.drawable.ic_person, R.string.author_website),
+    EMAIL(R.drawable.ic_email, R.string.author_email),
     LICENSE(R.drawable.ic_copyright, R.string.license,
-      format = { context, text -> context.getString(R.string.license_format, text) }),
+      format = { context, text -> context.getString(R.string.license_FORMAT, text) }),
     SOURCE(R.drawable.ic_code, R.string.source_code),
     TRACKER(R.drawable.ic_bug_report, R.string.bug_tracker),
     CHANGELOG(R.drawable.ic_history, R.string.changelog),
@@ -636,18 +636,18 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
 
       val antiFeatures = productRepository.first.antiFeatures.map {
         when (it) {
-          "Ads" -> context.getString(R.string.anti_feature_advertising)
-          "ApplicationDebuggable" -> context.getString(R.string.anti_feature_application_debuggable)
-          "DisabledAlgorithm" -> context.getString(R.string.anti_feature_disabled_algorithm)
-          "KnownVuln" -> context.getString(R.string.anti_feature_known_vulnerabilities)
-          "NoSourceSince" -> context.getString(R.string.anti_feature_no_source_since)
-          "NonFreeAdd" -> context.getString(R.string.anti_feature_non_free_addons)
-          "NonFreeAssets" -> context.getString(R.string.anti_feature_non_free_assets)
-          "NonFreeDep" -> context.getString(R.string.anti_feature_non_free_dependencies)
-          "NonFreeNet" -> context.getString(R.string.anti_feature_non_free_network)
-          "Tracking" -> context.getString(R.string.anti_feature_tracking)
-          "UpstreamNonFree" -> context.getString(R.string.anti_feature_upstream_non_free)
-          else -> context.getString(R.string.unknown_format, it)
+          "Ads" -> context.getString(R.string.has_advertising)
+          "ApplicationDebuggable" -> context.getString(R.string.compiled_for_debugging)
+          "DisabledAlgorithm" -> context.getString(R.string.signed_using_unsafe_algorithm)
+          "KnownVuln" -> context.getString(R.string.has_security_vulnerabilities)
+          "NoSourceSince" -> context.getString(R.string.source_code_no_longer_available)
+          "NonFreeAdd" -> context.getString(R.string.promotes_non_free_software)
+          "NonFreeAssets" -> context.getString(R.string.contains_non_free_media)
+          "NonFreeDep" -> context.getString(R.string.has_non_free_dependencies)
+          "NonFreeNet" -> context.getString(R.string.promotes_non_free_network_services)
+          "Tracking" -> context.getString(R.string.tracks_or_reports_your_activity)
+          "UpstreamNonFree" -> context.getString(R.string.upstream_source_code_is_not_free)
+          else -> context.getString(R.string.unknown_FORMAT, it)
         }
       }.joinToString(separator = "\n") { "\u2022 $it" }
       if (antiFeatures.isNotEmpty()) {
@@ -655,14 +655,14 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         items += Item.TextItem(TextType.ANTI_FEATURES, antiFeatures)
       }
 
-      val whatsNew = formatHtml(productRepository.first.whatsNew)
-      if (whatsNew.isNotEmpty()) {
-        items += Item.SectionItem(SectionType.WHATS_NEW)
-        val cropped = if (ExpandType.WHATS_NEW !in expanded) whatsNew.lineCropped(12, 10) else null
-        val item = Item.TextItem(TextType.WHATS_NEW, whatsNew)
+      val changes = formatHtml(productRepository.first.whatsNew)
+      if (changes.isNotEmpty()) {
+        items += Item.SectionItem(SectionType.CHANGES)
+        val cropped = if (ExpandType.CHANGES !in expanded) changes.lineCropped(12, 10) else null
+        val item = Item.TextItem(TextType.CHANGES, changes)
         if (cropped != null) {
-          items += listOf(Item.TextItem(TextType.WHATS_NEW, cropped),
-            Item.ExpandItem(ExpandType.WHATS_NEW, true, listOf(item)))
+          items += listOf(Item.TextItem(TextType.CHANGES, cropped),
+            Item.ExpandItem(ExpandType.CHANGES, true, listOf(item)))
         } else {
           items += item
         }
@@ -758,11 +758,11 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
       .sortedByDescending { it.release.versionCode }
       .toList()
     if (releaseItems.isNotEmpty()) {
-      items += Item.SectionItem(SectionType.RELEASES)
+      items += Item.SectionItem(SectionType.VERSIONS)
       val maxReleases = 5
-      if (releaseItems.size > maxReleases && ExpandType.RELEASES !in expanded) {
+      if (releaseItems.size > maxReleases && ExpandType.VERSIONS !in expanded) {
         items += releaseItems.take(maxReleases)
-        items += Item.ExpandItem(ExpandType.RELEASES, false, releaseItems.takeLast(releaseItems.size - maxReleases))
+        items += Item.ExpandItem(ExpandType.VERSIONS, false, releaseItems.takeLast(releaseItems.size - maxReleases))
       } else {
         items += releaseItems
       }
@@ -975,7 +975,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
             !ProductPreferences[item.product.packageName].shouldIgnoreUpdate(item.product.versionCode)
           val version = (if (canUpdate) item.product.version else installedItem?.version)?.nullIfEmpty()
             ?: item.product.version.nullIfEmpty()
-          holder.version.text = version?.let { context.getString(R.string.version_format, it) }
+          holder.version.text = version?.let { context.getString(R.string.version_FORMAT, it) }
             ?: context.getString(R.string.unknown)
           holder.packageName.text = item.product.packageName
           val action = action
@@ -1002,7 +1002,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
                 holder.progress.isIndeterminate = true
               }
               is Status.Downloading -> {
-                holder.status.text = context.getString(R.string.downloading_format, if (status.total == null)
+                holder.status.text = context.getString(R.string.downloading_FORMAT, if (status.total == null)
                   status.read.formatSize() else "${status.read.formatSize()} / ${status.total.formatSize()}")
                 holder.progress.isIndeterminate = status.total == null
                 if (status.total != null) {
@@ -1051,7 +1051,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         holder as ExpandViewHolder
         item as Item.ExpandItem
         holder.text.setText(when (item.expandType) {
-          ExpandType.RELEASES -> R.string.show_older_releases
+          ExpandType.VERSIONS -> R.string.show_older_versions
           else -> R.string.show_more
         })
       }
@@ -1154,7 +1154,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         val grayOut = incompatibility != null || olderOrSignature
         val primarySecondaryColor = context.getColorFromAttr(if (grayOut)
           android.R.attr.textColorSecondary else android.R.attr.textColorPrimary)
-        holder.version.text = context.getString(R.string.version_format, item.release.version)
+        holder.version.text = context.getString(R.string.version_FORMAT, item.release.version)
         holder.version.setTextColor(primarySecondaryColor)
         holder.setStatusActive(!grayOut)
         holder.status.visibility = if (installed || suggested) View.VISIBLE else View.GONE
@@ -1163,7 +1163,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
           suggested -> R.string.suggested
           else -> R.string.unknown
         })
-        holder.source.text = context.getString(R.string.provided_by_format, item.repository.name)
+        holder.source.text = context.getString(R.string.provided_by_FORMAT, item.repository.name)
         holder.added.text = holder.dateFormat.format(item.release.added)
         holder.added.setTextColor(primarySecondaryColor)
         holder.size.text = item.release.size.formatSize()
@@ -1173,14 +1173,14 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
           holder.compatibility.setTextColor(context.getColorFromAttr(R.attr.colorError))
           holder.compatibility.text = when (incompatibility) {
             is Release.Incompatibility.MinSdk,
-            is Release.Incompatibility.MaxSdk -> context.getString(R.string.incompatible_with_format, Android.name)
-            is Release.Incompatibility.Platform -> context.getString(R.string.incompatible_with_format,
+            is Release.Incompatibility.MaxSdk -> context.getString(R.string.incompatible_with_FORMAT, Android.name)
+            is Release.Incompatibility.Platform -> context.getString(R.string.incompatible_with_FORMAT,
               Android.primaryPlatform ?: context.getString(R.string.unknown))
-            is Release.Incompatibility.Feature -> context.getString(R.string.requires_format, incompatibility.feature)
+            is Release.Incompatibility.Feature -> context.getString(R.string.requires_FORMAT, incompatibility.feature)
           }
         } else if (singlePlatform != null) {
           holder.compatibility.setTextColor(context.getColorFromAttr(android.R.attr.textColorSecondary))
-          holder.compatibility.text = context.getString(R.string.compatible_with_only_format, singlePlatform)
+          holder.compatibility.text = context.getString(R.string.only_compatible_with_FORMAT, singlePlatform)
         }
         val enabled = status == null
         holder.statefulViews.forEach { it.isEnabled = enabled }

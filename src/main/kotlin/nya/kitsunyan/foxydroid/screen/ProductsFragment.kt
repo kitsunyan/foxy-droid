@@ -131,11 +131,11 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       this.cursor = cursor
       emptyText = when {
         cursor == null -> ""
-        searchQuery.isNotEmpty() -> getString(R.string.empty_search_summary)
+        searchQuery.isNotEmpty() -> getString(R.string.no_matching_applications_found)
         else -> when (source) {
-          Source.AVAILABLE -> getString(R.string.available_empty_summary)
-          Source.INSTALLED -> getString(R.string.installed_empty_summary)
-          Source.UPDATES -> getString(R.string.updates_empty_summary)
+          Source.AVAILABLE -> getString(R.string.no_applications_available)
+          Source.INSTALLED -> getString(R.string.no_applications_installed)
+          Source.UPDATES -> getString(R.string.all_applications_up_to_date)
         }
       }
     }

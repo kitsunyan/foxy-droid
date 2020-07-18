@@ -128,11 +128,11 @@ class RepositoryFragment(): ScreenFragment() {
             Database.ProductAdapter.getCount(repository.id).toString())
         }
       } else {
-        layout.addTitleText(R.string.description, getString(R.string.not_updated_description))
+        layout.addTitleText(R.string.description, getString(R.string.repository_not_used_DESC))
       }
       if (repository.fingerprint.isEmpty()) {
         if (repository.updated > 0L) {
-          val builder = SpannableStringBuilder(getString(R.string.unsigned_description))
+          val builder = SpannableStringBuilder(getString(R.string.repository_unsigned_DESC))
           builder.setSpan(ForegroundColorSpan(layout.context.getColorFromAttr(R.attr.colorError).defaultColor),
             0, builder.length, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
           layout.addTitleText(R.string.fingerprint, builder)

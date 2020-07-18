@@ -315,11 +315,11 @@ class EditRepositoryFragment(): ScreenFragment() {
     if (usernameInvalid) {
       layout.usernameError.setText(R.string.invalid_username_format)
     } else if (usernameEmpty) {
-      layout.usernameError.setText(R.string.username_is_not_specified)
+      layout.usernameError.setText(R.string.username_missing)
     }
     layout.username.setError(usernameEmpty)
     if (passwordEmpty) {
-      layout.passwordError.setText(R.string.password_is_not_specified)
+      layout.passwordError.setText(R.string.password_missing)
     }
     layout.password.setError(passwordEmpty)
     usernamePasswordError = usernameInvalid || usernameEmpty || passwordEmpty
@@ -474,7 +474,7 @@ class EditRepositoryFragment(): ScreenFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {
       val mirrors = requireArguments().getStringArrayList(EXTRA_MIRRORS)!!
       return AlertDialog.Builder(requireContext())
-        .setTitle(R.string.select_the_mirror)
+        .setTitle(R.string.select_mirror)
         .setItems(mirrors.toTypedArray()) { _, position -> (parentFragment as EditRepositoryFragment)
           .setMirror(mirrors[position]) }
         .setNegativeButton(R.string.cancel, null)

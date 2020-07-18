@@ -54,12 +54,12 @@ class PreferencesFragment: ScreenFragment() {
       addEnumeration(Preferences.Key.AutoSync, getString(R.string.sync_repositories_automatically)) {
         when (it) {
           Preferences.AutoSync.Never -> getString(R.string.never)
-          Preferences.AutoSync.Wifi -> getString(R.string.over_wifi)
+          Preferences.AutoSync.Wifi -> getString(R.string.only_on_wifi)
           Preferences.AutoSync.Always -> getString(R.string.always)
         }
       }
-      addSwitch(Preferences.Key.UpdateNotify, getString(R.string.update_notifications),
-        getString(R.string.update_notifications_summary))
+      addSwitch(Preferences.Key.UpdateNotify, getString(R.string.notify_about_updates),
+        getString(R.string.notify_about_updates_summary))
       addSwitch(Preferences.Key.UpdateUnstable, getString(R.string.unstable_updates),
         getString(R.string.unstable_updates_summary))
     }

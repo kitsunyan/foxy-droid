@@ -201,15 +201,15 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       .setSmallIcon(android.R.drawable.stat_sys_warning)
       .setColor(ContextThemeWrapper(this, R.style.Theme_Main_Light)
         .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
-      .setContentTitle(getString(R.string.error_syncing_format, repository.name))
+      .setContentTitle(getString(R.string.could_not_sync_FORMAT, repository.name))
       .setContentText(getString(when (exception) {
         is RepositoryUpdater.UpdateException -> when (exception.errorType) {
-          RepositoryUpdater.ErrorType.NETWORK -> R.string.network_error_description
-          RepositoryUpdater.ErrorType.HTTP -> R.string.http_error_description
-          RepositoryUpdater.ErrorType.VALIDATION -> R.string.validation_index_error_description
-          RepositoryUpdater.ErrorType.PARSING -> R.string.parsing_index_error_description
+          RepositoryUpdater.ErrorType.NETWORK -> R.string.network_error_DESC
+          RepositoryUpdater.ErrorType.HTTP -> R.string.http_error_DESC
+          RepositoryUpdater.ErrorType.VALIDATION -> R.string.validation_index_error_DESC
+          RepositoryUpdater.ErrorType.PARSING -> R.string.parsing_index_error_DESC
         }
-        else -> R.string.unknown_error_description
+        else -> R.string.unknown_error_DESC
       }))
       .build())
   }
@@ -229,12 +229,12 @@ class SyncService: ConnectionService<SyncService.Binder>() {
         startForeground(Common.NOTIFICATION_ID_SYNCING, stateNotificationBuilder.apply {
           when (state) {
             is State.Connecting -> {
-              setContentTitle(getString(R.string.syncing_format, state.name))
+              setContentTitle(getString(R.string.syncing_FORMAT, state.name))
               setContentText(getString(R.string.connecting))
               setProgress(0, 0, true)
             }
             is State.Syncing -> {
-              setContentTitle(getString(R.string.syncing_format, state.name))
+              setContentTitle(getString(R.string.syncing_FORMAT, state.name))
               when (state.stage) {
                 RepositoryUpdater.Stage.DOWNLOAD -> {
                   if (state.total != null) {
@@ -247,12 +247,12 @@ class SyncService: ConnectionService<SyncService.Binder>() {
                 }
                 RepositoryUpdater.Stage.PROCESS -> {
                   val progress = state.total?.let { 100f * state.read / it }?.roundToInt()
-                  setContentText(getString(R.string.processing_format, "${progress ?: 0}%"))
+                  setContentText(getString(R.string.processing_FORMAT, "${progress ?: 0}%"))
                   setProgress(100, progress ?: 0, progress == null)
                 }
                 RepositoryUpdater.Stage.MERGE -> {
                   val progress = (100f * state.read / (state.total ?: state.read)).roundToInt()
-                  setContentText(getString(R.string.merging_format, "${state.read} / ${state.total ?: state.read}"))
+                  setContentText(getString(R.string.merging_FORMAT, "${state.read} / ${state.total ?: state.read}"))
                   setProgress(100, progress, false)
                 }
                 RepositoryUpdater.Stage.COMMIT -> {
@@ -350,7 +350,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       .Builder(this, Common.NOTIFICATION_CHANNEL_UPDATES)
       .setSmallIcon(R.drawable.ic_new_releases)
       .setContentTitle(getString(R.string.new_updates_available))
-      .setContentText(resources.getQuantityString(R.plurals.new_updates_description_format,
+      .setContentText(resources.getQuantityString(R.plurals.new_updates_DESC_FORMAT,
         productItems.size, productItems.size))
       .setColor(ContextThemeWrapper(this, R.style.Theme_Main_Light)
         .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
@@ -365,7 +365,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
           addLine(builder)
         }
         if (productItems.size > maxUpdates) {
-          val summary = getString(R.string.plus_more_format, productItems.size - maxUpdates)
+          val summary = getString(R.string.plus_more_FORMAT, productItems.size - maxUpdates)
           if (Android.sdk(24)) {
             addLine(summary)
           } else {

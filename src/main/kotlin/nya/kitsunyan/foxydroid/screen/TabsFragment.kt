@@ -115,7 +115,7 @@ class TabsFragment: ScreenFragment() {
 
     val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
     screenActivity.onToolbarCreated(toolbar)
-    toolbar.setTitle(R.string.app_name)
+    toolbar.setTitle(R.string.application_name)
     // Move focus from SearchView to Toolbar
     toolbar.isFocusableInTouchMode = true
 
@@ -147,7 +147,7 @@ class TabsFragment: ScreenFragment() {
         .setActionView(searchView)
         .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW)
 
-      sortOrderMenu = addSubMenu(0, 0, 0, R.string.sort_order)
+      sortOrderMenu = addSubMenu(0, 0, 0, R.string.sorting_order)
         .setIcon(Utils.getToolbarIcon(toolbar.context, R.drawable.ic_sort))
         .let { menu ->
           menu.item.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS)

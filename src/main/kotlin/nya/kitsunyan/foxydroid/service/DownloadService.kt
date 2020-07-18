@@ -174,7 +174,7 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
     }
   }
 
-  private enum class ValidationError { HASH, STRUCTURE, INTEGRITY, SIGNATURE, PERMISSIONS }
+  private enum class ValidationError { INTEGRITY, FORMAT, METADATA, SIGNATURE, PERMISSIONS }
 
   private sealed class ErrorType {
     object Network: ErrorType()
@@ -194,23 +194,22 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
       .apply {
         when (errorType) {
           is ErrorType.Network -> {
-            setContentTitle(getString(R.string.error_downloading_format, task.name))
-            setContentText(getString(R.string.network_error_description))
+            setContentTitle(getString(R.string.could_not_download_FORMAT, task.name))
+            setContentText(getString(R.string.network_error_DESC))
           }
           is ErrorType.Http -> {
-            setContentTitle(getString(R.string.error_downloading_format, task.name))
-            setContentText(getString(R.string.http_error_description))
+            setContentTitle(getString(R.string.could_not_download_FORMAT, task.name))
+            setContentText(getString(R.string.http_error_DESC))
           }
           is ErrorType.Validation -> {
-            setContentTitle(getString(R.string.error_validating_format, task.name))
-            val resId = R.string.validation_package_error_description_format
-            setContentText(getString(resId, getString(when (errorType.validateError) {
-              ValidationError.HASH -> R.string.validation_error_hash_lower
-              ValidationError.STRUCTURE -> R.string.validation_error_structure_lower
-              ValidationError.INTEGRITY -> R.string.validation_error_integrity_lower
-              ValidationError.SIGNATURE -> R.string.validation_error_signature_lower
-              ValidationError.PERMISSIONS -> R.string.validation_error_permissions_lower
-            })))
+            setContentTitle(getString(R.string.could_not_validate_FORMAT, task.name))
+            setContentText(getString(when (errorType.validateError) {
+              ValidationError.INTEGRITY -> R.string.integrity_check_error_DESC
+              ValidationError.FORMAT -> R.string.file_format_error_DESC
+              ValidationError.METADATA -> R.string.invalid_metadata_error_DESC
+              ValidationError.SIGNATURE -> R.string.invalid_signature_error_DESC
+              ValidationError.PERMISSIONS -> R.string.invalid_permissions_error_DESC
+            }))
           }
         }::class
       }
@@ -227,8 +226,8 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
       .setContentIntent(PendingIntent.getBroadcast(this, 0, Intent(this, Receiver::class.java)
         .setAction("$ACTION_INSTALL.${task.packageName}")
         .putExtra(EXTRA_CACHE_FILE_NAME, task.release.cacheFileName), PendingIntent.FLAG_UPDATE_CURRENT))
-      .setContentTitle(getString(R.string.finished_downloading_format, task.name))
-      .setContentText(getString(R.string.tap_to_install_description))
+      .setContentTitle(getString(R.string.downloaded_FORMAT, task.name))
+      .setContentText(getString(R.string.tap_to_install_DESC))
       .build())
   }
 
@@ -253,7 +252,7 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
       ""
     }
     return if (hash.isEmpty() || hash != task.release.hash) {
-      ValidationError.HASH
+      ValidationError.INTEGRITY
     } else {
       val packageInfo = try {
         packageManager.getPackageArchiveInfo(file.path, Android.PackageManager.signaturesFlag)
@@ -262,10 +261,10 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
         null
       }
       if (packageInfo == null) {
-        ValidationError.STRUCTURE
+        ValidationError.FORMAT
       } else if (packageInfo.packageName != task.packageName ||
         packageInfo.versionCodeCompat != task.release.versionCode) {
-        ValidationError.INTEGRITY
+        ValidationError.METADATA
       } else {
         val signature = packageInfo.singleSignature?.let(Utils::calculateHash).orEmpty()
         if (signature.isEmpty() || signature != task.release.signature) {
@@ -296,12 +295,12 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
       startForeground(Common.NOTIFICATION_ID_SYNCING, stateNotificationBuilder.apply {
         when (state) {
           is State.Connecting -> {
-            setContentTitle(getString(R.string.downloading_format, state.name))
+            setContentTitle(getString(R.string.downloading_FORMAT, state.name))
             setContentText(getString(R.string.connecting))
             setProgress(1, 0, true)
           }
           is State.Downloading -> {
-            setContentTitle(getString(R.string.downloading_format, state.name))
+            setContentTitle(getString(R.string.downloading_FORMAT, state.name))
             if (state.total != null) {
               setContentText("${state.read.formatSize()} / ${state.total.formatSize()}")
               setProgress(100, (100f * state.read / state.total).roundToInt(), false)
