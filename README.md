@@ -9,7 +9,7 @@ Yet another F-Droid client.
 
 Unofficial F-Droid client in the style of the classic one.
 
-Jump over the lazy dog, manage repositories and install software quickly.
+Jump over the lazy dog, manage repositories, and install software quickly.
 No privileged extension, root installation, or sharing local repositories nearby.
 
 ### Features
