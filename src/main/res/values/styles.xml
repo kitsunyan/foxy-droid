@@ -4,7 +4,8 @@
   <style name="Theme.Main.Light" parent="@android:style/Theme.Material.Light.DarkActionBar">
     <item name="android:windowActionBar">false</item>
     <item name="android:windowNoTitle">true</item>
-    <item name="android:colorBackground">#fffafafa</item>
+    <item name="android:toolbarStyle">@style/Widget.Main.Toolbar</item>
+    <item name="android:colorBackground">@color/background_light</item>
     <item name="android:colorPrimary">@color/primary_light</item>
     <item name="android:colorPrimaryDark">@color/primary_dark_light</item>
     <item name="android:colorAccent">@color/accent_light</item>
@@ -15,7 +16,8 @@
   <style name="Theme.Main.Dark" parent="@android:style/Theme.Material">
     <item name="android:windowActionBar">false</item>
     <item name="android:windowNoTitle">true</item>
-    <item name="android:colorBackground">#ff111111</item>
+    <item name="android:toolbarStyle">@style/Widget.Main.Toolbar</item>
+    <item name="android:colorBackground">@color/background_dark</item>
     <item name="android:colorPrimary">@color/primary_dark</item>
     <item name="android:colorPrimaryDark">@color/primary_dark_dark</item>
     <item name="android:colorAccent">@color/accent_dark</item>
@@ -23,7 +25,13 @@
     <item name="colorError">@color/error_dark</item>
   </style>
 
-  <style name="Theme.Toolbar.Popup" parent="Theme.Main.Dark">
+  <style name="Widget.Main.Toolbar" parent="@android:style/Widget.Material.Toolbar">
+    <!-- Fixes invalid text style on Samsung devices -->
+    <item name="android:titleTextAppearance">@android:style/TextAppearance.Material.Widget.Toolbar.Title</item>
+    <item name="android:subtitleTextAppearance">@android:style/TextAppearance.Material.Widget.Toolbar.Subtitle</item>
+  </style>
+
+  <style name="Theme.Main.Toolbar.Popup" parent="Theme.Main.Dark">
     <item name="android:colorBackground">?android:attr/colorPrimaryDark</item>
   </style>
 
