@@ -138,7 +138,7 @@ class TabsFragment: ScreenFragment() {
     })
 
     toolbar.menu.apply {
-      if (Android.sdk(28)) {
+      if (Android.sdk(28) && !Android.Device.isHuaweiEmui) {
         setGroupDividerEnabled(true)
       }
 
