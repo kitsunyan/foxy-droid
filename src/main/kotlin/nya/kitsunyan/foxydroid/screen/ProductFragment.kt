@@ -1,5 +1,6 @@
 package nya.kitsunyan.foxydroid.screen
 
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
@@ -13,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toolbar
+import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -49,21 +51,26 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
   }
 
   private class Nullable<T>(val value: T?)
+
   private enum class Action(val id: Int, val adapterAction: ProductAdapter.Action, val iconResId: Int) {
-    LAUNCH(1, ProductAdapter.Action.LAUNCH, R.drawable.ic_launch),
-    DETAILS(2, ProductAdapter.Action.DETAILS, R.drawable.ic_tune),
-    UNINSTALL(3, ProductAdapter.Action.UNINSTALL, R.drawable.ic_delete)
+    INSTALL(1, ProductAdapter.Action.INSTALL, R.drawable.ic_archive),
+    UPDATE(2, ProductAdapter.Action.UPDATE, R.drawable.ic_archive),
+    LAUNCH(3, ProductAdapter.Action.LAUNCH, R.drawable.ic_launch),
+    DETAILS(4, ProductAdapter.Action.DETAILS, R.drawable.ic_tune),
+    UNINSTALL(5, ProductAdapter.Action.UNINSTALL, R.drawable.ic_delete)
   }
+
+  private class Installed(val installedItem: InstalledItem, val isSystem: Boolean,
+    val launcherActivities: List<Pair<String, String>>)
 
   val packageName: String
     get() = requireArguments().getString(EXTRA_PACKAGE_NAME)!!
 
   private var layoutManagerState: LinearLayoutManager.SavedState? = null
 
+  private var actions = Pair(emptySet<Action>(), null as Action?)
   private var products = emptyList<Pair<Product, Repository>>()
-  private var installedItem: InstalledItem? = null
-  private var installedMainActivity: String? = null
-  private var installedIsSystem = false
+  private var installed: Installed? = null
   private var downloading = false
 
   private var toolbar: Toolbar? = null
@@ -119,6 +126,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
           return if (adapter.requiresGrid(position)) 1 else layoutManager.spanCount
         }
       }
+      addOnScrollListener(scrollListener)
       addItemDecoration(adapter.gridItemDecoration)
       addItemDecoration(DividerItemDecoration(context, adapter::configureDivider))
       savedInstanceState?.getParcelable<ProductAdapter.SavedState>(STATE_ADAPTER)?.let(adapter::restoreState)
@@ -144,7 +152,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         val firstChanged = first
         first = false
         val productChanged = this.products != products
-        val installedItemChanged = this.installedItem != installedItem.value
+        val installedItemChanged = this.installed?.installedItem != installedItem.value
         if (firstChanged || productChanged || installedItemChanged) {
           layoutManagerState?.let { recyclerView?.layoutManager!!.onRestoreInstanceState(it) }
           layoutManagerState = null
@@ -152,7 +160,34 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
             this.products = products
           }
           if (firstChanged || installedItemChanged) {
-            this.installedItem = installedItem.value
+            installed = installedItem.value?.let {
+              val isSystem = try {
+                ((requireContext().packageManager.getApplicationInfo(packageName, 0).flags)
+                  and ApplicationInfo.FLAG_SYSTEM) != 0
+              } catch (e: Exception) {
+                false
+              }
+              val launcherActivities = if (packageName == requireContext().packageName) {
+                // Don't allow to launch self
+                emptyList()
+              } else {
+                val packageManager = requireContext().packageManager
+                packageManager
+                  .queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0)
+                  .asSequence().mapNotNull { it.activityInfo }.filter { it.packageName == packageName }
+                  .mapNotNull { activityInfo ->
+                    val label = try {
+                      activityInfo.loadLabel(packageManager).toString()
+                    } catch (e: Exception) {
+                      e.printStackTrace()
+                      null
+                    }
+                    label?.let { Pair(activityInfo.name, it) }
+                  }
+                  .toList()
+              }
+              Installed(it, isSystem, launcherActivities)
+            }
           }
           val recyclerView = recyclerView!!
           val adapter = recyclerView.adapter as ProductAdapter
@@ -161,15 +196,6 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
           }
           if (installedItemChanged) {
             adapter.installedItem = installedItem.value
-            installedMainActivity = requireContext().packageManager
-              .queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0)
-              .find { it.activityInfo?.packageName == packageName }?.activityInfo?.name
-            installedIsSystem = try {
-              ((requireContext().packageManager.getApplicationInfo(packageName, 0).flags)
-                and ApplicationInfo.FLAG_SYSTEM) != 0
-            } catch (e: Exception) {
-              false
-            }
           }
           updateButtons()
         }
@@ -206,44 +232,66 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
 
   private fun updateButtons(preference: ProductPreference) {
     val product = Product.findSuggested(products) { it.first }?.first
-    val installedItem = installedItem
+    val installed = installed
     val compatible = product != null && product.selectedRelease.let { it != null && it.incompatibilities.isEmpty() }
-    val canInstall = product != null && installedItem == null && compatible
-    val canUpdate = product != null && compatible && product.canUpdate(installedItem) &&
+    val canInstall = product != null && installed == null && compatible
+    val canUpdate = product != null && compatible && product.canUpdate(installed?.installedItem) &&
       !preference.shouldIgnoreUpdate(product.versionCode)
-    val canUninstall = product != null && installedItem != null && !installedIsSystem
-    val canLaunch = product != null && installedItem != null && installedMainActivity != null
+    val canUninstall = product != null && installed != null && !installed.isSystem
+    val canLaunch = product != null && installed != null && installed.launcherActivities.isNotEmpty()
+
     val actions = mutableSetOf<Action>()
+    if (canInstall) {
+      actions += Action.INSTALL
+    }
+    if (canUpdate) {
+      actions += Action.UPDATE
+    }
     if (canLaunch) {
       actions += Action.LAUNCH
     }
-    if (installedItem != null) {
+    if (installed != null) {
       actions += Action.DETAILS
     }
     if (canUninstall) {
       actions += Action.UNINSTALL
     }
-
-    val recyclerView = recyclerView
-    if (recyclerView != null) {
-      val adapterAction = when {
-        downloading -> ProductAdapter.Action.CANCEL
-        canUpdate -> ProductAdapter.Action.UPDATE
-        canLaunch -> ProductAdapter.Action.LAUNCH
-        canUninstall -> ProductAdapter.Action.UNINSTALL
-        canInstall -> ProductAdapter.Action.INSTALL
-        installedItem != null -> ProductAdapter.Action.DETAILS
-        else -> null
-      }
-      (recyclerView.adapter as ProductAdapter).setAction(adapterAction)
-      Action.values().find { it.adapterAction == adapterAction }?.let { actions -= it }
+    val primaryAction = when {
+      canUpdate -> Action.UPDATE
+      canLaunch -> Action.LAUNCH
+      canInstall -> Action.INSTALL
+      installed != null -> Action.DETAILS
+      else -> null
     }
+
+    val adapterAction = if (downloading) ProductAdapter.Action.CANCEL else primaryAction?.adapterAction
+    (recyclerView?.adapter as? ProductAdapter)?.setAction(adapterAction)
 
     val toolbar = toolbar
     if (toolbar != null) {
-      toolbar.menu.findItem(Action.UNINSTALL.id).isEnabled = !downloading
+      for (action in sequenceOf(Action.INSTALL, Action.UPDATE, Action.UNINSTALL)) {
+        toolbar.menu.findItem(action.id).isEnabled = !downloading
+      }
+    }
+    this.actions = Pair(actions, primaryAction)
+    updateToolbarButtons()
+  }
+
+  private fun updateToolbarButtons() {
+    val (actions, primaryAction) = actions
+    val showPrimaryAction = recyclerView
+      ?.let { (it.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition() != 0 } == true
+    val displayActions = actions.toMutableSet()
+    if (!showPrimaryAction && primaryAction != null) {
+      displayActions -= primaryAction
+    }
+    if (displayActions.size >= 4 && resources.configuration.screenWidthDp < 400) {
+      displayActions -= Action.DETAILS
+    }
+    val toolbar = toolbar
+    if (toolbar != null) {
       for (action in Action.values()) {
-        toolbar.menu.findItem(action.id).isVisible = action in actions
+        toolbar.menu.findItem(action.id).isVisible = action in displayActions
       }
     }
   }
@@ -267,6 +315,19 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     }
   }
 
+  private val scrollListener = object: RecyclerView.OnScrollListener() {
+    private var lastPosition = -1
+
+    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+      val position = (recyclerView.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+      val lastPosition = lastPosition
+      this.lastPosition = position
+      if ((lastPosition == 0) != (position == 0)) {
+        updateToolbarButtons()
+      }
+    }
+  }
+
   override fun onActionClick(action: ProductAdapter.Action) {
     when (action) {
       ProductAdapter.Action.INSTALL,
@@ -280,16 +341,11 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         Unit
       }
       ProductAdapter.Action.LAUNCH -> {
-        val installedMainActivity = installedMainActivity
-        if (installedMainActivity != null) {
-          try {
-            startActivity(Intent(Intent.ACTION_MAIN)
-              .addCategory(Intent.CATEGORY_LAUNCHER)
-              .setComponent(ComponentName(packageName, installedMainActivity))
-              .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-          } catch (e: Exception) {
-            e.printStackTrace()
-          }
+        val launcherActivities = installed?.launcherActivities.orEmpty()
+        if (launcherActivities.size >= 2) {
+          LaunchDialog(launcherActivities).show(childFragmentManager, LaunchDialog::class.java.name)
+        } else {
+          launcherActivities.firstOrNull()?.let { startLauncherActivity(it.first) }
         }
         Unit
       }
@@ -313,6 +369,17 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     }::class
   }
 
+  private fun startLauncherActivity(name: String) {
+    try {
+      startActivity(Intent(Intent.ACTION_MAIN)
+        .addCategory(Intent.CATEGORY_LAUNCHER)
+        .setComponent(ComponentName(packageName, name))
+        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+  }
+
   override fun onPreferenceChanged(preference: ProductPreference) {
     updateButtons(preference)
   }
@@ -334,7 +401,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
   }
 
   override fun onReleaseClick(release: Release) {
-    val installedItem = installedItem
+    val installedItem = installed?.installedItem
     when {
       release.incompatibilities.isNotEmpty() -> {
         MessageDialog(MessageDialog.Message.ReleaseIncompatible(release.incompatibilities,
@@ -368,6 +435,31 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         e.printStackTrace()
         false
       }
+    }
+  }
+
+  class LaunchDialog(): DialogFragment() {
+    companion object {
+      private const val EXTRA_NAMES = "names"
+      private const val EXTRA_LABELS = "labels"
+    }
+
+    constructor(launcherActivities: List<Pair<String, String>>): this() {
+      arguments = Bundle().apply {
+        putStringArrayList(EXTRA_NAMES, ArrayList(launcherActivities.map { it.first }))
+        putStringArrayList(EXTRA_LABELS, ArrayList(launcherActivities.map { it.second }))
+      }
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {
+      val names = requireArguments().getStringArrayList(EXTRA_NAMES)!!
+      val labels = requireArguments().getStringArrayList(EXTRA_LABELS)!!
+      return AlertDialog.Builder(requireContext())
+        .setTitle(R.string.launch)
+        .setItems(labels.toTypedArray()) { _, position -> (parentFragment as ProductFragment)
+          .startLauncherActivity(names[position]) }
+        .setNegativeButton(R.string.cancel, null)
+        .create()
     }
   }
 }
