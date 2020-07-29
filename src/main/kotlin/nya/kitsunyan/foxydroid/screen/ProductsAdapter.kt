@@ -20,6 +20,7 @@ import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
 import nya.kitsunyan.foxydroid.widget.CursorRecyclerAdapter
+import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 
 class ProductsAdapter(private val onClick: (ProductItem) -> Unit):
   CursorRecyclerAdapter<ProductsAdapter.ViewType, RecyclerView.ViewHolder>() {
@@ -65,6 +66,20 @@ class ProductsAdapter(private val onClick: (ProductItem) -> Unit):
       itemView.setTextSizeScaled(20)
       itemView.layoutParams = RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT,
         RecyclerView.LayoutParams.MATCH_PARENT)
+    }
+  }
+
+  fun configureDivider(context: Context, position: Int, configuration: DividerItemDecoration.Configuration) {
+    val currentItem = if (getItemEnumViewType(position) == ViewType.PRODUCT) getProductItem(position) else null
+    val nextItem = if (position + 1 < itemCount && getItemEnumViewType(position + 1) == ViewType.PRODUCT)
+      getProductItem(position + 1) else null
+    when {
+      currentItem != null && nextItem != null && currentItem.matchRank != nextItem.matchRank -> {
+        configuration.set(true, false, 0, 0)
+      }
+      else -> {
+        configuration.set(true, false, context.resources.sizeScaled(72), 0)
+      }
     }
   }
 

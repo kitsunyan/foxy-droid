@@ -14,7 +14,6 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Parcel
-import android.text.Html
 import android.text.SpannableStringBuilder
 import android.text.format.DateFormat
 import android.text.style.BulletSpan
@@ -37,6 +36,7 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.graphics.ColorUtils
+import androidx.core.text.HtmlCompat
 import androidx.core.text.util.LinkifyCompat
 import androidx.recyclerview.widget.RecyclerView
 import nya.kitsunyan.foxydroid.R
@@ -1207,8 +1207,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
   }
 
   private fun formatHtml(text: String): SpannableStringBuilder {
-    val html = if (Android.sdk(24)) Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY) else
-      @Suppress("DEPRECATION") Html.fromHtml(text)
+    val html = HtmlCompat.fromHtml(text, HtmlCompat.FROM_HTML_MODE_LEGACY)
     val builder = run {
       val builder = SpannableStringBuilder(html)
       val last = builder.indexOfLast { it != '\n' }

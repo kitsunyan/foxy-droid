@@ -17,7 +17,6 @@ import nya.kitsunyan.foxydroid.database.CursorOwner
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.utility.RxUtils
-import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 import nya.kitsunyan.foxydroid.widget.RecyclerFastScroller
 
@@ -79,9 +78,9 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       isVerticalScrollBarEnabled = false
       setHasFixedSize(true)
       recycledViewPool.setMaxRecycledViews(ProductsAdapter.ViewType.PRODUCT.ordinal, 30)
-      adapter = ProductsAdapter { screenActivity.navigateProduct(it.packageName) }
-      addItemDecoration(DividerItemDecoration(context,
-        DividerItemDecoration.fixed(context.resources.sizeScaled(72), 0)))
+      val adapter = ProductsAdapter { screenActivity.navigateProduct(it.packageName) }
+      this.adapter = adapter
+      addItemDecoration(DividerItemDecoration(context, adapter::configureDivider))
       RecyclerFastScroller(this)
       recyclerView = this
     }

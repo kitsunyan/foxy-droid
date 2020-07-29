@@ -7,7 +7,7 @@ import nya.kitsunyan.foxydroid.utility.extension.json.*
 
 data class ProductItem(val repositoryId: Long, val packageName: String,
   val name: String, val summary: String, val icon: String, val version: String, val installedVersion: String,
-  val compatible: Boolean, val canUpdate: Boolean) {
+  val compatible: Boolean, val canUpdate: Boolean, val matchRank: Int) {
   enum class Order(val titleResId: Int) {
     NAME(R.string.name),
     DATE_ADDED(R.string.date_added),
@@ -22,7 +22,8 @@ data class ProductItem(val repositoryId: Long, val packageName: String,
 
   companion object {
     fun deserialize(repositoryId: Long, packageName: String, name: String, summary: String,
-      installedVersion: String, compatible: Boolean, canUpdate: Boolean, parser: JsonParser): ProductItem {
+      installedVersion: String, compatible: Boolean, canUpdate: Boolean, matchRank: Int,
+      parser: JsonParser): ProductItem {
       var icon = ""
       var version = ""
       parser.forEachKey {
@@ -33,7 +34,7 @@ data class ProductItem(val repositoryId: Long, val packageName: String,
         }
       }
       return ProductItem(repositoryId, packageName, name, summary, icon,
-        version, installedVersion, compatible, canUpdate)
+        version, installedVersion, compatible, canUpdate, matchRank)
     }
   }
 }

@@ -17,7 +17,7 @@ class IndexMerger(file: File): Closeable {
   init {
     db.execWithResult("PRAGMA synchronous = OFF")
     db.execWithResult("PRAGMA journal_mode = OFF")
-    db.execSQL("CREATE TABLE product (package_name TEXT PRIMARY KEY, data BLOB NOT NULL)")
+    db.execSQL("CREATE TABLE product (package_name TEXT PRIMARY KEY, description TEXT NOT NULL, data BLOB NOT NULL)")
     db.execSQL("CREATE TABLE releases (package_name TEXT PRIMARY KEY, data BLOB NOT NULL)")
     db.beginTransaction()
   }
@@ -28,6 +28,7 @@ class IndexMerger(file: File): Closeable {
       Json.factory.createGenerator(outputStream).use { it.writeDictionary(product::serialize) }
       db.insert("product", null, ContentValues().apply {
         put("package_name", product.packageName)
+        put("description", product.description)
         put("data", outputStream.toByteArray())
       })
     }
@@ -60,14 +61,15 @@ class IndexMerger(file: File): Closeable {
 
   fun forEach(repositoryId: Long, windowSize: Int, callback: (List<Product>, Int) -> Unit) {
     closeTransaction()
-    db.rawQuery("""SELECT product.data AS p, releases.data AS d FROM product
+    db.rawQuery("""SELECT product.description, product.data AS pd, releases.data AS rd FROM product
       LEFT JOIN releases ON product.package_name = releases.package_name""", null)
       ?.use { it.asSequence().map {
-        val product = Json.factory.createParser(it.getBlob(0)).use {
+        val description = it.getString(0)
+        val product = Json.factory.createParser(it.getBlob(1)).use {
           it.nextToken()
-          Product.deserialize(repositoryId, it)
+          Product.deserialize(repositoryId, description, it)
         }
-        val releases = it.getBlob(1)?.let { Json.factory.createParser(it).use {
+        val releases = it.getBlob(2)?.let { Json.factory.createParser(it).use {
           it.nextToken()
           it.collectNotNull(JsonToken.START_OBJECT, Release.Companion::deserialize)
         } }.orEmpty()

@@ -75,6 +75,7 @@ object Database {
       const val ROW_PACKAGE_NAME = "package_name"
       const val ROW_NAME = "name"
       const val ROW_SUMMARY = "summary"
+      const val ROW_DESCRIPTION = "description"
       const val ROW_ADDED = "added"
       const val ROW_UPDATED = "updated"
       const val ROW_VERSION_CODE = "version_code"
@@ -90,6 +91,7 @@ object Database {
         $ROW_PACKAGE_NAME TEXT NOT NULL,
         $ROW_NAME TEXT NOT NULL,
         $ROW_SUMMARY TEXT NOT NULL,
+        $ROW_DESCRIPTION TEXT NOT NULL,
         $ROW_ADDED INTEGER NOT NULL,
         $ROW_UPDATED INTEGER NOT NULL,
         $ROW_VERSION_CODE INTEGER NOT NULL,
@@ -148,6 +150,7 @@ object Database {
 
     object Synthetic {
       const val ROW_CAN_UPDATE = "can_update"
+      const val ROW_MATCH_RANK = "match_rank"
     }
   }
 
@@ -191,7 +194,7 @@ object Database {
         db.execSQL(it.formatCreateTable(it.name))
         !it.memory
       }
-      if (shouldVacuum.any { it }) {
+      if (shouldVacuum.any { it } && !db.inTransaction()) {
         db.execSQL("VACUUM")
       }
       true
@@ -215,7 +218,7 @@ object Database {
         !it.memory
       }
     }
-    if (shouldVacuum.any { it }) {
+    if (shouldVacuum.any { it } && !db.inTransaction()) {
       db.execSQL("VACUUM")
     }
   }
@@ -230,7 +233,9 @@ object Database {
       for (table in tables) {
         db.execSQL("DROP TABLE IF EXISTS $table")
       }
-      db.execSQL("VACUUM")
+      if (!db.inTransaction()) {
+        db.execSQL("VACUUM")
+      }
     }
   }
 
@@ -378,7 +383,7 @@ object Database {
   object ProductAdapter {
     fun get(packageName: String, signal: CancellationSignal?): List<Product> {
       return db.query(Schema.Product.name,
-        columns = arrayOf(Schema.Product.ROW_REPOSITORY_ID, Schema.Product.ROW_DATA),
+        columns = arrayOf(Schema.Product.ROW_REPOSITORY_ID, Schema.Product.ROW_DESCRIPTION, Schema.Product.ROW_DATA),
         selection = Pair("${Schema.Product.ROW_PACKAGE_NAME} = ?", arrayOf(packageName)),
         signal = signal).use { it.asSequence().map(::transform).toList() }
     }
@@ -404,7 +409,19 @@ object Database {
         product.${Schema.Product.ROW_COMPATIBLE} != 0 AND product.${Schema.Product.ROW_VERSION_CODE} >
         COALESCE(installed.${Schema.Installed.ROW_VERSION_CODE}, 0xffffffff) AND $signatureMatches)
         AS ${Schema.Synthetic.ROW_CAN_UPDATE}, product.${Schema.Product.ROW_COMPATIBLE},
-        product.${Schema.Product.ROW_DATA_ITEM}, MAX((product.${Schema.Product.ROW_COMPATIBLE} AND
+        product.${Schema.Product.ROW_DATA_ITEM},"""
+
+      if (searchQuery.isNotEmpty()) {
+        builder += """(((product.${Schema.Product.ROW_NAME} LIKE ? OR
+          product.${Schema.Product.ROW_SUMMARY} LIKE ?) * 7) |
+          ((product.${Schema.Product.ROW_PACKAGE_NAME} LIKE ?) * 3) |
+          (product.${Schema.Product.ROW_DESCRIPTION} LIKE ?)) AS ${Schema.Synthetic.ROW_MATCH_RANK},"""
+        builder %= List(4) { "%$searchQuery%" }
+      } else {
+        builder += "0 AS ${Schema.Synthetic.ROW_MATCH_RANK},"
+      }
+
+      builder += """MAX((product.${Schema.Product.ROW_COMPATIBLE} AND
         (installed.${Schema.Installed.ROW_SIGNATURE} IS NULL OR $signatureMatches)) ||
         PRINTF('%016X', product.${Schema.Product.ROW_VERSION_CODE})) FROM ${Schema.Product.name} AS product"""
 
@@ -429,10 +446,7 @@ object Database {
         builder %= category
       }
       if (searchQuery.isNotEmpty()) {
-        builder += """AND (product.${Schema.Product.ROW_PACKAGE_NAME} LIKE ? OR
-          product.${Schema.Product.ROW_NAME} LIKE ? OR
-          product.${Schema.Product.ROW_SUMMARY} LIKE ?)"""
-        builder %= List(3) { "%$searchQuery%" }
+        builder += """AND ${Schema.Synthetic.ROW_MATCH_RANK} > 0"""
       }
 
       builder += "GROUP BY product.${Schema.Product.ROW_PACKAGE_NAME} HAVING 1"
@@ -440,6 +454,9 @@ object Database {
         builder += "AND ${Schema.Synthetic.ROW_CAN_UPDATE}"
       }
       builder += "ORDER BY"
+      if (searchQuery.isNotEmpty()) {
+        builder += """${Schema.Synthetic.ROW_MATCH_RANK} DESC,"""
+      }
       when (order) {
         ProductItem.Order.NAME -> Unit
         ProductItem.Order.DATE_ADDED -> builder += "product.${Schema.Product.ROW_ADDED} DESC,"
@@ -452,7 +469,8 @@ object Database {
 
     private fun transform(cursor: Cursor): Product {
       return cursor.getBlob(cursor.getColumnIndex(Schema.Product.ROW_DATA))
-        .jsonParse { Product.deserialize(cursor.getLong(cursor.getColumnIndex(Schema.Product.ROW_REPOSITORY_ID)), it) }
+        .jsonParse { Product.deserialize(cursor.getLong(cursor.getColumnIndex(Schema.Product.ROW_REPOSITORY_ID)),
+          cursor.getString(cursor.getColumnIndex(Schema.Product.ROW_DESCRIPTION)), it) }
     }
 
     fun transformItem(cursor: Cursor): ProductItem {
@@ -463,7 +481,8 @@ object Database {
           cursor.getString(cursor.getColumnIndex(Schema.Product.ROW_SUMMARY)),
           cursor.getString(cursor.getColumnIndex(Schema.Installed.ROW_VERSION)).orEmpty(),
           cursor.getInt(cursor.getColumnIndex(Schema.Product.ROW_COMPATIBLE)) != 0,
-          cursor.getInt(cursor.getColumnIndex(Schema.Synthetic.ROW_CAN_UPDATE)) != 0, it) }
+          cursor.getInt(cursor.getColumnIndex(Schema.Synthetic.ROW_CAN_UPDATE)) != 0,
+          cursor.getInt(cursor.getColumnIndex(Schema.Synthetic.ROW_MATCH_RANK)), it) }
     }
   }
 
@@ -585,6 +604,7 @@ object Database {
             put(Schema.Product.ROW_PACKAGE_NAME, product.packageName)
             put(Schema.Product.ROW_NAME, product.name)
             put(Schema.Product.ROW_SUMMARY, product.summary)
+            put(Schema.Product.ROW_DESCRIPTION, product.description)
             put(Schema.Product.ROW_ADDED, product.added)
             put(Schema.Product.ROW_UPDATED, product.updated)
             put(Schema.Product.ROW_VERSION_CODE, product.versionCode)

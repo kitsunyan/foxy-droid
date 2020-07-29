@@ -11,12 +11,6 @@ import kotlin.math.*
 
 class DividerItemDecoration(context: Context, private val configure: (context: Context,
   position: Int, configuration: Configuration) -> Unit): RecyclerView.ItemDecoration() {
-  companion object {
-    fun fixed(start: Int, end: Int): (Context, Int, Configuration) -> Unit = { _, _, configuration ->
-      configuration.set(true, false, start, end)
-    }
-  }
-
   interface Configuration {
     fun set(needDivider: Boolean, toTop: Boolean, paddingStart: Int, paddingEnd: Int)
   }

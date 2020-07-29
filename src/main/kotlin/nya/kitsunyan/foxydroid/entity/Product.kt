@@ -54,7 +54,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
     get() = selectedReleases.mapNotNull { it.signature.nullIfEmpty() }.distinct().toList()
 
   fun item(): ProductItem {
-    return ProductItem(repositoryId, packageName, name, summary, icon, version, "", compatible, false)
+    return ProductItem(repositoryId, packageName, name, summary, icon, version, "", compatible, false, 0)
   }
 
   fun canUpdate(installedItem: InstalledItem?): Boolean {
@@ -67,7 +67,6 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
     generator.writeStringField("packageName", packageName)
     generator.writeStringField("name", name)
     generator.writeStringField("summary", summary)
-    generator.writeStringField("description", description)
     generator.writeStringField("whatsNew", whatsNew)
     generator.writeStringField("icon", icon)
     generator.writeStringField("authorName", author.name)
@@ -133,11 +132,10 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
         (installedItem == null || installedItem.signature in extract(it).signatures) }, { extract(it).versionCode }))
     }
 
-    fun deserialize(repositoryId: Long, parser: JsonParser): Product {
+    fun deserialize(repositoryId: Long, description: String, parser: JsonParser): Product {
       var packageName = ""
       var name = ""
       var summary = ""
-      var description = ""
       var whatsNew = ""
       var icon = ""
       var authorName = ""
@@ -161,7 +159,6 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
           it.string("packageName") -> packageName = valueAsString
           it.string("name") -> name = valueAsString
           it.string("summary") -> summary = valueAsString
-          it.string("description") -> description = valueAsString
           it.string("whatsNew") -> whatsNew = valueAsString
           it.string("icon") -> icon = valueAsString
           it.string("authorName") -> authorName = valueAsString
