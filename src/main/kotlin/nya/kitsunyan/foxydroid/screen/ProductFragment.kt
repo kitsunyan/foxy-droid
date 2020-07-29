@@ -34,6 +34,7 @@ import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.Utils
+import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 
 class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
@@ -191,11 +192,8 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
           }
           val recyclerView = recyclerView!!
           val adapter = recyclerView.adapter as ProductAdapter
-          if (firstChanged || productChanged) {
-            adapter.setProducts(recyclerView.context, products, packageName)
-          }
-          if (installedItemChanged) {
-            adapter.installedItem = installedItem.value
+          if (firstChanged || productChanged || installedItemChanged) {
+            adapter.setProducts(recyclerView.context, packageName, products, installedItem.value)
           }
           updateButtons()
         }
@@ -231,9 +229,10 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
   }
 
   private fun updateButtons(preference: ProductPreference) {
-    val product = Product.findSuggested(products) { it.first }?.first
     val installed = installed
-    val compatible = product != null && product.selectedRelease.let { it != null && it.incompatibilities.isEmpty() }
+    val product = Product.findSuggested(products, installed?.installedItem) { it.first }?.first
+    val compatible = product != null && product.selectedReleases.firstOrNull()
+      .let { it != null && it.incompatibilities.isEmpty() }
     val canInstall = product != null && installed == null && compatible
     val canUpdate = product != null && compatible && product.canUpdate(installed?.installedItem) &&
       !preference.shouldIgnoreUpdate(product.versionCode)
@@ -332,10 +331,21 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     when (action) {
       ProductAdapter.Action.INSTALL,
       ProductAdapter.Action.UPDATE -> {
-        val productRepository = Product.findSuggested(products) { it.first }
-        val release = productRepository?.first?.selectedRelease
+        val installedItem = installed?.installedItem
+        val productRepository = Product.findSuggested(products, installedItem) { it.first }
+        val compatibleReleases = productRepository?.first?.selectedReleases.orEmpty()
+          .filter { installedItem == null || installedItem.signature == it.signature }
+        val release = if (compatibleReleases.size >= 2) {
+          compatibleReleases
+            .filter { it.platforms.contains(Android.primaryPlatform) }
+            .minBy { it.platforms.size }
+            ?: compatibleReleases.minBy { it.platforms.size }
+            ?: compatibleReleases.firstOrNull()
+        } else {
+          compatibleReleases.firstOrNull()
+        }
         val binder = downloadConnection.binder
-        if (release != null && binder != null) {
+        if (productRepository != null && release != null && binder != null) {
           binder.enqueue(packageName, productRepository.first.name, productRepository.second, release)
         }
         Unit

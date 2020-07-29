@@ -96,6 +96,14 @@
   </LinearLayout>
 
   <TextView
+    android:id="@+id/signature"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textColor="?android:attr/textColorSecondary"
+    android:textSize="14sp"
+    android:maxLines="1" />
+
+  <TextView
     android:id="@+id/compatibility"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"

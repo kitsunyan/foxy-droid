@@ -249,7 +249,8 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         get() = ViewType.SCREENSHOT
     }
 
-    class ReleaseItem(val repository: Repository, val release: Release, val selectedRepository: Boolean): Item() {
+    class ReleaseItem(val repository: Repository, val release: Release, val selectedRepository: Boolean,
+      val showSignature: Boolean): Item() {
       override val descriptor: String
         get() = "release.${repository.id}.${release.identifier}"
 
@@ -459,10 +460,11 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     val source = itemView.findViewById<TextView>(R.id.source)!!
     val added = itemView.findViewById<TextView>(R.id.added)!!
     val size = itemView.findViewById<TextView>(R.id.size)!!
+    val signature = itemView.findViewById<TextView>(R.id.signature)!!
     val compatibility = itemView.findViewById<TextView>(R.id.compatibility)!!
 
     val statefulViews: Sequence<View>
-      get() = sequenceOf(itemView, version, status, source, added, size, compatibility)
+      get() = sequenceOf(itemView, version, status, source, added, size, signature, compatibility)
 
     val setStatusActive: (Boolean) -> Unit
 
@@ -575,13 +577,22 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
   private val items = mutableListOf<Item>()
   private val expanded = mutableSetOf<ExpandType>()
   private var product: Product? = null
+  private var installedItem: InstalledItem? = null
 
-  fun setProducts(context: Context, products: List<Pair<Product, Repository>>, packageName: String) {
-    val productRepository = Product.findSuggested(products) { it.first }
+  fun setProducts(context: Context, packageName: String,
+    products: List<Pair<Product, Repository>>, installedItem: InstalledItem?) {
+    val productRepository = Product.findSuggested(products, installedItem) { it.first }
     items.clear()
 
     if (productRepository != null) {
       items += Item.HeaderItem(productRepository.second, productRepository.first)
+
+      if (installedItem != null) {
+        items.add(Item.SwitchItem(SwitchType.IGNORE_ALL_UPDATES, packageName, productRepository.first.versionCode))
+        if (productRepository.first.canUpdate(installedItem)) {
+          items.add(Item.SwitchItem(SwitchType.IGNORE_THIS_UPDATE, packageName, productRepository.first.versionCode))
+        }
+      }
 
       val textViewHolder = TextViewHolder(context)
       val textViewWidthSpec = context.resources.displayMetrics.widthPixels
@@ -739,7 +750,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
       }
 
       val screenshotItems = productRepository.first.screenshots
-        .map { Item.ScreenshotItem(productRepository.second, productRepository.first.packageName, it) }
+        .map { Item.ScreenshotItem(productRepository.second, packageName, it) }
       if (screenshotItems.isNotEmpty()) {
         if (ExpandType.SCREENSHOTS in expanded) {
           items += Item.SectionItem(SectionType.SCREENSHOTS, ExpandType.SCREENSHOTS, emptyList(), screenshotItems.size)
@@ -751,10 +762,19 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     }
 
     val incompatible = Preferences[Preferences.Key.IncompatibleVersions]
-    val releaseItems = products.asSequence()
+    val compatibleReleasePairs = products.asSequence()
       .flatMap { (product, repository) -> product.releases.asSequence()
         .filter { incompatible || it.incompatibilities.isEmpty() }
-        .map { Item.ReleaseItem(repository, it, repository.id == productRepository?.second?.id) } }
+        .map { Pair(it, repository) } }
+      .toList()
+    val signaturesForVersionCode = compatibleReleasePairs.asSequence()
+      .mapNotNull { (release, _) -> if (release.signature.isEmpty()) null else
+        Pair(release.versionCode, release.signature) }
+      .distinct().groupBy { it.first }.toMap()
+    val releaseItems = compatibleReleasePairs.asSequence()
+      .map { (release, repository) -> Item.ReleaseItem(repository, release,
+        repository.id == productRepository?.second?.id,
+        signaturesForVersionCode.getValue(release.versionCode).size >= 2) }
       .sortedByDescending { it.release.versionCode }
       .toList()
     if (releaseItems.isNotEmpty()) {
@@ -772,16 +792,9 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
       items += Item.EmptyItem(packageName)
     }
     this.product = productRepository?.first
-    updateSwitches()
+    this.installedItem = installedItem
     notifyDataSetChanged()
   }
-
-  var installedItem: InstalledItem? = null
-    set(value) {
-      field = value
-      updateSwitches()
-      notifyDataSetChanged()
-    }
 
   private var action: Action? = null
 
@@ -819,19 +832,6 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         } else {
           notifyItemChanged(index, Payload.STATUS)
         }
-      }
-    }
-  }
-
-  private fun updateSwitches() {
-    val product = product
-    val installedItem = installedItem
-    items.removeAll { it is Item.SwitchItem }
-    val index = items.indexOfFirst { it is Item.HeaderItem }
-    if (index >= 0 && product != null && installedItem != null) {
-      items.add(index + 1, Item.SwitchItem(SwitchType.IGNORE_ALL_UPDATES, product.packageName, product.versionCode))
-      if (product.canUpdate(installedItem)) {
-        items.add(index + 2, Item.SwitchItem(SwitchType.IGNORE_THIS_UPDATE, product.packageName, product.versionCode))
       }
     }
   }
@@ -1167,6 +1167,19 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         holder.added.text = holder.dateFormat.format(item.release.added)
         holder.added.setTextColor(primarySecondaryColor)
         holder.size.text = item.release.size.formatSize()
+        holder.signature.visibility = if (item.showSignature && item.release.signature.isNotEmpty())
+          View.VISIBLE else View.GONE
+        if (item.showSignature && item.release.signature.isNotEmpty()) {
+          val bytes = item.release.signature.toUpperCase(Locale.US).windowed(2, 2, false).take(8)
+          val signature = bytes.joinToString(separator = " ")
+          val builder = SpannableStringBuilder(context.getString(R.string.signature_FORMAT, signature))
+          val index = builder.indexOf(signature)
+          if (index >= 0) {
+            bytes.forEachIndexed { i, _ -> builder.setSpan(TypefaceSpan("monospace"),
+              index + 3 * i, index + 3 * i + 2, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE) }
+          }
+          holder.signature.text = builder
+        }
         holder.compatibility.visibility = if (incompatibility != null || singlePlatform != null)
           View.VISIBLE else View.GONE
         if (incompatibility != null) {

@@ -78,7 +78,7 @@ object Database {
       const val ROW_ADDED = "added"
       const val ROW_UPDATED = "updated"
       const val ROW_VERSION_CODE = "version_code"
-      const val ROW_SIGNATURE = "signature"
+      const val ROW_SIGNATURES = "signatures"
       const val ROW_COMPATIBLE = "compatible"
       const val ROW_DATA = "data"
       const val ROW_DATA_ITEM = "data_item"
@@ -93,7 +93,7 @@ object Database {
         $ROW_ADDED INTEGER NOT NULL,
         $ROW_UPDATED INTEGER NOT NULL,
         $ROW_VERSION_CODE INTEGER NOT NULL,
-        $ROW_SIGNATURE TEXT NOT NULL,
+        $ROW_SIGNATURES TEXT NOT NULL,
         $ROW_COMPATIBLE INTEGER NOT NULL,
         $ROW_DATA BLOB NOT NULL,
         $ROW_DATA_ITEM BLOB NOT NULL,
@@ -393,17 +393,20 @@ object Database {
       category: String, order: ProductItem.Order, signal: CancellationSignal?): Cursor {
       val builder = QueryBuilder()
 
+      val signatureMatches = """installed.${Schema.Installed.ROW_SIGNATURE} IS NOT NULL AND
+        product.${Schema.Product.ROW_SIGNATURES} LIKE ('%.' || installed.${Schema.Installed.ROW_SIGNATURE} || '.%') AND
+        product.${Schema.Product.ROW_SIGNATURES} != ''"""
+
       builder += """SELECT product.rowid AS _id, product.${Schema.Product.ROW_REPOSITORY_ID},
         product.${Schema.Product.ROW_PACKAGE_NAME}, product.${Schema.Product.ROW_NAME},
         product.${Schema.Product.ROW_SUMMARY}, installed.${Schema.Installed.ROW_VERSION},
         (COALESCE(lock.${Schema.Lock.ROW_VERSION_CODE}, -1) NOT IN (0, product.${Schema.Product.ROW_VERSION_CODE}) AND
         product.${Schema.Product.ROW_COMPATIBLE} != 0 AND product.${Schema.Product.ROW_VERSION_CODE} >
-        COALESCE(installed.${Schema.Installed.ROW_VERSION_CODE}, 0xffffffff) AND
-        product.${Schema.Product.ROW_SIGNATURE} = installed.${Schema.Installed.ROW_SIGNATURE} AND
-        product.${Schema.Product.ROW_SIGNATURE} != '') AS ${Schema.Synthetic.ROW_CAN_UPDATE},
-        product.${Schema.Product.ROW_COMPATIBLE}, product.${Schema.Product.ROW_DATA_ITEM},
-        MAX((product.${Schema.Product.ROW_COMPATIBLE} << 32) | product.${Schema.Product.ROW_VERSION_CODE})
-        FROM ${Schema.Product.name} AS product"""
+        COALESCE(installed.${Schema.Installed.ROW_VERSION_CODE}, 0xffffffff) AND $signatureMatches)
+        AS ${Schema.Synthetic.ROW_CAN_UPDATE}, product.${Schema.Product.ROW_COMPATIBLE},
+        product.${Schema.Product.ROW_DATA_ITEM}, MAX((product.${Schema.Product.ROW_COMPATIBLE} AND
+        (installed.${Schema.Installed.ROW_SIGNATURE} IS NULL OR $signatureMatches)) ||
+        PRINTF('%016X', product.${Schema.Product.ROW_VERSION_CODE})) FROM ${Schema.Product.name} AS product"""
 
       builder += """JOIN ${Schema.Repository.name} AS repository
         ON product.${Schema.Product.ROW_REPOSITORY_ID} = repository.${Schema.Repository.ROW_ID}"""
@@ -574,6 +577,9 @@ object Database {
       db.beginTransaction()
       try {
         for (product in products) {
+          // Format signatures like ".signature1.signature2." for easier select
+          val signatures = product.signatures.joinToString { ".$it" }
+            .let { if (it.isNotEmpty()) "$it." else "" }
           db.insertOrReplace(true, Schema.Product.temporaryName, ContentValues().apply {
             put(Schema.Product.ROW_REPOSITORY_ID, product.repositoryId)
             put(Schema.Product.ROW_PACKAGE_NAME, product.packageName)
@@ -582,7 +588,7 @@ object Database {
             put(Schema.Product.ROW_ADDED, product.added)
             put(Schema.Product.ROW_UPDATED, product.updated)
             put(Schema.Product.ROW_VERSION_CODE, product.versionCode)
-            put(Schema.Product.ROW_SIGNATURE, product.signature)
+            put(Schema.Product.ROW_SIGNATURES, signatures)
             put(Schema.Product.ROW_COMPATIBLE, if (product.compatible) 1 else 0)
             put(Schema.Product.ROW_DATA, jsonGenerate(product::serialize))
             put(Schema.Product.ROW_DATA_ITEM, jsonGenerate(product.item()::serialize))

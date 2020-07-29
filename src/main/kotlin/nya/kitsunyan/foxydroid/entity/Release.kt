@@ -17,7 +17,7 @@ data class Release(val selected: Boolean, val version: String, val versionCode: 
     object MinSdk: Incompatibility()
     object MaxSdk: Incompatibility()
     object Platform: Incompatibility()
-    class Feature(val feature: String): Incompatibility()
+    data class Feature(val feature: String): Incompatibility()
   }
 
   val identifier: String

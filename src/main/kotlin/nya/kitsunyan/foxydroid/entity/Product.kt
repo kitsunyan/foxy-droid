@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import nya.kitsunyan.foxydroid.utility.extension.json.*
+import nya.kitsunyan.foxydroid.utility.extension.text.*
 
 data class Product(val repositoryId: Long, val packageName: String, val name: String, val summary: String,
   val description: String, val whatsNew: String, val icon: String, val author: Author,
@@ -33,23 +34,24 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
       get() = "$locale.${type.name}.$path"
   }
 
-  val selectedRelease: Release?
-    get() = releases.find { it.selected }
+  // Same releases with different signatures
+  val selectedReleases: List<Release>
+    get() = releases.filter { it.selected }
 
   val displayRelease: Release?
-    get() = selectedRelease ?: releases.firstOrNull()
+    get() = selectedReleases.firstOrNull() ?: releases.firstOrNull()
 
   val version: String
     get() = displayRelease?.version.orEmpty()
 
   val versionCode: Long
-    get() = selectedRelease?.versionCode ?: 0L
+    get() = selectedReleases.firstOrNull()?.versionCode ?: 0L
 
   val compatible: Boolean
-    get() = selectedRelease?.incompatibilities?.isEmpty() == true
+    get() = selectedReleases.firstOrNull()?.incompatibilities?.isEmpty() == true
 
-  val signature: String
-    get() = selectedRelease?.signature.orEmpty()
+  val signatures: List<String>
+    get() = selectedReleases.mapNotNull { it.signature.nullIfEmpty() }.distinct().toList()
 
   fun item(): ProductItem {
     return ProductItem(repositoryId, packageName, name, summary, icon, version, "", compatible, false)
@@ -57,7 +59,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
 
   fun canUpdate(installedItem: InstalledItem?): Boolean {
     return installedItem != null && compatible && versionCode > installedItem.versionCode &&
-      signature.isNotEmpty() && signature == installedItem.signature
+      installedItem.signature in signatures
   }
 
   fun serialize(generator: JsonGenerator) {
@@ -126,8 +128,9 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
   }
 
   companion object {
-    fun <T> findSuggested(products: List<T>, extract: (T) -> Product): T? {
-      return products.maxWith(compareBy({ extract(it).compatible }, { extract(it).versionCode }))
+    fun <T> findSuggested(products: List<T>, installedItem: InstalledItem?, extract: (T) -> Product): T? {
+      return products.maxWith(compareBy({ extract(it).compatible &&
+        (installedItem == null || installedItem.signature in extract(it).signatures) }, { extract(it).versionCode }))
     }
 
     fun deserialize(repositoryId: Long, parser: JsonParser): Product {

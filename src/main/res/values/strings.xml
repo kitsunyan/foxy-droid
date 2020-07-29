@@ -129,6 +129,7 @@
   <string name="select_mirror">Select a mirror</string>
   <string name="show_more">Show more</string>
   <string name="show_older_versions">Show older versions</string>
+  <string name="signature_FORMAT">Signature %s</string>
   <string name="signed_using_unsafe_algorithm">Signed using an unsafe algorithm</string>
   <string name="skip">Skip</string>
   <string name="socks_proxy">SOCKS proxy</string>
