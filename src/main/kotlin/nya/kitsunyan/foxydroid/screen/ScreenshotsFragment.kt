@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.DialogFragment
@@ -25,6 +26,7 @@ import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.graphics.PaddingDrawable
 import nya.kitsunyan.foxydroid.network.PicassoDownloader
 import nya.kitsunyan.foxydroid.utility.RxUtils
+import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.widget.StableRecyclerAdapter
 
@@ -79,6 +81,9 @@ class ScreenshotsFragment(): DialogFragment() {
           typedArray.recycle()
         }
       }
+      if (Android.sdk(28)) {
+        layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+      }
     }
 
     val hideFlags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
@@ -86,8 +91,7 @@ class ScreenshotsFragment(): DialogFragment() {
     decorView.systemUiVisibility = decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
       View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
     val applyHide = Runnable { decorView.systemUiVisibility = decorView.systemUiVisibility or hideFlags }
-    decorView.postDelayed(applyHide, 2000L)
-    decorView.setOnClickListener {
+    val handleClick = {
       decorView.removeCallbacks(applyHide)
       if ((decorView.systemUiVisibility and hideFlags) == hideFlags) {
         decorView.systemUiVisibility = decorView.systemUiVisibility and hideFlags.inv()
@@ -95,9 +99,11 @@ class ScreenshotsFragment(): DialogFragment() {
         decorView.systemUiVisibility = decorView.systemUiVisibility or hideFlags
       }
     }
+    decorView.postDelayed(applyHide, 2000L)
+    decorView.setOnClickListener { handleClick() }
 
     val viewPager = ViewPager2(dialog.context)
-    viewPager.adapter = Adapter(packageName) { decorView.performClick() }
+    viewPager.adapter = Adapter(packageName) { handleClick() }
     viewPager.setPageTransformer(MarginPageTransformer(resources.sizeScaled(16)))
     viewPager.viewTreeObserver.addOnGlobalLayoutListener {
       (viewPager.adapter as Adapter).size = Pair(viewPager.width, viewPager.height)
