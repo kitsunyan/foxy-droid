@@ -395,7 +395,7 @@ object Database {
     }
 
     fun query(installed: Boolean, updates: Boolean, searchQuery: String,
-      category: String, order: ProductItem.Order, signal: CancellationSignal?): Cursor {
+      section: ProductItem.Section, order: ProductItem.Order, signal: CancellationSignal?): Cursor {
       val builder = QueryBuilder()
 
       val signatureMatches = """installed.${Schema.Installed.ROW_SIGNATURE} IS NOT NULL AND
@@ -434,16 +434,19 @@ object Database {
       }
       builder += """JOIN ${Schema.Installed.name} AS installed
         ON product.${Schema.Product.ROW_PACKAGE_NAME} = installed.${Schema.Installed.ROW_PACKAGE_NAME}"""
-      if (category.isNotEmpty()) {
+      if (section is ProductItem.Section.Category) {
         builder += """JOIN ${Schema.Category.name} AS category
           ON product.${Schema.Product.ROW_PACKAGE_NAME} = category.${Schema.Product.ROW_PACKAGE_NAME}"""
       }
 
       builder += """WHERE repository.${Schema.Repository.ROW_ENABLED} != 0 AND
         repository.${Schema.Repository.ROW_DELETED} == 0"""
-      if (category.isNotEmpty()) {
+      if (section is ProductItem.Section.Category) {
         builder += "AND category.${Schema.Category.ROW_NAME} = ?"
-        builder %= category
+        builder %= section.name
+      } else if (section is ProductItem.Section.Repository) {
+        builder += "AND product.${Schema.Product.ROW_REPOSITORY_ID} = ?"
+        builder %= section.id.toString()
       }
       if (searchQuery.isNotEmpty()) {
         builder += """AND ${Schema.Synthetic.ROW_MATCH_RANK} > 0"""

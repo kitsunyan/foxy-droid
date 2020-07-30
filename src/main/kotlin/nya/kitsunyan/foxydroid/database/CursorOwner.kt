@@ -11,19 +11,19 @@ class CursorOwner: Fragment(), LoaderManager.LoaderCallbacks<Cursor> {
   sealed class Request {
     internal abstract val id: Int
 
-    data class ProductsAvailable(val searchQuery: String, val category: String,
+    data class ProductsAvailable(val searchQuery: String, val section: ProductItem.Section,
       val order: ProductItem.Order): Request() {
       override val id: Int
         get() = 1
     }
 
-    data class ProductsInstalled(val searchQuery: String, val category: String,
+    data class ProductsInstalled(val searchQuery: String, val section: ProductItem.Section,
       val order: ProductItem.Order): Request() {
       override val id: Int
         get() = 2
     }
 
-    data class ProductsUpdates(val searchQuery: String, val category: String,
+    data class ProductsUpdates(val searchQuery: String, val section: ProductItem.Section,
       val order: ProductItem.Order): Request() {
       override val id: Int
         get() = 3
@@ -79,11 +79,11 @@ class CursorOwner: Fragment(), LoaderManager.LoaderCallbacks<Cursor> {
     return QueryLoader(requireContext()) {
       when (request) {
         is Request.ProductsAvailable -> Database.ProductAdapter
-          .query(false, false, request.searchQuery, request.category, request.order, it)
+          .query(false, false, request.searchQuery, request.section, request.order, it)
         is Request.ProductsInstalled -> Database.ProductAdapter
-          .query(true, false, request.searchQuery, request.category, request.order, it)
+          .query(true, false, request.searchQuery, request.section, request.order, it)
         is Request.ProductsUpdates -> Database.ProductAdapter
-          .query(true, true, request.searchQuery, request.category, request.order, it)
+          .query(true, true, request.searchQuery, request.section, request.order, it)
         is Request.Repositories -> Database.RepositoryAdapter.query(it)
       }
     }

@@ -316,7 +316,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
         if (hasUpdates && Preferences[Preferences.Key.UpdateNotify]) {
           val disposable = RxUtils
             .querySingle { Database.ProductAdapter
-              .query(true, true, "", "", ProductItem.Order.NAME, it)
+              .query(true, true, "", ProductItem.Section.All, ProductItem.Order.NAME, it)
               .use { it.asSequence().map(Database.ProductAdapter::transformItem).toList() } }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

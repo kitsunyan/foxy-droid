@@ -13,12 +13,12 @@
     android:orientation="horizontal" />
 
   <FrameLayout
-    android:id="@+id/category_layout"
+    android:id="@+id/section_layout"
     android:layout_width="match_parent"
     android:layout_height="0dp">
 
     <LinearLayout
-      android:id="@+id/category_change"
+      android:id="@+id/section_change"
       android:layout_width="match_parent"
       android:layout_height="48dp"
       android:orientation="horizontal"
@@ -29,7 +29,7 @@
       tools:ignore="UselessParent">
 
       <TextView
-        android:id="@+id/category_name"
+        android:id="@+id/section_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -41,7 +41,7 @@
         android:textSize="16sp" />
 
       <ImageView
-        android:id="@+id/category_icon"
+        android:id="@+id/section_icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginStart="12dp"

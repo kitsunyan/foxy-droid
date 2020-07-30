@@ -25,12 +25,12 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     private const val EXTRA_SOURCE = "source"
 
     private const val STATE_CURRENT_SEARCH_QUERY = "currentSearchQuery"
-    private const val STATE_CURRENT_CATEGORY = "currentCategory"
+    private const val STATE_CURRENT_SECTION = "currentSection"
     private const val STATE_CURRENT_ORDER = "currentOrder"
     private const val STATE_LAYOUT_MANAGER = "layoutManager"
   }
 
-  enum class Source(val titleResId: Int, val categories: Boolean, val order: Boolean) {
+  enum class Source(val titleResId: Int, val sections: Boolean, val order: Boolean) {
     AVAILABLE(R.string.available, true, true),
     INSTALLED(R.string.installed, false, false),
     UPDATES(R.string.updates, false, false)
@@ -46,11 +46,11 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     get() = requireArguments().getString(EXTRA_SOURCE)!!.let(Source::valueOf)
 
   private var searchQuery = ""
-  private var category = ""
+  private var section: ProductItem.Section = ProductItem.Section.All
   private var order = ProductItem.Order.NAME
 
   private var currentSearchQuery = ""
-  private var currentCategory = ""
+  private var currentSection: ProductItem.Section = ProductItem.Section.All
   private var currentOrder = ProductItem.Order.NAME
   private var layoutManagerState: Parcelable? = null
 
@@ -61,12 +61,12 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
   private val request: CursorOwner.Request
     get() {
       val searchQuery = searchQuery
-      val category = if (source.categories) category else ""
+      val section = if (source.sections) section else ProductItem.Section.All
       val order = if (source.order) order else ProductItem.Order.NAME
       return when (source) {
-        Source.AVAILABLE -> CursorOwner.Request.ProductsAvailable(searchQuery, category, order)
-        Source.INSTALLED -> CursorOwner.Request.ProductsInstalled(searchQuery, category, order)
-        Source.UPDATES -> CursorOwner.Request.ProductsUpdates(searchQuery, category, order)
+        Source.AVAILABLE -> CursorOwner.Request.ProductsAvailable(searchQuery, section, order)
+        Source.INSTALLED -> CursorOwner.Request.ProductsInstalled(searchQuery, section, order)
+        Source.UPDATES -> CursorOwner.Request.ProductsUpdates(searchQuery, section, order)
       }
     }
 
@@ -90,7 +90,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     super.onViewCreated(view, savedInstanceState)
 
     currentSearchQuery = savedInstanceState?.getString(STATE_CURRENT_SEARCH_QUERY).orEmpty()
-    currentCategory = savedInstanceState?.getString(STATE_CURRENT_CATEGORY).orEmpty()
+    currentSection = savedInstanceState?.getParcelable(STATE_CURRENT_SECTION) ?: ProductItem.Section.All
     currentOrder = savedInstanceState?.getString(STATE_CURRENT_ORDER)
       ?.let(ProductItem.Order::valueOf) ?: ProductItem.Order.NAME
     layoutManagerState = savedInstanceState?.getParcelable(STATE_LAYOUT_MANAGER)
@@ -119,7 +119,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     super.onSaveInstanceState(outState)
 
     outState.putString(STATE_CURRENT_SEARCH_QUERY, currentSearchQuery)
-    outState.putString(STATE_CURRENT_CATEGORY, currentCategory)
+    outState.putParcelable(STATE_CURRENT_SECTION, currentSection)
     outState.putString(STATE_CURRENT_ORDER, currentOrder.name)
     (layoutManagerState ?: recyclerView?.layoutManager?.onSaveInstanceState())
       ?.let { outState.putParcelable(STATE_LAYOUT_MANAGER, it) }
@@ -144,9 +144,9 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       recyclerView?.layoutManager?.onRestoreInstanceState(it)
     }
 
-    if (currentSearchQuery != searchQuery || currentCategory != category || currentOrder != order) {
+    if (currentSearchQuery != searchQuery || currentSection != section || currentOrder != order) {
       currentSearchQuery = searchQuery
-      currentCategory = category
+      currentSection = section
       currentOrder = order
       recyclerView?.scrollToPosition(0)
     }
@@ -161,9 +161,9 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     }
   }
 
-  internal fun setCategory(category: String) {
-    if (this.category != category) {
-      this.category = category
+  internal fun setSection(section: ProductItem.Section) {
+    if (this.section != section) {
+      this.section = section
       if (view != null) {
         screenActivity.cursorOwner.attach(this, request)
       }
