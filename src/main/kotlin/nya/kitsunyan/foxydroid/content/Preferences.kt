@@ -2,10 +2,12 @@ package nya.kitsunyan.foxydroid.content
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.entity.ProductItem
+import nya.kitsunyan.foxydroid.utility.extension.android.*
 import java.net.Proxy
 
 object Preferences {
@@ -84,7 +86,8 @@ object Preferences {
     object ProxyPort: Key<Int>("proxy_port", Value.IntValue(9050))
     object ProxyType: Key<Preferences.ProxyType>("proxy_type", Value.EnumerationValue(Preferences.ProxyType.Direct))
     object SortOrder: Key<Preferences.SortOrder>("sort_order", Value.EnumerationValue(Preferences.SortOrder.Update))
-    object Theme: Key<Preferences.Theme>("theme", Value.EnumerationValue(Preferences.Theme.Light))
+    object Theme: Key<Preferences.Theme>("theme", Value.EnumerationValue(if (Android.sdk(29))
+      Preferences.Theme.System else Preferences.Theme.Light))
     object UpdateNotify: Key<Boolean>("update_notify", Value.BooleanValue(true))
     object UpdateUnstable: Key<Boolean>("update_unstable", Value.BooleanValue(false))
   }
@@ -116,12 +119,26 @@ object Preferences {
     object Update: SortOrder("update", ProductItem.Order.LAST_UPDATE)
   }
 
-  sealed class Theme(override val valueString: String, val resId: Int): Enumeration<Theme> {
+  sealed class Theme(override val valueString: String): Enumeration<Theme> {
     override val values: List<Theme>
-      get() = listOf(Light, Dark)
+      get() = if (Android.sdk(29)) listOf(System, Light, Dark) else listOf(Light, Dark)
 
-    object Light: Theme("light", R.style.Theme_Main_Light)
-    object Dark: Theme("dark", R.style.Theme_Main_Dark)
+    abstract fun getResId(configuration: Configuration): Int
+
+    object System: Theme("system") {
+      override fun getResId(configuration: Configuration): Int {
+        return if ((configuration.uiMode and Configuration.UI_MODE_NIGHT_YES) != 0)
+          R.style.Theme_Main_Dark else R.style.Theme_Main_Light
+      }
+    }
+
+    object Light: Theme("light") {
+      override fun getResId(configuration: Configuration): Int = R.style.Theme_Main_Light
+    }
+
+    object Dark: Theme("dark") {
+      override fun getResId(configuration: Configuration): Int = R.style.Theme_Main_Dark
+    }
   }
 
   operator fun <T> get(key: Key<T>): T {

@@ -69,7 +69,7 @@ abstract class ScreenActivity: FragmentActivity() {
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    setTheme(Preferences[Preferences.Key.Theme].resId)
+    setTheme(Preferences[Preferences.Key.Theme].getResId(resources.configuration))
     super.onCreate(savedInstanceState)
 
     window.decorView.systemUiVisibility = window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or

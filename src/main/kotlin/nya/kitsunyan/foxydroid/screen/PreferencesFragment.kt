@@ -77,6 +77,7 @@ class PreferencesFragment: ScreenFragment() {
     preferences.addCategory(getString(R.string.other)) {
       addEnumeration(Preferences.Key.Theme, getString(R.string.theme)) {
         when (it) {
+          is Preferences.Theme.System -> getString(R.string.system)
           is Preferences.Theme.Light -> getString(R.string.light)
           is Preferences.Theme.Dark -> getString(R.string.dark)
         }
