@@ -961,8 +961,9 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
         val updateStatus = Payload.STATUS in payloads
         val updateAll = !updateStatus
         if (updateAll) {
-          if (item.product.icon.isNotEmpty()) {
-            holder.icon.load(PicassoDownloader.createIconUri(holder.icon, item.product.icon, item.repository)) {
+          if (item.product.icon.isNotEmpty() || item.product.metadataIcon.isNotEmpty()) {
+            holder.icon.load(PicassoDownloader.createIconUri(holder.icon, item.product.packageName,
+              item.product.icon, item.product.metadataIcon, item.repository)) {
               placeholder(holder.progressIcon)
               error(holder.defaultIcon)
             }

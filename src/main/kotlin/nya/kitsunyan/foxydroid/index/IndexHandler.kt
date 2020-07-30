@@ -21,6 +21,10 @@ class IndexHandler(private val repositoryId: Long, private val callback: Callbac
         0L
       }
     }
+
+    internal fun validateIcon(icon: String): String {
+      return if (icon.endsWith(".xml")) "" else icon
+    }
   }
 
   interface Callback {
@@ -76,7 +80,7 @@ class IndexHandler(private val repositoryId: Long, private val callback: Callbac
     val releases = mutableListOf<Release>()
 
     fun build(): Product {
-      return Product(repositoryId, packageName, name, summary, description, "", icon,
+      return Product(repositoryId, packageName, name, summary, description, "", icon, "",
         Product.Author(authorName, authorEmail, ""), source, changelog, web, tracker, added, updated,
         suggestedVersionCode, categories.toList(), antiFeatures.toList(),
         licenses, donates.sortedWith(DonateComparator), emptyList(), releases)
@@ -230,7 +234,7 @@ class IndexHandler(private val repositoryId: Long, private val callback: Callbac
           "summary" -> productBuilder.summary = content
           "description" -> productBuilder.description = "<p>$content</p>"
           "desc" -> productBuilder.description = content.replace("\n", "<br/>")
-          "icon" -> productBuilder.icon = content
+          "icon" -> productBuilder.icon = validateIcon(content)
           "author" -> productBuilder.authorName = content
           "email" -> productBuilder.authorEmail = content
           "source" -> productBuilder.source = content

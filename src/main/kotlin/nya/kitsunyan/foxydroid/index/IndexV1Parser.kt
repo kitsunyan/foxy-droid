@@ -18,7 +18,7 @@ object IndexV1Parser {
 
   private class Screenshots(val phone: List<String>, val smallTablet: List<String>, val largeTablet: List<String>)
   private class Localized(val name: String, val summary: String, val description: String,
-    val whatsNew: String, val screenshots: Screenshots?)
+    val whatsNew: String, val metadataIcon: String, val screenshots: Screenshots?)
 
   private fun <T> Map<String, Localized>.getAndCall(key: String, callback: (String, Localized) -> T?): T? {
     return this[key]?.let { callback(key, it) }
@@ -106,7 +106,7 @@ object IndexV1Parser {
         it.string("name") -> nameFallback = valueAsString
         it.string("summary") -> summaryFallback = valueAsString
         it.string("description") -> descriptionFallback = valueAsString
-        it.string("icon") -> icon = valueAsString
+        it.string("icon") -> icon = IndexHandler.validateIcon(valueAsString)
         it.string("authorName") -> authorName = valueAsString
         it.string("authorEmail") -> authorEmail = valueAsString
         it.string("authorWebSite") -> authorWeb = valueAsString
@@ -132,6 +132,7 @@ object IndexV1Parser {
             var summary = ""
             var description = ""
             var whatsNew = ""
+            var metadataIcon = ""
             var phone = emptyList<String>()
             var smallTablet = emptyList<String>()
             var largeTablet = emptyList<String>()
@@ -141,6 +142,7 @@ object IndexV1Parser {
                 it.string("summary") -> summary = valueAsString
                 it.string("description") -> description = valueAsString
                 it.string("whatsNew") -> whatsNew = valueAsString
+                it.string("icon") -> metadataIcon = valueAsString
                 it.array("phoneScreenshots") -> phone = collectDistinctNotEmptyStrings()
                 it.array("sevenInchScreenshots") -> smallTablet = collectDistinctNotEmptyStrings()
                 it.array("tenInchScreenshots") -> largeTablet = collectDistinctNotEmptyStrings()
@@ -149,7 +151,8 @@ object IndexV1Parser {
             }
             val screenshots = if (sequenceOf(phone, smallTablet, largeTablet).any { it.isNotEmpty() })
               Screenshots(phone, smallTablet, largeTablet) else null
-            localizedMap[locale] = Localized(name, summary, description, whatsNew, screenshots)
+            localizedMap[locale] = Localized(name, summary, description, whatsNew,
+              metadataIcon.nullIfEmpty()?.let { "$locale/$it" }.orEmpty(), screenshots)
           } else {
             skipChildren()
           }
@@ -161,6 +164,7 @@ object IndexV1Parser {
     val summary = localizedMap.findString(summaryFallback) { it.summary }
     val description = localizedMap.findString(descriptionFallback) { it.description }.replace("\n", "<br/>")
     val whatsNew = localizedMap.findString("") { it.whatsNew }.replace("\n", "<br/>")
+    val metadataIcon = localizedMap.findString("") { it.metadataIcon }
     val screenshotPairs = localizedMap.find { key, localized -> localized.screenshots?.let { Pair(key, it) } }
     val screenshots = screenshotPairs
       ?.let { (key, screenshots) -> screenshots.phone.asSequence()
@@ -170,7 +174,7 @@ object IndexV1Parser {
         screenshots.largeTablet.asSequence()
           .map { Product.Screenshot(key, Product.Screenshot.Type.LARGE_TABLET, it) } }
       .orEmpty().toList()
-    return Product(repositoryId, packageName, name, summary, description, whatsNew, icon,
+    return Product(repositoryId, packageName, name, summary, description, whatsNew, icon, metadataIcon,
       Product.Author(authorName, authorEmail, authorWeb), source, changelog, web, tracker, added, updated,
       suggestedVersionCode, categories, antiFeatures, licenses,
       donates.sortedWith(IndexHandler.DonateComparator), screenshots, emptyList())

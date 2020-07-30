@@ -7,8 +7,8 @@ import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.utility.KParcelable
 import nya.kitsunyan.foxydroid.utility.extension.json.*
 
-data class ProductItem(val repositoryId: Long, val packageName: String,
-  val name: String, val summary: String, val icon: String, val version: String, val installedVersion: String,
+data class ProductItem(val repositoryId: Long, val packageName: String, val name: String, val summary: String,
+  val icon: String, val metadataIcon: String, val version: String, val installedVersion: String,
   val compatible: Boolean, val canUpdate: Boolean, val matchRank: Int) {
   sealed class Section: KParcelable {
     object All: Section() {
@@ -53,6 +53,7 @@ data class ProductItem(val repositoryId: Long, val packageName: String,
   fun serialize(generator: JsonGenerator) {
     generator.writeNumberField("serialVersion", 1)
     generator.writeStringField("icon", icon)
+    generator.writeStringField("metadataIcon", metadataIcon)
     generator.writeStringField("version", version)
   }
 
@@ -61,15 +62,17 @@ data class ProductItem(val repositoryId: Long, val packageName: String,
       installedVersion: String, compatible: Boolean, canUpdate: Boolean, matchRank: Int,
       parser: JsonParser): ProductItem {
       var icon = ""
+      var metadataIcon = ""
       var version = ""
       parser.forEachKey {
         when {
           it.string("icon") -> icon = valueAsString
+          it.string("metadataIcon") -> metadataIcon = valueAsString
           it.string("version") -> version = valueAsString
           else -> skipChildren()
         }
       }
-      return ProductItem(repositoryId, packageName, name, summary, icon,
+      return ProductItem(repositoryId, packageName, name, summary, icon, metadataIcon,
         version, installedVersion, compatible, canUpdate, matchRank)
     }
   }

@@ -139,8 +139,9 @@ class ProductsAdapter(private val onClick: (ProductItem) -> Unit):
         holder.summary.text = if (productItem.name == productItem.summary) "" else productItem.summary
         holder.summary.visibility = if (holder.summary.text.isNotEmpty()) View.VISIBLE else View.GONE
         val repository: Repository? = repositories[productItem.repositoryId]
-        if (productItem.icon.isNotEmpty() && repository != null) {
-          holder.icon.load(PicassoDownloader.createIconUri(holder.icon, productItem.icon, repository)) {
+        if ((productItem.icon.isNotEmpty() || productItem.metadataIcon.isNotEmpty()) && repository != null) {
+          holder.icon.load(PicassoDownloader.createIconUri(holder.icon, productItem.packageName,
+            productItem.icon, productItem.metadataIcon, repository)) {
             placeholder(holder.progressIcon)
             error(holder.defaultIcon)
           }

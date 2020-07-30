@@ -17,8 +17,9 @@ object PicassoDownloader {
   private const val HOST_SCREENSHOT = "screenshot"
   private const val QUERY_ADDRESS = "address"
   private const val QUERY_AUTHENTICATION = "authentication"
-  private const val QUERY_ICON = "icon"
   private const val QUERY_PACKAGE_NAME = "packageName"
+  private const val QUERY_ICON = "icon"
+  private const val QUERY_METADATA_ICON = "metadataIcon"
   private const val QUERY_LOCALE = "locale"
   private const val QUERY_DEVICE = "device"
   private const val QUERY_SCREENSHOT = "screenshot"
@@ -32,16 +33,24 @@ object PicassoDownloader {
     override fun newCall(request: okhttp3.Request): Call {
       return when (request.url.host) {
         HOST_ICON -> {
-          val address = request.url.queryParameter(QUERY_ADDRESS)
+          val address = request.url.queryParameter(QUERY_ADDRESS)?.nullIfEmpty()
           val authentication = request.url.queryParameter(QUERY_AUTHENTICATION)
-          val icon = request.url.queryParameter(QUERY_ICON)
-          val dpi = request.url.queryParameter(QUERY_DPI)?.nullIfEmpty()
-          if (address.isNullOrEmpty() || icon.isNullOrEmpty()) {
+          val path = run {
+            val packageName = request.url.queryParameter(QUERY_PACKAGE_NAME)?.nullIfEmpty()
+            val icon = request.url.queryParameter(QUERY_ICON)?.nullIfEmpty()
+            val metadataIcon = request.url.queryParameter(QUERY_METADATA_ICON)?.nullIfEmpty()
+            val dpi = request.url.queryParameter(QUERY_DPI)?.nullIfEmpty()
+            when {
+              icon != null -> "${if (dpi != null) "icons-$dpi" else "icons"}/$icon"
+              packageName != null && metadataIcon != null -> "$packageName/$metadataIcon"
+              else -> null
+            }
+          }
+          if (address == null || path == null) {
             Downloader.createCall(request.newBuilder(), "", null)
           } else {
             Downloader.createCall(request.newBuilder().url(address.toHttpUrl()
-              .newBuilder().addPathSegment(if (dpi != null) "icons-$dpi" else "icons")
-              .addPathSegment(icon).build()), authentication.orEmpty(), cache)
+              .newBuilder().addPathSegments(path).build()), authentication.orEmpty(), cache)
           }
         }
         HOST_SCREENSHOT -> {
@@ -82,17 +91,20 @@ object PicassoDownloader {
       .build()
   }
 
-  fun createIconUri(view: View, icon: String, repository: Repository): Uri {
+  fun createIconUri(view: View, packageName: String, icon: String, metadataIcon: String, repository: Repository): Uri {
     val size = (view.layoutParams.let { min(it.width, it.height) } /
       view.resources.displayMetrics.density).roundToInt()
-    return createIconUri(view.context, icon, size, repository)
+    return createIconUri(view.context, packageName, icon, metadataIcon, size, repository)
   }
 
-  private fun createIconUri(context: Context, icon: String, targetSizeDp: Int, repository: Repository): Uri {
+  private fun createIconUri(context: Context, packageName: String, icon: String, metadataIcon: String,
+    targetSizeDp: Int, repository: Repository): Uri {
     return Uri.Builder().scheme("https").authority(HOST_ICON)
       .appendQueryParameter(QUERY_ADDRESS, repository.address)
       .appendQueryParameter(QUERY_AUTHENTICATION, repository.authentication)
+      .appendQueryParameter(QUERY_PACKAGE_NAME, packageName)
       .appendQueryParameter(QUERY_ICON, icon)
+      .appendQueryParameter(QUERY_METADATA_ICON, metadataIcon)
       .apply {
         if (repository.version >= 11) {
           val displayDpi = context.resources.displayMetrics.densityDpi

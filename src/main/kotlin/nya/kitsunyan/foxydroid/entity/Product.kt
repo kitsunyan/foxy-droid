@@ -7,7 +7,7 @@ import nya.kitsunyan.foxydroid.utility.extension.json.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
 
 data class Product(val repositoryId: Long, val packageName: String, val name: String, val summary: String,
-  val description: String, val whatsNew: String, val icon: String, val author: Author,
+  val description: String, val whatsNew: String, val icon: String, val metadataIcon: String, val author: Author,
   val source: String, val changelog: String, val web: String, val tracker: String,
   val added: Long, val updated: Long, val suggestedVersionCode: Long,
   val categories: List<String>, val antiFeatures: List<String>, val licenses: List<String>,
@@ -54,7 +54,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
     get() = selectedReleases.mapNotNull { it.signature.nullIfEmpty() }.distinct().toList()
 
   fun item(): ProductItem {
-    return ProductItem(repositoryId, packageName, name, summary, icon, version, "", compatible, false, 0)
+    return ProductItem(repositoryId, packageName, name, summary, icon, metadataIcon, version, "", compatible, false, 0)
   }
 
   fun canUpdate(installedItem: InstalledItem?): Boolean {
@@ -69,6 +69,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
     generator.writeStringField("summary", summary)
     generator.writeStringField("whatsNew", whatsNew)
     generator.writeStringField("icon", icon)
+    generator.writeStringField("metadataIcon", metadataIcon)
     generator.writeStringField("authorName", author.name)
     generator.writeStringField("authorEmail", author.email)
     generator.writeStringField("authorWeb", author.web)
@@ -138,6 +139,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
       var summary = ""
       var whatsNew = ""
       var icon = ""
+      var metadataIcon = ""
       var authorName = ""
       var authorEmail = ""
       var authorWeb = ""
@@ -161,6 +163,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
           it.string("summary") -> summary = valueAsString
           it.string("whatsNew") -> whatsNew = valueAsString
           it.string("icon") -> icon = valueAsString
+          it.string("metadataIcon") -> metadataIcon = valueAsString
           it.string("authorName") -> authorName = valueAsString
           it.string("authorEmail") -> authorEmail = valueAsString
           it.string("authorWeb") -> authorWeb = valueAsString
@@ -216,7 +219,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
           else -> skipChildren()
         }
       }
-      return Product(repositoryId, packageName, name, summary, description, whatsNew, icon,
+      return Product(repositoryId, packageName, name, summary, description, whatsNew, icon, metadataIcon,
         Author(authorName, authorEmail, authorWeb), source, changelog, web, tracker, added, updated,
         suggestedVersionCode, categories, antiFeatures, licenses, donates, screenshots, releases)
     }
