@@ -5,6 +5,7 @@
     <item name="android:windowActionBar">false</item>
     <item name="android:windowNoTitle">true</item>
     <item name="android:toolbarStyle">@style/Widget.Main.Toolbar</item>
+    <item name="android:windowBackground">@color/primary_dark_light</item>
     <item name="android:colorBackground">@color/background_light</item>
     <item name="android:colorPrimary">@color/primary_light</item>
     <item name="android:colorPrimaryDark">@color/primary_dark_light</item>
@@ -17,6 +18,7 @@
     <item name="android:windowActionBar">false</item>
     <item name="android:windowNoTitle">true</item>
     <item name="android:toolbarStyle">@style/Widget.Main.Toolbar</item>
+    <item name="android:windowBackground">@color/primary_dark_dark</item>
     <item name="android:colorBackground">@color/background_dark</item>
     <item name="android:colorPrimary">@color/primary_dark</item>
     <item name="android:colorPrimaryDark">@color/primary_dark_dark</item>

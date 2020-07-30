@@ -124,6 +124,7 @@ class TabsFragment: ScreenFragment() {
     val searchView = FocusSearchView(toolbar.context)
     searchView.allowFocus = savedInstanceState?.getBoolean(STATE_SEARCH_FOCUSED) == true
     searchView.maxWidth = Int.MAX_VALUE
+    searchView.queryHint = getString(R.string.search)
     searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
       override fun onQueryTextSubmit(query: String?): Boolean {
         searchView.clearFocus()
@@ -490,7 +491,7 @@ class TabsFragment: ScreenFragment() {
       updateUpdateNotificationBlocker(source)
       sortOrderMenu!!.first.isVisible = source.order
       syncRepositoriesMenuItem!!.setShowAsActionFlags(if (!source.order ||
-        resources.configuration.screenWidthDp >= 480) MenuItem.SHOW_AS_ACTION_ALWAYS else 0)
+        resources.configuration.screenWidthDp >= 400) MenuItem.SHOW_AS_ACTION_ALWAYS else 0)
       setSelectedTab(source)
       if (showSections && !source.sections) {
         showSections = false

@@ -83,7 +83,7 @@ object Preferences {
     object ProxyHost: Key<String>("proxy_host", Value.StringValue("localhost"))
     object ProxyPort: Key<Int>("proxy_port", Value.IntValue(9050))
     object ProxyType: Key<Preferences.ProxyType>("proxy_type", Value.EnumerationValue(Preferences.ProxyType.Direct))
-    object SortOrder: Key<Preferences.SortOrder>("sort_order", Value.EnumerationValue(Preferences.SortOrder.Name))
+    object SortOrder: Key<Preferences.SortOrder>("sort_order", Value.EnumerationValue(Preferences.SortOrder.Update))
     object Theme: Key<Preferences.Theme>("theme", Value.EnumerationValue(Preferences.Theme.Light))
     object UpdateNotify: Key<Boolean>("update_notify", Value.BooleanValue(true))
     object UpdateUnstable: Key<Boolean>("update_unstable", Value.BooleanValue(false))
