@@ -774,7 +774,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     val releaseItems = compatibleReleasePairs.asSequence()
       .map { (release, repository) -> Item.ReleaseItem(repository, release,
         repository.id == productRepository?.second?.id,
-        signaturesForVersionCode.getValue(release.versionCode).size >= 2) }
+        signaturesForVersionCode[release.versionCode].orEmpty().size >= 2) }
       .sortedByDescending { it.release.versionCode }
       .toList()
     if (releaseItems.isNotEmpty()) {

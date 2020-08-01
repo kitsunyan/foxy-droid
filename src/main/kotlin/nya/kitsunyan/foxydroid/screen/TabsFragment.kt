@@ -42,8 +42,8 @@ import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
-import nya.kitsunyan.foxydroid.widget.EnumRecyclerAdapter
 import nya.kitsunyan.foxydroid.widget.FocusSearchView
+import nya.kitsunyan.foxydroid.widget.StableRecyclerAdapter
 import kotlin.math.*
 
 class TabsFragment: ScreenFragment() {
@@ -323,7 +323,7 @@ class TabsFragment: ScreenFragment() {
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
 
-    outState.putBoolean(STATE_SEARCH_FOCUSED, searchMenuItem?.actionView!!.hasFocus())
+    outState.putBoolean(STATE_SEARCH_FOCUSED, searchMenuItem?.actionView?.hasFocus() == true)
     outState.putString(STATE_SEARCH_QUERY, searchQuery)
     outState.putByte(STATE_SHOW_SECTIONS, if (showSections) 1 else 0)
     outState.putParcelableArrayList(STATE_SECTIONS, ArrayList(sections))
@@ -544,7 +544,7 @@ class TabsFragment: ScreenFragment() {
   }
 
   private class SectionsAdapter(private val sections: () -> List<ProductItem.Section>,
-    private val onClick: (ProductItem.Section) -> Unit): EnumRecyclerAdapter<SectionsAdapter.ViewType,
+    private val onClick: (ProductItem.Section) -> Unit): StableRecyclerAdapter<SectionsAdapter.ViewType,
     RecyclerView.ViewHolder>() {
     enum class ViewType { SECTION }
 
@@ -582,6 +582,7 @@ class TabsFragment: ScreenFragment() {
       get() = ViewType::class.java
 
     override fun getItemCount(): Int = sections().size
+    override fun getItemDescriptor(position: Int): String = sections()[position].toString()
     override fun getItemEnumViewType(position: Int): ViewType = ViewType.SECTION
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: ViewType): RecyclerView.ViewHolder {
