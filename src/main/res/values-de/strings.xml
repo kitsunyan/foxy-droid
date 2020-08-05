@@ -3,7 +3,7 @@
 
   <string name="action_failed">Aktion fehlgeschlagen</string>
   <string name="add_repository">Paketquelle hinzufügen</string>
-  <string name="address">Addresse</string>
+  <string name="address">Adresse</string>
   <string name="all_applications">Alle Apps</string>
   <string name="all_applications_up_to_date">Keine Updates verfügbar</string>
   <string name="already_exists">Existiert bereits</string>
@@ -12,7 +12,7 @@
   <string name="application">App</string>
   <string name="application_name" translatable="false">Foxy Droid</string>
   <string name="application_not_found">App nicht gefunden</string>
-  <string name="author_email">eMail des Autors</string>
+  <string name="author_email">E-Mail des Autors</string>
   <string name="author_website">Webseite des Autors</string>
   <string name="available">Verfügbar</string>
   <string name="bug_tracker">Fehlerberichte</string>
@@ -48,7 +48,7 @@
   <string name="http_proxy">HTTP-Protokoll</string>
   <string name="ignore_all_updates">Alle Updates ignorieren</string>
   <string name="ignore_this_update">Dieses Update ignorieren</string>
-  <string name="incompatible_api_DESC_FORMAT">%1$s (API version %2$d) wird nicht unterstützt. %3$s</string>
+  <string name="incompatible_api_DESC_FORMAT">%1$s (API-Version %2$d) wird nicht unterstützt. %3$s</string>
   <string name="incompatible_api_max_DESC_FORMAT">Maximale API-Version: %d.</string>
   <string name="incompatible_api_min_DESC_FORMAT">Minimale API-Version: %d.</string>
   <string name="incompatible_features_DESC">Inkompatible Eigenschaften.</string>
@@ -129,7 +129,7 @@
   <string name="signature_FORMAT">Signatur %s</string>
   <string name="signed_using_unsafe_algorithm">Signiert mit unsicherem Algorithmus</string>
   <string name="skip">Überspringen</string>
-  <string name="socks_proxy">Socks-Protokoll</string>
+  <string name="socks_proxy">SOCKS-Protokoll</string>
   <string name="sorting_order">Sortierreihenfolge</string>
   <string name="source_code">Quellcode</string>
   <string name="source_code_no_longer_available">Quellcode nicht mehr verfügbar</string>
@@ -158,7 +158,7 @@
   <string name="validation_index_error_DESC">Index konnte nicht validiert werden.</string>
   <string name="version_FORMAT">Version %s</string>
   <string name="versions">Versionen</string>
-  <string name="waiting_to_start_download">Warte auf Download-Start</string>
+  <string name="waiting_to_start_download">Warte auf Herunterladevorgang</string>
   <string name="website">Webseite</string>
 
 </resources>
