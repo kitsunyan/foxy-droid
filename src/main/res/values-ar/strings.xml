@@ -25,9 +25,9 @@
   <string name="confirmation">تأكيد</string>
   <string name="connecting">يتصل</string>
   <string name="contains_non_free_media">يحوي وسائط غير حرة</string>
-  <string name="could_not_download_FORMAT">%s فشل تحميل</string>
-  <string name="could_not_sync_FORMAT">%s فشلت مزامنة</string>
-  <string name="could_not_validate_FORMAT">%s فشل التحقق من صحة</string>
+  <string name="could_not_download_FORMAT">%s تعذر تحميل</string>
+  <string name="could_not_sync_FORMAT">%s تعذرت المزامنة</string>
+  <string name="could_not_validate_FORMAT">%s تعذر التحقق من صحة</string>
   <string name="dark">داكن</string>
   <string name="date_added">أُضيف التاريخ</string>
   <string name="delete">احذف</string>
@@ -45,19 +45,19 @@
   <string name="has_non_free_dependencies">لديه اعتماديات ليست حرة</string>
   <string name="has_security_vulnerabilities">يحتوي ثغرات أمنية</string>
   <string name="http_error_DESC">استجابة الخادم غير صالحة.</string>
-  <string name="http_proxy">HTTP proxy</string>
+  <string name="http_proxy">HTTP وكيل</string>
   <string name="ignore_all_updates">تجاهل كل التحديثات</string>
   <string name="ignore_this_update">تجاهل هذا التحديث</string>
   <string name="incompatible_api_DESC_FORMAT">Your %1$s (API version %2$d) is not supported. %3$s</string>
   <string name="incompatible_api_max_DESC_FORMAT">.%d أقصى حد لنسخة API هو</string>
-  <string name="incompatible_api_min_DESC_FORMAT">Minimum API version is %d.</string>
+  <string name="incompatible_api_min_DESC_FORMAT">.%d أدنى حد لنسخة API هو</string>
   <string name="incompatible_features_DESC">مزايا مفقودة</string>
-  <string name="incompatible_older_DESC">This version is older than the one installed on your device.
-    Uninstall that first.</string>
-  <string name="incompatible_platforms_DESC_FORMAT">Your %1$s platform is not supported.
-    Supported platforms: %2$s.</string>
-  <string name="incompatible_signature_DESC">This version is signed with a different certificate than the one
-    installed on your device. Uninstall that first.</string>
+  <string name="incompatible_older_DESC">هذا الاصدار أقدم من المثبت على جهازك.
+    أزل الاصدار المثبت لتثبيته</string>
+  <string name="incompatible_platforms_DESC_FORMAT">غير مدعومة %1$s منصتك
+    .%2$s المنصات المدعومة:</string>
+  <string name="incompatible_signature_DESC">هذا التطبيق موقع بشهادة مختلفة عن المثبت
+    عل جهازك، أزل الطبيق المثبت أولا.</string>
   <string name="incompatible_version">إصدار غي متوافق</string>
   <string name="incompatible_versions">إصدارات غير متوافقة</string>
   <string name="incompatible_versions_summary">اعرض الاصدارات غير المتوافقة مع جهازي</string>
@@ -78,7 +78,7 @@
   <string name="light">فاتح</string>
   <string name="link_copied_to_clipboard">نُسخ الرابط الى المحفظة</string>
   <string name="links">روابط</string>
-  <string name="merging_FORMAT">Merging %s</string>
+  <string name="merging_FORMAT">%s يدمج</string>
   <string name="name">الاسم</string>
   <string name="network_error_DESC">خطأ في الشبكة.</string>
   <string name="never">أبدا</string>
@@ -87,40 +87,40 @@
     <item quantity="one">تحديث جديد %d</item>
     <item quantity="other">تحديث جديد %d</item>
   </plurals>
-  <string name="no_applications_available">No applications available</string>
-  <string name="no_applications_installed">No applications installed</string>
-  <string name="no_description_available_DESC">No description available.</string>
-  <string name="no_matching_applications_found">No matching applications found</string>
-  <string name="no_proxy">No proxy</string>
-  <string name="notify_about_updates">Notify about updates</string>
-  <string name="notify_about_updates_summary">Show a notification when updates are available</string>
-  <string name="number_of_applications">Number of applications</string>
+  <string name="no_applications_available">لا تتوفر تطبيقات</string>
+  <string name="no_applications_installed">لا تتوفر تطبيقات مثبتة</string>
+  <string name="no_description_available_DESC">لا يتوفر وصف</string>
+  <string name="no_matching_applications_found">لم يُعثر على تطبيق مطابق</string>
+  <string name="no_proxy">بدون وكيل</string>
+  <string name="notify_about_updates">نبهني بالتحديثات</string>
+  <string name="notify_about_updates_summary">اعرض اشعارا عند توفر تحديث جديد</string>
+  <string name="number_of_applications">عدد التطبيقات</string>
   <string name="ok">موافق</string>
   <string name="only_compatible_with_FORMAT">فقط %s متوافق مع</string>
   <string name="only_on_wifi">عبر واي-فاي فقط</string>
   <string name="open_DESC_FORMAT">؟%s تريد فتح</string>
   <string name="other">أخرى</string>
-  <string name="parsing_index_error_DESC">Could not parse the index file.</string>
-  <string name="password">Password</string>
-  <string name="password_missing">Password missing</string>
-  <string name="permissions">Permissions</string>
-  <string name="plus_more_FORMAT">+%d more</string>
-  <string name="preferences">Preferences</string>
+  <string name="parsing_index_error_DESC">تعذر تحليل ملف الفهرس.</string>
+  <string name="password">كلمة السر</string>
+  <string name="password_missing">كلمة السر مفقودة</string>
+  <string name="permissions">الأذون</string>
+  <string name="plus_more_FORMAT">أكثر %d+</string>
+  <string name="preferences">الاعدادات</string>
   <string name="processing_FORMAT">%1$s يعالج</string>
   <string name="project_website">موقع المشروع</string>
   <string name="promotes_non_free_network_services">يروج لخدمة غير حرة</string>
   <string name="promotes_non_free_software">يروج لبرمجية غير حرو</string>
-  <string name="provided_by_FORMAT">Provided by %s</string>
-  <string name="proxy">Proxy</string>
-  <string name="proxy_host">Proxy host</string>
-  <string name="proxy_port">Proxy port</string>
-  <string name="proxy_type">Proxy type</string>
+  <string name="provided_by_FORMAT">%s وفره</string>
+  <string name="proxy">الوكيل</string>
+  <string name="proxy_host">استضافة  الوكيل</string>
+  <string name="proxy_port">منفذ الوكيل</string>
+  <string name="proxy_type">نوع الوكيل</string>
   <string name="repositories">مستودعات</string>
   <string name="repository">مستودع</string>
   <string name="repository_not_used_DESC">لم يستخدم هذا المستودع بعد. فعِله لاستعراض التطبيقات التي يوفر</string>
-  <string name="repository_unsigned_DESC">Unsigned. Could not verify the application list. Be careful downloading
-    applications from unsigned repositories.</string>
-  <string name="requires_FORMAT">Requires %s</string>
+  <string name="repository_unsigned_DESC">غير موقع. تعذر التحقق من قائمة التطبيقات، كن حذرا عند التنزيل
+    تطبيقات من مستودعات غير موقعة.</string>
+  <string name="requires_FORMAT">%s يتطلب</string>
   <string name="save">احفظ</string>
   <string name="saving_details">يحفظ التفاصيل</string>
   <string name="screenshots">لقطات الشاشة</string>
@@ -132,7 +132,7 @@
   <string name="signed_using_unsafe_algorithm">وقِّع باستخدام خوارزمية غير آمنة</string>
   <string name="skip">تخطى</string>
   <string name="socks_proxy">SOCKS proxy</string>
-  <string name="sorting_order">Sorting order</string>
+  <string name="sorting_order">افرز حسب</string>
   <string name="source_code">الشفرة المصدرية</string>
   <string name="source_code_no_longer_available">لم تعد الشفرة المصدرية.متوفرة</string>
   <string name="suggested">مقترَح</string>
@@ -150,11 +150,11 @@
   <string name="unknown_FORMAT">%s مجهول:</string>
   <string name="unsigned">غير موَقع</string>
   <string name="unstable_updates">التحديثات غير المستقرة</string>
-  <string name="unstable_updates_summary">Suggest installing unstable versions</string>
+  <string name="unstable_updates_summary">اقترح تثبيت الاصدارات غير المستقرة</string>
   <string name="unverified">لم يتحقق منه</string>
-  <string name="update">Update</string>
-  <string name="updates">Updates</string>
-  <string name="upstream_source_code_is_not_free">Upstream source code is not free</string>
+  <string name="update">تحديث</string>
+  <string name="updates">تحديثات</string>
+  <string name="upstream_source_code_is_not_free">الشفرة المصدرية ليس حرة بالكامل</string>
   <string name="username">اسم المستخدم</string>
   <string name="username_missing">اسم المستخدم مفقود</string>
   <string name="validation_index_error_DESC">فشل التحقق من صحة الفهرس.</string>
