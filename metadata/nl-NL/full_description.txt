@@ -1,0 +1,10 @@
+Onofficiële F-Droid client in de klassieke stijl.
+
+Spring over de luie hond, beheer repositories, en installeer snel software. Geen extensie met privileges, root installatie of het delen van lokale repositories in de buurt.
+
+Functionaliteiten:
+
+* Klassieke F-Droid stijl
+* Geen kaarten of ongepaste animaties
+* Snel synchroniseren van repositories
+* Standard Android componenten en minimale afhankelijkheden
