@@ -1,0 +1,10 @@
+Nieoficjalny klient F-Droid w jego klasycznym stylu.
+
+Skocz przez leniwego psa, zarządzaj repozytoriami i szybko instaluj oprogramowanie. Brak uprzywilejowanych rozszerzeń, instalacji roota lub współdzielenia lokalnych repozytoriów w pobliżu.
+
+Funkcje:
+
+* Klasyczny wygląd F-Droid
+* Brak kart czy niepotrzebnych animacji
+* Szybkie synchronizowanie repozytoriów
+* Standardowe komponenty Androida i minimalne zależności
