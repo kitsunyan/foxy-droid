@@ -137,7 +137,7 @@
   <string name="source_code_no_longer_available">El código fuente ya no está disponible</string>
   <string name="suggested">Sugerido</string>
   <string name="sync_repositories">Sincronizar repositorios</string>
-  <string name="sync_repositories_automatically">Sincronizar repositorios automáticamente/string>
+  <string name="sync_repositories_automatically">Sincronizar repositorios automáticamente</string>
   <string name="syncing">Sincronizando</string>
   <string name="syncing_FORMAT">Sincronizando %s</string>
   <string name="system">Sistema</string>
