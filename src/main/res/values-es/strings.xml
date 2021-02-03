@@ -109,7 +109,7 @@
   <string name="project_website">Sitio web del projecto</string>
   <string name="promotes_non_free_network_services">Promueve servicios de red no libres</string>
   <string name="promotes_non_free_software">Promueve software no libre</string>
-  <string name="provided_by_FORMAT">Proporcionado por%s</string>
+  <string name="provided_by_FORMAT">Proporcionado por %s</string>
   <string name="proxy">Proxy</string>
   <string name="proxy_host">Servidor de proxy</string>
   <string name="proxy_port">Puerto de proxy</string>
