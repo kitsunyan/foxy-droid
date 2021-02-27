@@ -35,7 +35,7 @@
   <string name="description">Descripción</string>
   <string name="details">Detalles</string>
   <string name="donate">Donar</string>
-  <string name="downloaded_FORMAT">Descargado %s </string>
+  <string name="downloaded_FORMAT">%s descargado</string>
   <string name="downloading">Descargando</string>
   <string name="downloading_FORMAT">Descargando %s</string>
   <string name="edit_repository">Editar repositorio</string>
