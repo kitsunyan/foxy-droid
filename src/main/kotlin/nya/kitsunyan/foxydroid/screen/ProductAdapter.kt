@@ -562,7 +562,7 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
       }
       currentItem is Item.LinkItem && nextItem is Item.LinkItem ||
         currentItem is Item.PermissionsItem && nextItem is Item.PermissionsItem -> {
-        configuration.set(true, false, context.resources.sizeScaled(72), 0)
+        configuration.set(true, false, context.resources.sizeScaled(56), 0)
       }
       currentItem is Item.SwitchItem && nextItem is Item.SwitchItem ||
         currentItem is Item.ReleaseItem && nextItem is Item.ReleaseItem -> {
