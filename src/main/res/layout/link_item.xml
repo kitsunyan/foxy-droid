@@ -16,6 +16,7 @@
     android:scaleType="centerInside"
     android:tint="?android:attr/textColorSecondary"
     android:tintMode="src_in"
+    android:layout_gravity="center"
     tools:ignore="ContentDescription" />
 
   <LinearLayout
@@ -23,7 +24,7 @@
     android:layout_height="wrap_content"
     android:layout_weight="1"
     android:orientation="vertical"
-    android:layout_marginStart="32dp"
+    android:layout_marginStart="16dp"
     android:paddingTop="16dp"
     android:paddingBottom="16dp">
 
