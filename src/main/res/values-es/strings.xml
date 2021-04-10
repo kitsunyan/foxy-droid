@@ -160,7 +160,7 @@
   <string name="validation_index_error_DESC">El índice no pudo ser validado.</string>
   <string name="version_FORMAT">Versión %s</string>
   <string name="versions">Versiones</string>
-  <string name="waiting_to_start_download">Esperando para inicar descarga</string>
+  <string name="waiting_to_start_download">Esperando para iniciar descarga</string>
   <string name="website">Sitio web</string>
 
 </resources>
