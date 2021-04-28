@@ -10,6 +10,9 @@
   <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
   <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
+  <!-- Added by REV Robotics on 2021-04-28  -->
+  <uses-permission android:name="com.revrobotics.permission.UPDATE_CONTROL_HUB" />
+
   <application
     android:name=".MainApplication"
     android:label="@string/application_name"

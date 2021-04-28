@@ -1,36 +1,18 @@
-# Foxy Droid
+# REV Robotics Software Manager for Android
 
-Yet another F-Droid client.
+Allows on-device updating of the Driver Hub Operating System and its built-in apps.
 
-[![Release](https://img.shields.io/github/v/release/kitsunyan/foxy-droid)](https://github.com/kitsunyan/foxy-droid/releases)
-[![F-Droid](https://img.shields.io/f-droid/v/nya.kitsunyan.foxydroid)](https://f-droid.org/packages/nya.kitsunyan.foxydroid/)
-
-## Description
-
-Unofficial F-Droid client in the style of the classic one.
-
-Jump over the lazy dog, manage repositories, and install software quickly. No privileged extension, root installation,
-or sharing local repositories nearby.
-
-### Features
-
-* Classic F-Droid style
-* No cards or inappropriate animations
-* Fast repository syncing
-* Standard Android components and minimal dependencies
-
-### Screenshots
-
-<p>
-<img src="metadata/en-US/images/phoneScreenshots/1.png" width="15%" />
-<img src="metadata/en-US/images/phoneScreenshots/2.png" width="15%" />
-<img src="metadata/en-US/images/phoneScreenshots/3.png" width="15%" />
-<img src="metadata/en-US/images/phoneScreenshots/4.png" width="15%" />
-<img src="metadata/en-US/images/phoneScreenshots/5.png" width="15%" />
-<img src="metadata/en-US/images/phoneScreenshots/6.png" width="15%" />
-</p>
+Based on the [Foxy Droid](https://github.com/kitsunyan/foxy-droid) F-Droid client. Installing apps
+from the [F-Droid app repository](https://www.f-droid.org/en/packages/) can optionally be enabled.
+These apps are provided by the F-Droid community and are not supported by REV Robotics.
 
 ## Building and Installing
+
+You cannot replace the Software Manager app on a Driver Hub, so you will need to change the
+`applicationId` in `build.gradle` from `com.revrobotics.android.softwaremanager` to something else.
+Then you will be able to install your build of the Software Manager alongside the official one.
+No functionality is exclusive to the official build; user-built versions can do everything the
+official version can.
 
 Specify your Android SDK path either using the `ANDROID_HOME` environment variable, or by filling out the `sdk.dir`
 property in `local.properties`.
@@ -48,4 +30,5 @@ Run `./gradlew assembleRelease` to build the package, which can be installed usi
 
 ## License
 
-Foxy Droid is available under the terms of the GNU General Public License v3 or later. Copyright © 2020 kitsunyan.
+This software is available under the terms of the GNU General Public License v3 or later.
+Copyright © 2020-2021 kitsunyan, REV Robotics.

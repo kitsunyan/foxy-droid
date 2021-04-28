@@ -10,7 +10,7 @@
   <string name="always">Always</string>
   <string name="anti_features">Anti-features</string>
   <string name="application">Application</string>
-  <string name="application_name" translatable="false">Foxy Droid</string>
+  <string name="application_name">Software Manager</string>
   <string name="application_not_found">Application not found</string>
   <string name="author_email">Author email</string>
   <string name="author_website">Author website</string>
