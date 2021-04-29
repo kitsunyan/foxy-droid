@@ -88,9 +88,22 @@ class TabsFragment: ScreenFragment() {
   private var sections = listOf<ProductItem.Section>(ProductItem.Section.All)
   private var section: ProductItem.Section = ProductItem.Section.All
 
+  // Added by REV Robotics on 2021-04-08 to allow only a single tab to be selected.
+  // All other references to ProductsFragment.Source.values() in this file should probably be
+  // replaced with a reference to selectableTabs.
+  // TODO(Noah): Hide tab bar if only one tab is visible
+  private val showAllTabs = false
+  private val selectableTabs = if (showAllTabs) {
+    ProductsFragment.Source.values()
+  } else {
+    // As of today (2021-04-08), the indices of this array must match the indices of
+    // ProductsFragment.Source.values() in order for everything to work correctly.
+    arrayOf(ProductsFragment.Source.UPDATES)
+  }
+
   private val syncConnection = Connection(SyncService::class.java, onBind = { _, _ ->
     viewPager?.let {
-      val source = ProductsFragment.Source.values()[it.currentItem]
+      val source = selectableTabs[it.currentItem]
       updateUpdateNotificationBlocker(source)
     }
   })
@@ -195,7 +208,8 @@ class TabsFragment: ScreenFragment() {
 
     layout.tabs.background = TabsBackgroundDrawable(layout.tabs.context,
       layout.tabs.layoutDirection == View.LAYOUT_DIRECTION_RTL)
-    ProductsFragment.Source.values().forEach {
+
+    selectableTabs.forEach {
       val tab = TextView(layout.tabs.context)
       val selectedColor = tab.context.getColorFromAttr(android.R.attr.textColorPrimary).defaultColor
       val normalColor = tab.context.getColorFromAttr(android.R.attr.textColorSecondary).defaultColor
@@ -233,9 +247,9 @@ class TabsFragment: ScreenFragment() {
     viewPager = ViewPager2(content.context).apply {
       id = R.id.fragment_pager
       adapter = object: FragmentStateAdapter(this@TabsFragment) {
-        override fun getItemCount(): Int = ProductsFragment.Source.values().size
-        override fun createFragment(position: Int): Fragment = ProductsFragment(ProductsFragment
-          .Source.values()[position])
+        override fun getItemCount(): Int = selectableTabs.size
+        override fun createFragment(position: Int): Fragment = ProductsFragment(
+                selectableTabs[position])
       }
       content.addView(this, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
       registerOnPageChangeCallback(pageChangeCallback)
@@ -465,9 +479,9 @@ class TabsFragment: ScreenFragment() {
   private val pageChangeCallback = object: ViewPager2.OnPageChangeCallback() {
     override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
       val layout = layout!!
-      val fromSections = ProductsFragment.Source.values()[position].sections
+      val fromSections = selectableTabs[position].sections
       val toSections = if (positionOffset <= 0f) fromSections else
-        ProductsFragment.Source.values()[position + 1].sections
+        selectableTabs[position + 1].sections
       val offset = if (fromSections != toSections) {
         if (fromSections) 1f - positionOffset else positionOffset
       } else {
@@ -487,7 +501,7 @@ class TabsFragment: ScreenFragment() {
     }
 
     override fun onPageSelected(position: Int) {
-      val source = ProductsFragment.Source.values()[position]
+      val source = selectableTabs[position]
       updateUpdateNotificationBlocker(source)
       sortOrderMenu!!.first.isVisible = source.order
       syncRepositoriesMenuItem!!.setShowAsActionFlags(if (!source.order ||
@@ -499,7 +513,7 @@ class TabsFragment: ScreenFragment() {
     }
 
     override fun onPageScrollStateChanged(state: Int) {
-      val source = ProductsFragment.Source.values()[viewPager!!.currentItem]
+      val source = selectableTabs[viewPager!!.currentItem]
       layout!!.sectionChange.isEnabled = state != ViewPager2.SCROLL_STATE_DRAGGING && source.sections
       if (state == ViewPager2.SCROLL_STATE_IDLE) {
         // onPageSelected can be called earlier than fragments created
