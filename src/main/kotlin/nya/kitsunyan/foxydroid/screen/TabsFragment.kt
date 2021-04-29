@@ -91,7 +91,6 @@ class TabsFragment: ScreenFragment() {
   // Added by REV Robotics on 2021-04-08 to allow only a single tab to be selected.
   // All other references to ProductsFragment.Source.values() in this file should probably be
   // replaced with a reference to selectableTabs.
-  // TODO(Noah): Hide tab bar if only one tab is visible
   private val showAllTabs = false
   private val selectableTabs = if (showAllTabs) {
     ProductsFragment.Source.values()
@@ -205,6 +204,13 @@ class TabsFragment: ScreenFragment() {
     toolbarExtra.addView(toolbarExtra.inflate(R.layout.tabs_toolbar))
     val layout = Layout(view)
     this.layout = layout
+
+    // Added by REV Robotics on 2021-04-29 to hide the tab bar when there is only one tab
+    layout.tabs.visibility = if (selectableTabs.size <=1) {
+      View.GONE
+    } else {
+      View.VISIBLE
+    }
 
     layout.tabs.background = TabsBackgroundDrawable(layout.tabs.context,
       layout.tabs.layoutDirection == View.LAYOUT_DIRECTION_RTL)
