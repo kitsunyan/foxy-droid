@@ -31,9 +31,10 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
   }
 
   enum class Source(val titleResId: Int, val sections: Boolean, val order: Boolean) {
+    // Modified by REV Robotics on 2021-04-28 to list the Updates tab first
+    UPDATES(R.string.updates, false, false),
     AVAILABLE(R.string.available, true, true),
-    INSTALLED(R.string.installed, false, false),
-    UPDATES(R.string.updates, false, false)
+    INSTALLED(R.string.installed, false, false)
   }
 
   constructor(source: Source): this() {
