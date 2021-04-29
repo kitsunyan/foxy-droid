@@ -26,6 +26,7 @@ import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.index.RepositoryUpdater
+import nya.kitsunyan.foxydroid.screen.ProductsFragment
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
@@ -110,6 +111,10 @@ class SyncService: ConnectionService<SyncService.Binder>() {
 
     fun setEnabled(repository: Repository, enabled: Boolean): Boolean {
       Database.RepositoryAdapter.put(repository.enable(enabled))
+
+      // Line added by REV Robotics on 2021-04-30
+      ProductsFragment.markRepoAsNeverDownloaded(repository.id)
+
       if (enabled) {
         if (repository.id != currentTask?.task?.repositoryId && !tasks.any { it.repositoryId == repository.id }) {
           tasks += Task(repository.id, true)
@@ -305,6 +310,10 @@ class SyncService: ConnectionService<SyncService.Binder>() {
               throwable?.printStackTrace()
               if (throwable != null && task.manual) {
                 showNotificationError(repository, throwable as Exception)
+              }
+              // Added by REV Robotics: Mark the repo as having been just downloaded
+              if (throwable == null) {
+                ProductsFragment.markRepoAsJustDownloaded(repository.id)
               }
               handleNextTask(result == true || hasUpdates)
             }

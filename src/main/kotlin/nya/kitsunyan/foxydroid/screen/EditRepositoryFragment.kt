@@ -447,6 +447,10 @@ class EditRepositoryFragment(): ScreenFragment() {
         if (repositoryId == null && changedRepository.enabled) {
           binder.sync(changedRepository)
         }
+
+        // Line added by REV Robotics on 2021-04-30
+        ProductsFragment.markRepoAsNeverDownloaded(changedRepository.id)
+
         requireActivity().onBackPressed()
       }
     } else {

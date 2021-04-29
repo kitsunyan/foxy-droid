@@ -20,6 +20,7 @@ import nya.kitsunyan.foxydroid.entity.InstalledItem
 import nya.kitsunyan.foxydroid.index.RepositoryUpdater
 import nya.kitsunyan.foxydroid.network.Downloader
 import nya.kitsunyan.foxydroid.network.PicassoDownloader
+import nya.kitsunyan.foxydroid.screen.ProductsFragment
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.SyncService
 import nya.kitsunyan.foxydroid.utility.Utils
@@ -29,6 +30,12 @@ import java.net.Proxy
 
 @Suppress("unused")
 class MainApplication: Application() {
+
+  // Ability to get the MainApplication instance added by REV Robotics on 2021-04-29
+  companion object Getter {
+    lateinit var instance: MainApplication
+  }
+
   private fun PackageInfo.toInstalledItem(): InstalledItem {
     val signatureString = singleSignature?.let(Utils::calculateHash).orEmpty()
     return InstalledItem(packageName, versionName.orEmpty(), versionCodeCompat, signatureString)
@@ -40,6 +47,9 @@ class MainApplication: Application() {
 
   override fun onCreate() {
     super.onCreate()
+
+    // Line added by REV Robotics on 2021-04-29
+    instance = this
 
     val databaseUpdated = Database.init(this)
     Preferences.init(this)
@@ -173,6 +183,8 @@ class MainApplication: Application() {
       if (it.lastModified.isNotEmpty() || it.entityTag.isNotEmpty()) {
         Database.RepositoryAdapter.put(it.copy(lastModified = "", entityTag = ""))
       }
+      // Line added by REV Robotics on 2021-04-30
+      ProductsFragment.markRepoAsNeverDownloaded(it.id)
     }
     Connection(SyncService::class.java, onBind = { connection, binder ->
       binder.sync(SyncService.SyncRequest.FORCE)
