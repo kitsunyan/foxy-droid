@@ -9,7 +9,7 @@ These apps are provided by the F-Droid community and are not supported by REV Ro
 ## Building and Installing
 
 You cannot replace the Software Manager app on a Driver Hub, so you will need to change the
-`applicationId` in `build.gradle` from `com.revrobotics.android.softwaremanager` to something else.
+`applicationId` in `build.gradle` from `com.revrobotics.softwaremanager` to something else.
 Then you will be able to install your build of the Software Manager alongside the official one.
 No functionality is exclusive to the official build; user-built versions can do everything the
 official version can.

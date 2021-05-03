@@ -26,7 +26,7 @@ android {
     // archive name, application ID, minSdk, targetSdk, and version information have been modified
     // by REV Robotics.
     archivesBaseName = 'SoftwareManager'
-    applicationId 'com.revrobotics.android.softwaremanager'
+    applicationId 'com.revrobotics.softwaremanager'
     minSdkVersion 29
     //noinspection OldTargetApi
     targetSdkVersion 29
