@@ -10,14 +10,19 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import android.system.Os
+import nya.kitsunyan.foxydroid.MainApplication
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import java.io.File
 import java.util.UUID
 import kotlin.concurrent.thread
 
 object Cache {
+  // REV Robotics added the cacheDir property and replaced references to context.cacheDir with it
+  // on 05-03-2021. Having the cache live in "external" storage simplifies some things for us.
+  private val cacheDir = File(MainApplication.instance.getExternalFilesDir(null), "cache")
+
   private fun ensureCacheDir(context: Context, name: String): File {
-    return File(context.cacheDir, name).apply { isDirectory || mkdirs() || throw RuntimeException() }
+    return File(cacheDir, name).apply { isDirectory || mkdirs() || throw RuntimeException() }
   }
 
   private fun applyOrMode(file: File, mode: Int) {
@@ -63,7 +68,7 @@ object Cache {
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_PROVIDERS)
     val authority = packageInfo.providers.find { it.name == Provider::class.java.name }!!.authority
     return Uri.Builder().scheme("content").authority(authority)
-      .encodedPath(subPath(context.cacheDir, file)).build()
+      .encodedPath(subPath(cacheDir, file)).build()
   }
 
   fun getTemporaryFile(context: Context): File {
@@ -76,7 +81,7 @@ object Cache {
 
   private fun cleanup(context: Context, vararg dirHours: Pair<String, Int>) {
     val knownNames = dirHours.asSequence().map { it.first }.toSet()
-    val files = context.cacheDir.listFiles().orEmpty()
+    val files = cacheDir.listFiles().orEmpty()
     files.asSequence().filter { it.name !in knownNames }.forEach {
       if (it.isDirectory) {
         cleanupDir(it, 0)
@@ -87,7 +92,7 @@ object Cache {
     }
     dirHours.forEach { (name, hours) ->
       if (hours > 0) {
-        val file = File(context.cacheDir, name)
+        val file = File(cacheDir, name)
         if (file.exists()) {
           if (file.isDirectory) {
             cleanupDir(file, hours)
@@ -130,7 +135,7 @@ object Cache {
 
     private fun getFileAndTypeForUri(uri: Uri): Pair<File, String> {
       return when (uri.pathSegments?.firstOrNull()) {
-        "releases" -> Pair(File(context!!.cacheDir, uri.encodedPath!!), "application/vnd.android.package-archive")
+        "releases" -> Pair(File(cacheDir, uri.encodedPath!!), "application/vnd.android.package-archive")
         else -> throw SecurityException()
       }
     }
