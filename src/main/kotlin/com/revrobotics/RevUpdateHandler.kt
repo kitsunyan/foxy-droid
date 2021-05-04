@@ -66,9 +66,7 @@ object RevUpdateHandler {
 
           // TODO(Noah): Handle prompts
           // TODO(Noah): Handle detail messages that are supposed to be displayed
-          // TODO(Noah): Test various navigation cases
           // TODO(Noah): Figure out why dialog doesn't display when rotated to portrait
-          // TODO(Noah): Did I see a toast pop up beneath the dialog?
 
           updateState = if (result.presentationType == ERROR || result.presentationType == SUCCESS) {
             statusDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.text = "OK"
@@ -104,7 +102,6 @@ object RevUpdateHandler {
         updatePath = otaDestination.absolutePath
         updateIntent.action = ChUpdaterConstants.ACTION_APPLY_OTA_UPDATE
       } else {
-        // TODO(Noah): Allow installing any app targeting API 23+ via ChUpdater
         updatePath = apkFile.absolutePath
         updateIntent.action = ChUpdaterConstants.ACTION_UPDATE_FTC_APP
       }

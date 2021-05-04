@@ -332,7 +332,6 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       val cacheFileName = state.release.cacheFileName
       if (state.release.targetSdkVersion < 23) {
         screenActivity.startPackageInstaller(cacheFileName)
-        // TODO(Noah): Whitelist Software Manager for installing packages
       } else {
         RevUpdateHandler.performUpdateUsingControlHubUpdater(cacheFileName, packageName, state.release.version)
       }
