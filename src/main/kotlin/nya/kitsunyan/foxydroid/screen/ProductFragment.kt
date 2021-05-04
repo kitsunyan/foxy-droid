@@ -23,6 +23,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import nya.kitsunyan.foxydroid.MainApplication
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.ProductPreferences
 import nya.kitsunyan.foxydroid.database.Database
@@ -261,7 +262,8 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     if (canLaunch) {
       actions += Action.LAUNCH
     }
-    if (installed != null) {
+    // Modified by REV Robotics on 2021-05-04 to hide details button for Driver Hub OS
+    if (installed != null && packageName != MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
       actions += Action.DETAILS
     }
     if (canUninstall) {
@@ -271,7 +273,8 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       canUpdate -> Action.UPDATE
       canLaunch -> Action.LAUNCH
       canInstall -> Action.INSTALL
-      installed != null -> Action.DETAILS
+      // Modified by REV Robotics on 2021-05-04 to hide details button for Driver Hub OS
+      installed != null && packageName != MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE -> Action.DETAILS
       else -> null
     }
 
