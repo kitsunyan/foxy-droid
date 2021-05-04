@@ -18,6 +18,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.revrobotics.RevUpdateHandler
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -202,6 +203,17 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     downloadConnection.bind(requireContext())
   }
 
+  // onResume() and onPause() added by REV Robotics on 2021-05-03
+  override fun onResume() {
+    super.onResume()
+    RevUpdateHandler.currentlyDisplayedPackageName = packageName
+  }
+
+  override fun onPause() {
+    super.onPause()
+    RevUpdateHandler.currentlyDisplayedPackageName = null
+  }
+
   override fun onDestroyView() {
     super.onDestroyView()
 
@@ -310,7 +322,17 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     (recyclerView?.adapter as? ProductAdapter)?.setStatus(status)
     if (state is DownloadService.State.Success && isResumed) {
       state.consume()
-      screenActivity.startPackageInstaller(state.release.cacheFileName)
+
+      // Modified by REV Robotics on 2021-05-03:  When the application is targeting API 23+
+      // (meaning it supports runtime permissions), update using ControlHubUpdater instead of
+      // calling screenActivity.startPackageInstaller()
+      val cacheFileName = state.release.cacheFileName
+      if (state.release.targetSdkVersion < 23) {
+        screenActivity.startPackageInstaller(cacheFileName)
+        // TODO(Noah): Whitelist Software Manager for installing packages
+      } else {
+        RevUpdateHandler.performUpdateUsingControlHubUpdater(cacheFileName, packageName, state.release.version)
+      }
     }
   }
 

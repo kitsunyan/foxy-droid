@@ -109,11 +109,13 @@ class MainApplication: Application() {
     val getIntMethod = systemPropertiesClass.getMethod("getInt", String::class.java, Int::class.java)
 
     val driverHubOsVersionString: String = getStringMethod.invoke(null, "ro.driverhub.os.version", "") as String
-    val driverHubOsVersionCode: Long = 0 // TODO(Noah): Get real Driver Hub OS version code
+    val driverHubOsVersionCode: Int = 0
+    // TODO(Noah): Get real Driver Hub OS version code:
+//    val driverHubOsVersionCode: Int = getIntMethod.invoke(null, "ro.driverhub.os.versionnum", 0) as Int
 
     if (driverHubOsVersionString.isNotBlank()) {
       // TODO(Noah): Update signature string
-      Database.InstalledAdapter.put(InstalledItem(DRIVER_HUB_OS_CONTAINER_PACKAGE, driverHubOsVersionString, driverHubOsVersionCode, "7968985a266acd9d4640716afaad21ed"))
+      Database.InstalledAdapter.put(InstalledItem(DRIVER_HUB_OS_CONTAINER_PACKAGE, driverHubOsVersionString, driverHubOsVersionCode.toLong(), "7968985a266acd9d4640716afaad21ed"))
     }
   }
 
