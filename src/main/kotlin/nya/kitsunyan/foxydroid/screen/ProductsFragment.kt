@@ -28,6 +28,7 @@ import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 import nya.kitsunyan.foxydroid.widget.RecyclerFastScroller
+import kotlin.concurrent.thread
 
 class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
   companion object {
@@ -65,7 +66,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     }
 
     private fun calculateLastDownloadOfAllReposTimestamp() {
-      Thread() {
+      thread {
         synchronized(this) {
           var oldestTimestamp = Long.MAX_VALUE
           Database.RepositoryAdapter.getAll(null).asSequence()
@@ -81,7 +82,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
             lastDownloadOfAllReposTimestamp = oldestTimestamp
           }
         }
-      }.start()
+      }
     }
 
 
