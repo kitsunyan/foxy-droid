@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import android.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import com.revrobotics.RevUpdateHandler
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
@@ -247,4 +248,15 @@ abstract class ScreenActivity: FragmentActivity() {
   internal fun navigateAddRepository() = pushFragment(EditRepositoryFragment(null))
   internal fun navigateRepository(repositoryId: Long) = pushFragment(RepositoryFragment(repositoryId))
   internal fun navigateEditRepository(repositoryId: Long) = pushFragment(EditRepositoryFragment(repositoryId))
+
+  // onPause() and onResume() overrides added by REV Robotics on 2021-05-04
+  override fun onResume() {
+    super.onResume()
+    RevUpdateHandler.currentActivity = this
+  }
+
+  override fun onPause() {
+    super.onPause()
+    RevUpdateHandler.currentActivity = null
+  }
 }

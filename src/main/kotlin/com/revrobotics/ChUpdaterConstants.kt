@@ -12,7 +12,7 @@ object ChUpdaterConstants {
   const val EXTRA_RESULT_RECEIVER = "com.revrobotics.controlhubupdater.extra.RESULT_RECEIVER"
 
   // Result broadcast values (broadcasts are sent when the system does an action on boot, or when the ResultReceiver instance has been invalidated because the app restarted)
-  const val RESULT_BROADCAST = "com.revrobotics.controlhubupdater.broadcast.RESULT_BROADCAST" // TODO(Noah): Register receiver for result broadcasts
+  const val RESULT_BROADCAST = "com.revrobotics.controlhubupdater.broadcast.RESULT_BROADCAST"
   const val RESULT_BROADCAST_BUNDLE_EXTRA = "com.revrobotics.controlhubupdater.broadcast.extra.BUNDLE" // Contains the exact same bundle as would have been passed to a ResultReceiver instance
   const val RESULT_BUNDLE_CATEGORY_KEY = "category" // Will contain a String representation of Result.Category
   const val RESULT_BUNDLE_PRESENTATION_TYPE_KEY = "presentationType" // Will contain a String representation of Result.PresentationType

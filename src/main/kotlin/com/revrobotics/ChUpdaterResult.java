@@ -15,7 +15,7 @@ public final class ChUpdaterResult {
   @Nullable private String detailMessage;
   @Nullable private Throwable cause;
 
-  private ChUpdaterResult(@NonNull ChUpdaterResultType resultType, @Nullable String detailMessage, @Nullable Throwable cause) {
+  public ChUpdaterResult(@NonNull ChUpdaterResultType resultType, @Nullable String detailMessage, @Nullable Throwable cause) {
     this.resultType = resultType;
     this.detailMessage = detailMessage;
     this.cause = cause;
@@ -86,6 +86,19 @@ public final class ChUpdaterResult {
     Throwable cause = (Throwable) bundle.getSerializable(ChUpdaterConstants.RESULT_BUNDLE_CAUSE_KEY);
     return new ChUpdaterResult(ChUpdaterResultType, detailMessage, cause);
   }
+
+  public final Bundle toBundle() {
+    Bundle bundle = new Bundle();
+    bundle.putString(ChUpdaterConstants.RESULT_BUNDLE_CATEGORY_KEY, getCategory().name());
+    bundle.putString(ChUpdaterConstants.RESULT_BUNDLE_PRESENTATION_TYPE_KEY, getPresentationType().name());
+    bundle.putString(ChUpdaterConstants.RESULT_BUNDLE_DETAIL_MESSAGE_TYPE_KEY, getDetailMessageType().name());
+    bundle.putInt(ChUpdaterConstants.RESULT_BUNDLE_CODE_KEY, getCode());
+    bundle.putString(ChUpdaterConstants.RESULT_BUNDLE_MESSAGE_KEY, getMessage());
+    bundle.putString(ChUpdaterConstants.RESULT_BUNDLE_DETAIL_MESSAGE_KEY, getDetailMessage());
+    bundle.putSerializable(ChUpdaterConstants.RESULT_BUNDLE_CAUSE_KEY, getCause());
+    return bundle;
+  }
+
 
   /**
    * Enum that specifies which ChUpdaterResultType category this result is
