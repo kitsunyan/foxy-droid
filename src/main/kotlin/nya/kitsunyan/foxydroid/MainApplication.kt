@@ -109,9 +109,7 @@ class MainApplication: Application() {
     val getIntMethod = systemPropertiesClass.getMethod("getInt", String::class.java, Int::class.java)
 
     val driverHubOsVersionString: String = getStringMethod.invoke(null, "ro.driverhub.os.version", "") as String
-    val driverHubOsVersionCode: Int = 0
-    // TODO(Noah): Get real Driver Hub OS version code:
-//    val driverHubOsVersionCode: Int = getIntMethod.invoke(null, "ro.driverhub.os.versionnum", 0) as Int
+    val driverHubOsVersionCode: Int = getIntMethod.invoke(null, "ro.driverhub.os.versionnum", 0) as Int
 
     if (driverHubOsVersionString.isNotBlank()) {
       // TODO(Noah): Update signature string
