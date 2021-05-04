@@ -184,11 +184,12 @@ class TabsFragment: ScreenFragment() {
           true
         }
 
-      add(1, 0, 0, R.string.repositories)
+      // Repositories menu option disabled by REV Robotics on 2021-05-04
+      /*add(1, 0, 0, R.string.repositories)
         .setOnMenuItemClickListener {
           view.post { screenActivity.navigateRepositories() }
           true
-        }
+        }*/
 
       add(1, 0, 0, R.string.preferences)
         .setOnMenuItemClickListener {
