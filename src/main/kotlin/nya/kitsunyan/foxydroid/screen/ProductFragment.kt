@@ -266,7 +266,8 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     if (installed != null && packageName != MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
       actions += Action.DETAILS
     }
-    if (canUninstall) {
+    // Modified by REV Robotics on 2021-05-04 to hide uninstall button for Driver Hub OS
+    if (canUninstall && packageName != MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
       actions += Action.UNINSTALL
     }
     val primaryAction = when {
