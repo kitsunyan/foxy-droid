@@ -101,7 +101,7 @@ android {
           storePassword signing.storePassword
           keyAlias signing.keyAlias
           keyPassword signing.keyPassword
-          v2SigningEnabled false
+          v2SigningEnabled true
         }
       }
 
