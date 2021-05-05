@@ -101,7 +101,7 @@ data class Repository(val id: Long, val address: String, val mirrors: List<Strin
     val defaultRepositories = listOf(run {
       defaultRepository("https://software-metadata.revrobotics.com/fdroid-repo", "REV Robotics",
         "The official update repository for apps and operating system updates built or distributed by REV Robotics",
-        20000, true, "", "")
+        20000, true, "2803D3952C3C0DDF3AD20F05632B79CC0A4001D928CBABFF521A606BF557B37F", "")
     }, run {
       defaultRepository("https://f-droid.org/repo", "F-Droid", "The official F-Droid Free Software repository. " +
         "Everything in this repository is always built from the source code.",
