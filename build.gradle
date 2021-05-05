@@ -88,10 +88,11 @@ android {
     keystoreProperties.load(keystorePropertiesFile.newDataInputStream())
 
     def signing = [
-      storeFile: keystoreProperties['store.file'],
-      storePassword: keystoreProperties['store.password'],
-      keyAlias: keystoreProperties['key.alias'],
-      keyPassword: keystoreProperties['key.password']
+      // Modified by REV Robotics on 2021-05-05 to use Google-recommended property names
+      storeFile: keystoreProperties['storeFile'],
+      storePassword: keystoreProperties['storePassword'],
+      keyAlias: keystoreProperties['keyAlias'],
+      keyPassword: keystoreProperties['keyPassword']
     ]
 
     if (!signing.any { _, v -> v == null }) {
@@ -101,6 +102,7 @@ android {
           storePassword signing.storePassword
           keyAlias signing.keyAlias
           keyPassword signing.keyPassword
+          // v2SigningEnabled set to true by REV Robotics on 2021-05-05
           v2SigningEnabled true
         }
       }
