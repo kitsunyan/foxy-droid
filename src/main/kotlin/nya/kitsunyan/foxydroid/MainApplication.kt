@@ -112,8 +112,7 @@ class MainApplication: Application() {
     val driverHubOsVersionCode: Int = getIntMethod.invoke(null, "ro.driverhub.os.versionnum", 0) as Int
 
     if (driverHubOsVersionString.isNotBlank()) {
-      // TODO(Noah): Update signature string
-      Database.InstalledAdapter.put(InstalledItem(DRIVER_HUB_OS_CONTAINER_PACKAGE, driverHubOsVersionString, driverHubOsVersionCode.toLong(), "7968985a266acd9d4640716afaad21ed"))
+      Database.InstalledAdapter.put(InstalledItem(DRIVER_HUB_OS_CONTAINER_PACKAGE, driverHubOsVersionString, driverHubOsVersionCode.toLong(), "2de81609ece923768afd554228986159"))
     }
   }
 
