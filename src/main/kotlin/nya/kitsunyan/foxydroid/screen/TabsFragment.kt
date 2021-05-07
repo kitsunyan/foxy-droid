@@ -127,9 +127,15 @@ class TabsFragment: ScreenFragment() {
 
     syncConnection.bind(requireContext())
 
+    // Modified by REV Robotics on 2021-05-06: When tabs are hidden,
+    // include a description of what the user is looking at in the title
     val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
     screenActivity.onToolbarCreated(toolbar)
-    toolbar.setTitle(R.string.application_name)
+    var title = getString(R.string.application_name)
+    if (!showAllTabs) {
+      title += " - Available Updates"
+    }
+    toolbar.title = title
     // Move focus from SearchView to Toolbar
     toolbar.isFocusableInTouchMode = true
 
