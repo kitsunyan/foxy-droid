@@ -2,9 +2,11 @@
 
 Allows on-device updating of the Driver Hub Operating System and its built-in apps.
 
-Based on the [Foxy Droid](https://github.com/kitsunyan/foxy-droid) F-Droid client. Installing apps
-from the [F-Droid app repository](https://www.f-droid.org/en/packages/) can optionally be enabled.
-These apps are provided by the F-Droid community and are not supported by REV Robotics.
+Based on the [Foxy Droid](https://github.com/kitsunyan/foxy-droid) F-Droid client.
+
+[comment]: <> (Installing apps from the [F-Droid app repository]&#40;https://www.f-droid.org/en/packages/&#41; can optionally be enabled.)
+
+[comment]: <> (These apps are provided by the F-Droid community and are not supported by REV Robotics.)
 
 ## Building and Installing
 
