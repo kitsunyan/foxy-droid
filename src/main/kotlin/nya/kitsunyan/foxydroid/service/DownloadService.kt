@@ -242,7 +242,7 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
       if (task.release.targetSdkVersion < 23) {
         showNotificationInstall(task)
       } else {
-        RevUpdateHandler.performUpdateUsingControlHubUpdater(task.release.cacheFileName, packageName, task.release.version)
+        RevUpdateHandler.performUpdateUsingControlHubUpdater(task.release.cacheFileName, task.packageName, task.release.version)
       }
     }
   }
