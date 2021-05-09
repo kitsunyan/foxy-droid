@@ -116,7 +116,8 @@ class ProductsAdapter(private val onClick: (ProductItem) -> Unit):
     }
   }
 
-  private fun getProductItem(position: Int): ProductItem {
+  // Made public by REV Robotics on 2021-05-09
+  fun getProductItem(position: Int): ProductItem {
     return Database.ProductAdapter.transformItem(moveTo(position))
   }
 

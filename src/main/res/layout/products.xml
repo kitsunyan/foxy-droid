@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File created by REV Robotics on 2021-05-09 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools" xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:gravity="center_horizontal"
+              android:padding="0dp">
+
+    <!--  Bottom margin is -5dp to reduce the apparent margin below the button.
+          By default, a button's background is larger than the the button's apparent size. -->
+    <Button
+            android:id="@+id/updateAllButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:layout_marginBottom="-5dp"
+            android:text="Update All"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/products_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="0dp"
+            android:layout_marginTop="0dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:splitMotionEvents="false"
+            />
+</LinearLayout>

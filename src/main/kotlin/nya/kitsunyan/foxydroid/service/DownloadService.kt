@@ -94,18 +94,18 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
 
     fun enqueue(packageName: String, name: String, repository: Repository, release: Release) {
       val task = Task(packageName, name, release, release.getDownloadUrl(repository), repository.authentication)
-      if (Cache.getReleaseFile(this@DownloadService, release.cacheFileName).exists()) {
-        publishSuccess(task)
+
+      // Modified by REV Robotics on 2021-05-09:
+      // To make sure that app updates are installed in the same order as their downloads are queued, we moved the check
+      // for if the file already exists to the point at which the file's download would normally begin.
+      cancelTasks(packageName)
+      cancelCurrentTask(packageName)
+      notificationManager.cancel(task.notificationTag, Common.NOTIFICATION_ID_DOWNLOADING)
+      tasks += task
+      if (currentTask == null) {
+        handleDownload()
       } else {
-        cancelTasks(packageName)
-        cancelCurrentTask(packageName)
-        notificationManager.cancel(task.notificationTag, Common.NOTIFICATION_ID_DOWNLOADING)
-        tasks += task
-        if (currentTask == null) {
-          handleDownload()
-        } else {
-          stateSubject.onNext(State.Pending(packageName, name))
-        }
+        stateSubject.onNext(State.Pending(packageName, name))
       }
     }
 
@@ -334,6 +334,15 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
           started = true
           startSelf()
         }
+
+        // Modified by REV Robotics on 2021-05-09:
+        // To make sure that app updates are installed in the same order as their downloads are queued, we moved the
+        // check for if the file already exists from the point at which the file download is queued to here, where the
+        // download would normally begin.
+        if (Cache.getReleaseFile(this, task.release.cacheFileName).exists()) {
+          publishSuccess(task)
+        }
+
         val initialState = State.Connecting(task.packageName, task.name)
         stateNotificationBuilder.setWhen(System.currentTimeMillis())
         publishForegroundState(true, initialState)

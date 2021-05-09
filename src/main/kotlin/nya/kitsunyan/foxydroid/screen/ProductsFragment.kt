@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Parcelable
+import android.util.Log
 import android.text.format.DateUtils
 import android.text.format.DateUtils.MINUTE_IN_MILLIS
 import android.text.format.DateUtils.HOUR_IN_MILLIS
@@ -14,17 +15,22 @@ import android.text.format.DateUtils.WEEK_IN_MILLIS
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.LinearLayoutManager
+import android.widget.Button
 import androidx.recyclerview.widget.RecyclerView
+import com.revrobotics.mainThreadHandler
+import com.revrobotics.queueDownloadAndUpdate
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.MainApplication
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.database.CursorOwner
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.ProductItem
+import nya.kitsunyan.foxydroid.service.Connection
+import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 import nya.kitsunyan.foxydroid.widget.RecyclerFastScroller
@@ -32,6 +38,9 @@ import kotlin.concurrent.thread
 
 class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
   companion object {
+    // TAG for logging added by REV Robotics on 2021-05-09
+    private const val TAG = "ProductsFragment"
+
     private const val EXTRA_SOURCE = "source"
 
     private const val STATE_CURRENT_SEARCH_QUERY = "currentSearchQuery"
@@ -117,8 +126,13 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
   private var layoutManagerState: Parcelable? = null
 
   private var recyclerView: RecyclerView? = null
+  // updateAllButton added by REV Robotics on 2021-05-09
+  private var updateAllButton: Button? = null
 
   private var repositoriesDisposable: Disposable? = null
+
+  // downloadConnectionadded by REV Robotics on 2021-05-09
+  private var downloadConnection: Connection<DownloadService.Binder, DownloadService>? = null
 
   private val request: CursorOwner.Request
     get() {
@@ -144,19 +158,33 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       LAST_DOWNLOAD_TIMESTAMP_CHANGED_CALLBACKS.add(lastDownloadTimestampChangedCallback)
     }
 
-    return RecyclerView(requireContext()).apply {
-      id = android.R.id.list
-      layoutManager = LinearLayoutManager(context)
-      isMotionEventSplittingEnabled = false
-      isVerticalScrollBarEnabled = false
-      setHasFixedSize(true)
-      recycledViewPool.setMaxRecycledViews(ProductsAdapter.ViewType.PRODUCT.ordinal, 30)
-      val adapter = ProductsAdapter { screenActivity.navigateProduct(it.packageName) }
-      this.adapter = adapter
-      addItemDecoration(DividerItemDecoration(context, adapter::configureDivider))
-      RecyclerFastScroller(this)
-      recyclerView = this
+    // The remainder of this function was reworked by REV Robotics on 2021-05-09 in order to support an Update ALl button
+
+    downloadConnection = Connection(DownloadService::class.java)
+    downloadConnection?.bind(requireContext())
+
+    val layout = inflater.inflate(R.layout.products, container, false)
+    val recyclerView: RecyclerView = layout.findViewById(R.id.products_recycler_view)
+    val updateAllButton: Button = layout.findViewById(R.id.updateAllButton)
+
+    recyclerView.setHasFixedSize(true)
+    recyclerView.isVerticalScrollBarEnabled = false
+    recyclerView.recycledViewPool.setMaxRecycledViews(ProductsAdapter.ViewType.PRODUCT.ordinal, 30)
+    val adapter = ProductsAdapter { screenActivity.navigateProduct(it.packageName) }
+    recyclerView.adapter = adapter
+    recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, adapter::configureDivider))
+    RecyclerFastScroller(recyclerView)
+
+    updateAllButton.setOnClickListener {
+      updateAllButton.isEnabled = false
+      updateAllButton.text = "Updating all applications"
+      updateAll()
+      // TODO(Noah): Reset the text when all updates are installed
     }
+
+    this.recyclerView = recyclerView
+    this.updateAllButton = updateAllButton
+    return layout
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -187,6 +215,11 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
     recyclerView = null
 
+    // These 3 lines added by REV Robotics on 2021-05-09
+    updateAllButton = null
+    downloadConnection?.unbind(requireContext())
+    downloadConnection = null
+
     screenActivity.cursorOwner.detach(this)
     repositoriesDisposable?.dispose()
     repositoriesDisposable = null
@@ -213,6 +246,13 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
           Source.INSTALLED -> getString(R.string.no_applications_installed)
           Source.UPDATES -> getUpdatesTabEmptyText() // Modified by REV Robotics on 2021-04-29
         }
+
+      }
+      // Lines added by REV Robotics on 2021-05-09 to control visibility of Update All button
+      if (source == Source.UPDATES && itemCount > 0 && getItemEnumViewType(0) == ProductsAdapter.ViewType.PRODUCT) {
+        updateAllButton?.visibility = View.VISIBLE
+      } else {
+        updateAllButton?.visibility = View.GONE
       }
     }
 
@@ -300,5 +340,56 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       }
     }
     return getString(R.string.all_applications_up_to_date) + howLongAgo
+  }
+
+  // updateAll() function added by REV Robotics on 2021-05-09
+  private fun updateAll() {
+    val downloadConnection = this.downloadConnection
+    if (downloadConnection?.binder == null) {
+      mainThreadHandler.postDelayed(::updateAll, 1000)
+    } else {
+      var thisApp: ProductItem? = null
+      var driverHubOs: ProductItem? = null
+      val adapter = recyclerView?.adapter as ProductsAdapter?
+      if (adapter == null) {
+        Log.e(TAG, "RecyclerView adapter is null in updateAll()")
+        return
+      }
+      for (i in 0 until adapter.itemCount) {
+        val product = adapter.getProductItem(i)
+        when (product.packageName) {
+          BuildConfig.APPLICATION_ID -> {
+            Log.d("Noah", "Deferring update for ${product.packageName}")
+            thisApp = product
+          }
+          MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE -> {
+            Log.d("Noah", "Deferring update for ${product.packageName}")
+            driverHubOs = product
+          }
+          else -> {
+            Log.d("Noah", "Queueing download for ${product.packageName}")
+            queueDownloadAndUpdate(product.packageName, downloadConnection)
+          }
+        }
+      } // for loop
+      if (thisApp != null && driverHubOs != null) {
+        // Both this app and the Driver Hub OS need to be updated. To handle this, we set a flag to cause the OS to
+        // auto-update the next time this app is launched, and then add this app to the update queue.
+        // TODO(Noah): Flag OS for auto-update when next launched
+        Log.d("Noah", "Noting auto-update command for OS and ueueing update for ${thisApp.packageName}")
+
+        queueDownloadAndUpdate(thisApp.packageName, downloadConnection)
+      } else {
+        // This app and the Driver Hub OS don't both need to be updated, so if one of them needs an update, queue it.
+        thisApp?.let {
+          Log.d("Noah", "Queueing download for ${it.packageName}")
+          queueDownloadAndUpdate(it.packageName, downloadConnection)
+        }
+        driverHubOs?.let {
+          Log.d("Noah", "Queueing download for ${it.packageName}")
+          queueDownloadAndUpdate(it.packageName, downloadConnection)
+        }
+      }
+    }
   }
 }
