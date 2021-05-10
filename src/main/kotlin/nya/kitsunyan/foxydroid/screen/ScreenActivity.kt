@@ -12,7 +12,7 @@ import android.widget.FrameLayout
 import android.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import com.revrobotics.RevUpdateHandler
+import com.revrobotics.RevUpdater
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
@@ -252,11 +252,11 @@ abstract class ScreenActivity: FragmentActivity() {
   // onPause() and onResume() overrides added by REV Robotics on 2021-05-04
   override fun onResume() {
     super.onResume()
-    RevUpdateHandler.currentActivity = this
+    RevUpdater.currentActivity = this
   }
 
   override fun onPause() {
     super.onPause()
-    RevUpdateHandler.currentActivity = null
+    RevUpdater.currentActivity = null
   }
 }

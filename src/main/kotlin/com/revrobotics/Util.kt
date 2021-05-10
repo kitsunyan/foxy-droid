@@ -8,6 +8,8 @@ import android.os.Handler
 import android.os.Looper
 import java.util.concurrent.Executors
 
+// This file was written by REV Robotics, but should only contain code that could be ported to upstream Foxy Droid.
+
 val mainThreadHandler = Handler(Looper.getMainLooper())
 
 private val executor = Executors.newSingleThreadExecutor()

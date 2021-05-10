@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
+import com.revrobotics.RevConstants
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
 import nya.kitsunyan.foxydroid.content.Cache
@@ -33,7 +34,6 @@ class MainApplication: Application() {
 
   // companion object added by REV Robotics on 2021-04-29
   companion object {
-    const val DRIVER_HUB_OS_CONTAINER_PACKAGE = "com.revrobotics.driverhuboscontainer"
     lateinit var instance: MainApplication
   }
 
@@ -108,11 +108,11 @@ class MainApplication: Application() {
     val getStringMethod = systemPropertiesClass.getMethod("get", String::class.java, String::class.java)
     val getIntMethod = systemPropertiesClass.getMethod("getInt", String::class.java, Int::class.java)
 
-    val driverHubOsVersionString: String = getStringMethod.invoke(null, "ro.driverhub.os.version", "") as String
-    val driverHubOsVersionCode: Int = getIntMethod.invoke(null, "ro.driverhub.os.versionnum", 0) as Int
+    val driverHubOsVersionString: String = getStringMethod.invoke(null, RevConstants.DRIVER_HUB_OS_VERSION_NAME_PROPERTY, "") as String
+    val driverHubOsVersionCode: Int = getIntMethod.invoke(null, RevConstants.DRIVER_HUB_OS_VERSION_CODE_PROPERTY, 0) as Int
 
     if (driverHubOsVersionString.isNotBlank()) {
-      Database.InstalledAdapter.put(InstalledItem(DRIVER_HUB_OS_CONTAINER_PACKAGE, driverHubOsVersionString, driverHubOsVersionCode.toLong(), "2de81609ece923768afd554228986159"))
+      Database.InstalledAdapter.put(InstalledItem(RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE, driverHubOsVersionString, driverHubOsVersionCode.toLong(), "2de81609ece923768afd554228986159"))
     }
   }
 

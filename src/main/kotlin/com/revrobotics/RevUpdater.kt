@@ -23,9 +23,9 @@ import java.util.zip.ZipFile
 import kotlin.concurrent.thread
 
 @SuppressLint("StaticFieldLeak") // We clear currentActivity when it becomes paused
-object RevUpdateHandler {
+object RevUpdater {
   private const val TAG = "RevUpdateHandler"
-  private val executor = Executors.newSingleThreadExecutor()
+  private val updateExecutor = Executors.newSingleThreadExecutor()
 
   @Volatile var currentActivity: Activity? = null
   @Volatile var currentlyDisplayedPackageName: String? = null
@@ -50,7 +50,7 @@ object RevUpdateHandler {
   private var statusDialog: AlertDialog? = null
 
   fun performUpdateUsingControlHubUpdater(cacheFileName: String, packageName: String, versionName: String) {
-    executor.submit(UpdateRunnable(cacheFileName, packageName, versionName))
+    updateExecutor.submit(UpdateRunnable(cacheFileName, packageName, versionName))
   }
 
   private class UpdateRunnable(val cacheFileName: String, val packageName: String, val versionName: String): Runnable {
@@ -66,7 +66,7 @@ object RevUpdateHandler {
           shouldStatusDialogBeDisplayed.set(true)
         }
 
-        val currentActivity = RevUpdateHandler.currentActivity
+        val currentActivity = RevUpdater.currentActivity
         if (shouldStatusDialogBeDisplayed.get() && currentActivity != null) {
           showOrUpdateDialog(result.message, currentActivity)
         } else {
@@ -107,6 +107,7 @@ object RevUpdateHandler {
         }
       }
     }
+
     override fun run() {
       val apkFile = Cache.getReleaseFile(MainApplication.instance, cacheFileName)
       val updateIntent = Intent()

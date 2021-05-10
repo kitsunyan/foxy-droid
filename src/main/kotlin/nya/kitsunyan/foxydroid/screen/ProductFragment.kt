@@ -18,12 +18,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.revrobotics.RevUpdateHandler
+import com.revrobotics.RevConstants
+import com.revrobotics.RevUpdater
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import nya.kitsunyan.foxydroid.MainApplication
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.ProductPreferences
 import nya.kitsunyan.foxydroid.database.Database
@@ -207,12 +207,12 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
   // onResume() and onPause() added by REV Robotics on 2021-05-03
   override fun onResume() {
     super.onResume()
-    RevUpdateHandler.currentlyDisplayedPackageName = packageName
+    RevUpdater.currentlyDisplayedPackageName = packageName
   }
 
   override fun onPause() {
     super.onPause()
-    RevUpdateHandler.currentlyDisplayedPackageName = null
+    RevUpdater.currentlyDisplayedPackageName = null
   }
 
   override fun onDestroyView() {
@@ -263,11 +263,11 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       actions += Action.LAUNCH
     }
     // Modified by REV Robotics on 2021-05-04 to hide details button for Driver Hub OS
-    if (installed != null && packageName != MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
+    if (installed != null && packageName != RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
       actions += Action.DETAILS
     }
     // Modified by REV Robotics on 2021-05-04 to hide uninstall button for Driver Hub OS
-    if (canUninstall && packageName != MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
+    if (canUninstall && packageName != RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
       actions += Action.UNINSTALL
     }
     val primaryAction = when {
@@ -275,7 +275,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       canLaunch -> Action.LAUNCH
       canInstall -> Action.INSTALL
       // Modified by REV Robotics on 2021-05-04 to hide details button for Driver Hub OS
-      installed != null && packageName != MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE -> Action.DETAILS
+      installed != null && packageName != RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE -> Action.DETAILS
       else -> null
     }
 
@@ -334,7 +334,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       if (state.release.targetSdkVersion < 23) {
         screenActivity.startPackageInstaller(cacheFileName)
       } else {
-        RevUpdateHandler.performUpdateUsingControlHubUpdater(cacheFileName, packageName, state.release.version)
+        RevUpdater.performUpdateUsingControlHubUpdater(cacheFileName, packageName, state.release.version)
       }
     }
   }

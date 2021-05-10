@@ -17,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.recyclerview.widget.RecyclerView
+import com.revrobotics.RevConstants
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -24,7 +25,6 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import nya.kitsunyan.foxydroid.BuildConfig
-import nya.kitsunyan.foxydroid.MainApplication
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.database.CursorOwner
 import nya.kitsunyan.foxydroid.database.Database
@@ -51,7 +51,6 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     // Values and functions added by REV Robotics
     private const val JAN_1_2021_TIMESTAMP_MS = 1609459200000
     private const val LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX = "lastUpdateCheckRepo"
-    private val SHARED_PREFS_REV = MainApplication.instance.getSharedPreferences("revrobotics", Context.MODE_PRIVATE)
     private val MAIN_HANDLER = Handler(Looper.getMainLooper())
     private val UPDATE_TAB_EMPTY_TEXT_UPDATE_TOKEN = Object()
     private val LAST_DOWNLOAD_TIMESTAMP_CHANGED_CALLBACKS: MutableList<()->Unit> = ArrayList()
@@ -65,12 +64,12 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       }
 
     fun markRepoAsJustDownloaded(repoId: Long) {
-      SHARED_PREFS_REV.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, System.currentTimeMillis()).apply()
+      RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, System.currentTimeMillis()).apply()
       calculateLastDownloadOfAllReposTimestamp()
     }
 
     fun markRepoAsNeverDownloaded(repoId: Long) {
-      SHARED_PREFS_REV.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, 0).apply()
+      RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, 0).apply()
       calculateLastDownloadOfAllReposTimestamp()
     }
 
@@ -81,7 +80,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
           Database.RepositoryAdapter.getAll(null).asSequence()
             .filter { it.enabled }
             .forEach {
-              val timeRepoWasLastUpdated = SHARED_PREFS_REV?.getLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + it.id, 0) ?: 0
+              val timeRepoWasLastUpdated = RevConstants.SHARED_PREFS.getLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + it.id, 0)
               if (timeRepoWasLastUpdated < oldestTimestamp) {
                 oldestTimestamp = timeRepoWasLastUpdated
               }
@@ -362,7 +361,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
             Log.d("Noah", "Deferring update for ${product.packageName}")
             thisApp = product
           }
-          MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE -> {
+          RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE -> {
             Log.d("Noah", "Deferring update for ${product.packageName}")
             driverHubOs = product
           }

@@ -9,7 +9,7 @@ import android.content.Intent
 import android.net.Uri
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
-import com.revrobotics.RevUpdateHandler
+import com.revrobotics.RevUpdater
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -242,7 +242,7 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
       if (task.release.targetSdkVersion < 23) {
         showNotificationInstall(task)
       } else {
-        RevUpdateHandler.performUpdateUsingControlHubUpdater(task.release.cacheFileName, task.packageName, task.release.version)
+        RevUpdater.performUpdateUsingControlHubUpdater(task.release.cacheFileName, task.packageName, task.release.version)
       }
     }
   }
