@@ -345,6 +345,7 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
         // To make sure that app updates are installed in the same order as their downloads are queued, we moved the
         // check for if the file already exists from the point at which the file download is queued to here, where the
         // download would normally begin.
+        // TODO(Noah): It still seems like this isn't working correctly. Investigate and fix.
         if (Cache.getReleaseFile(this, task.release.cacheFileName).exists()) {
           currentTask = null
           publishSuccess(task)

@@ -80,6 +80,7 @@ class MainApplication: Application() {
 
     if (RevConstants.shouldAutoInstallOsOnNextLaunch) {
       RevConstants.shouldAutoInstallOsOnNextLaunch = false
+      // TODO(Noah): The status updates are not displayed in a dialog like they should be
       RevUpdater.updatingAllSoftware = true
       installOsUpdate()
     }
