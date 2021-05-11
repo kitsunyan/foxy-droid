@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import com.revrobotics.RevConstants
+import com.revrobotics.RevUpdater
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
 import com.squareup.picasso.OkHttp3Downloader
@@ -79,6 +80,7 @@ class MainApplication: Application() {
 
     if (RevConstants.shouldAutoInstallOsOnNextLaunch) {
       RevConstants.shouldAutoInstallOsOnNextLaunch = false
+      RevUpdater.updatingAllSoftware = true
       installOsUpdate()
     }
   }

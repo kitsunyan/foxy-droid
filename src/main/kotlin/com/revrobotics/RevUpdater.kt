@@ -29,10 +29,11 @@ object RevUpdater {
   private val shouldStatusDialogBeDisplayed = AtomicBoolean(false)
 
   @Volatile var currentActivity: Activity? = null
+  @Volatile var dialogPrefix: String? = null
 
   // TODO(Noah): When update all has finished, show a popup that says "all software has been updated", even if the user pressed hide
 
-  @Volatile var showProgressOnAnyScreen = false // TODO(Noah): Set this to false after update all or launch-induced OS update has finished
+  @Volatile var updatingAllSoftware = false // TODO(Noah): Set this to false after update all or launch-induced OS update has finished
     set (value) {
       field = value
       if (value) {
@@ -43,7 +44,7 @@ object RevUpdater {
   @Volatile var currentlyDisplayedPackageName: String? = null
     set(value) {
       field = value
-      if (showProgressOnAnyScreen) { return }
+      if (updatingAllSoftware) { return }
 
       if (value == null) {
         this.statusDialog?.dismiss()
@@ -75,14 +76,19 @@ object RevUpdater {
         val result = ChUpdaterResult.fromBundle(resultBundle)
         Log.d(TAG, "CH Updater result: ${result.message}")
 
-        if (!showProgressOnAnyScreen && updateState?.packageBeingUpdated != packageName && currentlyDisplayedPackageName == packageName) {
+        if (!updatingAllSoftware && updateState?.packageBeingUpdated != packageName && currentlyDisplayedPackageName == packageName) {
           // We just received a result for a different package, whose ProductFragment is being displayed.
           shouldStatusDialogBeDisplayed.set(true)
         }
 
         val currentActivity = RevUpdater.currentActivity
         if (shouldStatusDialogBeDisplayed.get() && currentActivity != null) {
-          showOrUpdateDialog(result.message, currentActivity)
+          var message = result.message
+          if (updatingAllSoftware && result.presentationType == SUCCESS) {
+            // TODO(Noah): If we just updated the last piece of software, erase the prefix, and add a different message instead.
+            message += "\nWaiting for the next piece of software to finish downloading."
+          }
+          showOrUpdateDialog(message, currentActivity)
         } else {
           Toast.makeText(MainApplication.instance, result.message, Toast.LENGTH_SHORT).show()
         }
@@ -91,8 +97,8 @@ object RevUpdater {
         // TODO(Noah): Figure out why dialog doesn't display when rotated to portrait
 
         updateState = if (result.presentationType == ERROR || result.presentationType == SUCCESS) {
-          // TODO(Noah): When updating all apps, text should continue to say "hide progress" until all apps have been updated
-          if (!showProgressOnAnyScreen) {
+          // TODO(Noah): When updating all apps, button text should switch to "OK" after all apps have been updated
+          if (!updatingAllSoftware) {
             statusDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.text = "OK"
           }
           null
@@ -105,8 +111,6 @@ object RevUpdater {
         }
 
         if (result.presentationType == ERROR && result.message.contains("Busy with previous update")) {
-          // TODO(Noah): Fix bug where CHUpdater can report that it's busy with a previous request after that request
-          //             has been reported as successfully installed, and remove this hack
           Log.w(TAG, "ControlHubUpdater has reported that it is busy with a previous update. Trying again.")
 
           // We have to run on a new thread, because this runnable blocks, we're currently on the main/UI thread, and
@@ -163,20 +167,27 @@ object RevUpdater {
 
   fun showOrUpdateDialog(message: String, activity: Activity) {
     var statusDialog = this.statusDialog
+    val messagePrefix = this.dialogPrefix
+
+    var adjustedMessage = message
+    if (messagePrefix != null) {
+      adjustedMessage = messagePrefix + adjustedMessage
+    }
+
     if (statusDialog == null) {
       statusDialog = AlertDialog.Builder(activity)
           .setOnDismissListener {
             this.shouldStatusDialogBeDisplayed.set(false)
             this.statusDialog = null
           }
-          .setMessage(message)
-          .setPositiveButton("Hide progress") { _: DialogInterface, _: Int -> }
+          .setMessage(adjustedMessage)
+          .setPositiveButton("Hide installation status") { _: DialogInterface, _: Int -> }
           // TODO(Noah): Show spinner of some kind
           .create()
       statusDialog.show()
       this.statusDialog = statusDialog
     } else {
-      statusDialog.setMessage(message)
+      statusDialog.setMessage(adjustedMessage)
     }
   }
 }
