@@ -17,6 +17,8 @@ import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.database.CursorOwner
+import nya.kitsunyan.foxydroid.service.Connection
+import nya.kitsunyan.foxydroid.service.SyncService
 import nya.kitsunyan.foxydroid.utility.KParcelable
 import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
@@ -72,6 +74,12 @@ abstract class ScreenActivity: FragmentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     setTheme(Preferences[Preferences.Key.Theme].getResId(resources.configuration))
     super.onCreate(savedInstanceState)
+
+    // Modified by REV Robotics on 2021-05-10: Sync repositories when activity is created
+    Connection(SyncService::class.java, onBind = { connection, binder ->
+      binder.sync(SyncService.SyncRequest.MANUAL)
+      connection.unbind(this)
+    }).bind(this)
 
     window.decorView.systemUiVisibility = window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
       View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
