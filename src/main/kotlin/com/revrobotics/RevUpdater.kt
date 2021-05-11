@@ -26,11 +26,25 @@ import kotlin.concurrent.thread
 object RevUpdater {
   const val TAG = "RevUpdateHandler"
   private val updateExecutor = Executors.newSingleThreadExecutor()
+  private val shouldStatusDialogBeDisplayed = AtomicBoolean(false)
 
   @Volatile var currentActivity: Activity? = null
+
+  // TODO(Noah): When update all has finished, show a popup that says "all software has been updated", even if the user pressed hide
+
+  @Volatile var showProgressOnAnyScreen = false // TODO(Noah): Set this to false after update all or launch-induced OS update has finished
+    set (value) {
+      field = value
+      if (value) {
+        shouldStatusDialogBeDisplayed.set(true)
+      }
+    }
+
   @Volatile var currentlyDisplayedPackageName: String? = null
     set(value) {
       field = value
+      if (showProgressOnAnyScreen) { return }
+
       if (value == null) {
         this.statusDialog?.dismiss()
       } else {
@@ -46,7 +60,6 @@ object RevUpdater {
     }
 
   @Volatile private var updateState: UpdateState? = null
-  private var shouldStatusDialogBeDisplayed = AtomicBoolean(false)
   private var statusDialog: AlertDialog? = null
 
   fun performUpdateUsingControlHubUpdater(cacheFileName: String, packageName: String, versionName: String) {
@@ -60,8 +73,9 @@ object RevUpdater {
         // This runs on the main/UI thread because we are using a Handler based on Looper.getMainLooper()
         if (resultBundle == null) { return }
         val result = ChUpdaterResult.fromBundle(resultBundle)
+        Log.d(TAG, "CH Updater result: ${result.message}")
 
-        if (updateState?.packageBeingUpdated != packageName && currentlyDisplayedPackageName == packageName) {
+        if (!showProgressOnAnyScreen && updateState?.packageBeingUpdated != packageName && currentlyDisplayedPackageName == packageName) {
           // We just received a result for a different package, whose ProductFragment is being displayed.
           shouldStatusDialogBeDisplayed.set(true)
         }
@@ -70,7 +84,6 @@ object RevUpdater {
         if (shouldStatusDialogBeDisplayed.get() && currentActivity != null) {
           showOrUpdateDialog(result.message, currentActivity)
         } else {
-          Log.d(TAG, "CH Updater result: ${result.message}")
           Toast.makeText(MainApplication.instance, result.message, Toast.LENGTH_SHORT).show()
         }
 
@@ -78,7 +91,10 @@ object RevUpdater {
         // TODO(Noah): Figure out why dialog doesn't display when rotated to portrait
 
         updateState = if (result.presentationType == ERROR || result.presentationType == SUCCESS) {
-          statusDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.text = "OK"
+          // TODO(Noah): When updating all apps, text should continue to say "hide progress" until all apps have been updated
+          if (!showProgressOnAnyScreen) {
+            statusDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.text = "OK"
+          }
           null
         } else if (result.presentationType == PROMPT) {
           // TODO(Noah): Handle prompts correctly
@@ -145,7 +161,7 @@ object RevUpdater {
 
   }
 
-  private fun showOrUpdateDialog(message: String, activity: Activity) {
+  fun showOrUpdateDialog(message: String, activity: Activity) {
     var statusDialog = this.statusDialog
     if (statusDialog == null) {
       statusDialog = AlertDialog.Builder(activity)

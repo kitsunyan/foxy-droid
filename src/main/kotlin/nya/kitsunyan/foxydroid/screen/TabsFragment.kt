@@ -133,6 +133,7 @@ class TabsFragment: ScreenFragment() {
     screenActivity.onToolbarCreated(toolbar)
     var title = getString(R.string.application_name)
     if (!showAllTabs) {
+      // TODO(Noah): Instead of appending to the title, add to the header that contains the Update All button
       title += " - Available Updates"
     }
     toolbar.title = title

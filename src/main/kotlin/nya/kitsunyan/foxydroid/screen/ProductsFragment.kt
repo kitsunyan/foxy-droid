@@ -176,9 +176,11 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
     updateAllButton.setOnClickListener {
       updateAllButton.isEnabled = false
-      updateAllButton.text = "Updating all applications"
+      updateAllButton.text = "Updating all software"
+      RevUpdater.showProgressOnAnyScreen = true
+      RevUpdater.showOrUpdateDialog("Downloading and installing all updates", activity!!)
       updateAll()
-      // TODO(Noah): Reset the text when all updates are installed
+      // TODO(Noah): Reset the text and enable the button when all updates are installed
     }
 
     this.recyclerView = recyclerView
