@@ -34,8 +34,6 @@ import java.net.Proxy
 
 @Suppress("unused")
 class MainApplication: Application() {
-  var downloadConnection: Connection<DownloadService.Binder, DownloadService>? = null
-
   // companion object added by REV Robotics on 2021-04-29
   companion object {
     lateinit var instance: MainApplication
@@ -221,17 +219,11 @@ class MainApplication: Application() {
 
   // installOsUpdate() function added by REV Robotics on 2021-05-10
   private fun installOsUpdate() {
-    var downloadConnection = this.downloadConnection
-    if (downloadConnection == null) {
-      downloadConnection = Connection(DownloadService::class.java)
-      downloadConnection.bind(this)
-      this.downloadConnection = downloadConnection
-    }
-    if (downloadConnection.binder == null) {
+    Connection(DownloadService::class.java, onBind = { connection, _ ->
       mainThreadHandler.postDelayed(::installOsUpdate, 1000)
-    } else {
-      queueDownloadAndUpdate(RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE, downloadConnection)
-    }
+      queueDownloadAndUpdate(RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE, connection)
+      connection.unbind(this)
+    }).bind(this)
   }
 
   class BootReceiver: BroadcastReceiver() {
