@@ -335,7 +335,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       if (state.release.targetSdkVersion < 23) {
         screenActivity.startPackageInstaller(cacheFileName)
       } else {
-        if (packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE && !RevConstants.shouldAutoInstallOSWhenDownloadCompletes) {
+        if (state.packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE && !RevConstants.shouldAutoInstallOSWhenDownloadCompletes) {
           Log.i(RevUpdater.TAG, "The Driver Hub OS has finished downloading, but we are not going to install it at this time")
         } else {
           RevUpdater.performUpdateUsingControlHubUpdater(cacheFileName, packageName, state.release.version)

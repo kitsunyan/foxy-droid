@@ -244,7 +244,7 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
       if (task.release.targetSdkVersion < 23) {
         showNotificationInstall(task)
       } else {
-        if (packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE && !RevConstants.shouldAutoInstallOSWhenDownloadCompletes) {
+        if (task.packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE && !RevConstants.shouldAutoInstallOSWhenDownloadCompletes) {
           Log.i(RevUpdater.TAG, "The Driver Hub OS has finished downloading, but we are not going to install it at this time")
         } else {
           RevUpdater.performUpdateUsingControlHubUpdater(task.release.cacheFileName, task.packageName, task.release.version)
