@@ -11,6 +11,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import com.revrobotics.RevConstants
+import com.revrobotics.mainThreadHandler
+import com.revrobotics.queueDownloadAndUpdate
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
 import nya.kitsunyan.foxydroid.content.Cache
@@ -23,6 +25,7 @@ import nya.kitsunyan.foxydroid.network.Downloader
 import nya.kitsunyan.foxydroid.network.PicassoDownloader
 import nya.kitsunyan.foxydroid.screen.ProductsFragment
 import nya.kitsunyan.foxydroid.service.Connection
+import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.service.SyncService
 import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
@@ -31,6 +34,7 @@ import java.net.Proxy
 
 @Suppress("unused")
 class MainApplication: Application() {
+  var downloadConnection: Connection<DownloadService.Binder, DownloadService>? = null
 
   // companion object added by REV Robotics on 2021-04-29
   companion object {
@@ -68,6 +72,14 @@ class MainApplication: Application() {
 
     Cache.cleanup(this)
     updateSyncJob(false)
+
+    // Support for updating the Driver Hub OS on app launch added by REV Robotics on 2021-05-10
+    RevConstants.shouldAutoInstallOSWhenDownloadCompletes = true
+
+    if (RevConstants.shouldAutoInstallOsOnNextLaunch) {
+      RevConstants.shouldAutoInstallOsOnNextLaunch = false
+      installOsUpdate()
+    }
   }
 
   private fun listenApplications() {
@@ -102,7 +114,7 @@ class MainApplication: Application() {
     Database.InstalledAdapter.putAll(installedItems)
 
     // Modified by REV Robotics: Add entry for the Driver Hub OS container based on the actual
-    // Driver Hub OS version, rather than the container version, which might not even be installed.
+    // Driver Hub OS version, rather than the version of the container, which shouldn't even be installed.
     @SuppressLint("PrivateApi")
     val systemPropertiesClass = Class.forName("android.os.SystemProperties")
     val getStringMethod = systemPropertiesClass.getMethod("get", String::class.java, String::class.java)
@@ -205,6 +217,21 @@ class MainApplication: Application() {
       binder.sync(SyncService.SyncRequest.FORCE)
       connection.unbind(this)
     }).bind(this)
+  }
+
+  // installOsUpdate() function added by REV Robotics on 2021-05-10
+  private fun installOsUpdate() {
+    var downloadConnection = this.downloadConnection
+    if (downloadConnection == null) {
+      downloadConnection = Connection(DownloadService::class.java)
+      downloadConnection.bind(this)
+      this.downloadConnection = downloadConnection
+    }
+    if (downloadConnection.binder == null) {
+      mainThreadHandler.postDelayed(::installOsUpdate, 1000)
+    } else {
+      queueDownloadAndUpdate(RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE, downloadConnection)
+    }
   }
 
   class BootReceiver: BroadcastReceiver() {

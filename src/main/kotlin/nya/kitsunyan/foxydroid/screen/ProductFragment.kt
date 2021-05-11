@@ -8,6 +8,7 @@ import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -334,7 +335,11 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       if (state.release.targetSdkVersion < 23) {
         screenActivity.startPackageInstaller(cacheFileName)
       } else {
-        RevUpdater.performUpdateUsingControlHubUpdater(cacheFileName, packageName, state.release.version)
+        if (packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE && !RevConstants.shouldAutoInstallOSWhenDownloadCompletes) {
+          Log.i(RevUpdater.TAG, "The Driver Hub OS has finished downloading, but we are not going to install it at this time")
+        } else {
+          RevUpdater.performUpdateUsingControlHubUpdater(cacheFileName, packageName, state.release.version)
+        }
       }
     }
   }

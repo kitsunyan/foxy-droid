@@ -7,8 +7,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
+import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -242,7 +244,11 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
       if (task.release.targetSdkVersion < 23) {
         showNotificationInstall(task)
       } else {
-        RevUpdater.performUpdateUsingControlHubUpdater(task.release.cacheFileName, task.packageName, task.release.version)
+        if (packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE && !RevConstants.shouldAutoInstallOSWhenDownloadCompletes) {
+          Log.i(RevUpdater.TAG, "The Driver Hub OS has finished downloading, but we are not going to install it at this time")
+        } else {
+          RevUpdater.performUpdateUsingControlHubUpdater(task.release.cacheFileName, task.packageName, task.release.version)
+        }
       }
     }
   }

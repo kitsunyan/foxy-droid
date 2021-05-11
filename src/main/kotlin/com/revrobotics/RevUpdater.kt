@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
 
 @SuppressLint("StaticFieldLeak") // We clear currentActivity when it becomes paused
 object RevUpdater {
-  private const val TAG = "RevUpdateHandler"
+  const val TAG = "RevUpdateHandler"
   private val updateExecutor = Executors.newSingleThreadExecutor()
 
   @Volatile var currentActivity: Activity? = null
@@ -115,7 +115,7 @@ object RevUpdater {
       updateIntent.putExtra(ChUpdaterConstants.EXTRA_RESULT_RECEIVER, wrapResultReceiverForIpc(resultReceiver))
 
       val updatePath: String
-      if (packageName == MainApplication.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
+      if (packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
         resultReceiver.send(0, ChUpdaterResult(ChUpdaterResultType(
             ChUpdaterResult.Category.OTA_UPDATE,
             0,

@@ -1,6 +1,5 @@
 package nya.kitsunyan.foxydroid.screen
 
-import android.content.Context
 import android.database.Cursor
 import android.os.Bundle
 import android.os.Handler
@@ -18,6 +17,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.recyclerview.widget.RecyclerView
 import com.revrobotics.RevConstants
+import com.revrobotics.RevUpdater
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -373,10 +373,14 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       } // for loop
       if (thisApp != null && driverHubOs != null) {
         // Both this app and the Driver Hub OS need to be updated. To handle this, we set a flag to cause the OS to
-        // auto-update the next time this app is launched, and then add this app to the update queue.
-        // TODO(Noah): Flag OS for auto-update when next launched
-        Log.d("Noah", "Noting auto-update command for OS and ueueing update for ${thisApp.packageName}")
+        // auto-update the next time this app is launched, another flag to specify that the OS should not be installed
+        // immediately upon download completion, and then add the OS and this app to the update queue. The intended
+        // behavior is for the OS to already be downloaded before this app restarts due to it being updated.
+        RevConstants.shouldAutoInstallOsOnNextLaunch = true
+        RevConstants.shouldAutoInstallOSWhenDownloadCompletes = false
+        Log.d("Noah", "Queueing updates for OS and ourselves (${thisApp.packageName})")
 
+        queueDownloadAndUpdate(RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE, downloadConnection)
         queueDownloadAndUpdate(thisApp.packageName, downloadConnection)
       } else {
         // This app and the Driver Hub OS don't both need to be updated, so if one of them needs an update, queue it.
