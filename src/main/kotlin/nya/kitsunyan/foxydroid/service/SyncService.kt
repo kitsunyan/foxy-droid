@@ -35,6 +35,7 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
 
+// TODO(Noah): Dismiss errors about failing to sync a repository once it has been successfully synced
 class SyncService: ConnectionService<SyncService.Binder>() {
   companion object {
     private const val ACTION_CANCEL = "${BuildConfig.APPLICATION_ID}.intent.action.CANCEL"
