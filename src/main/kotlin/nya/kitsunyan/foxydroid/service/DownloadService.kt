@@ -346,7 +346,10 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
         // check for if the file already exists from the point at which the file download is queued to here, where the
         // download would normally begin.
         if (Cache.getReleaseFile(this, task.release.cacheFileName).exists()) {
+          currentTask = null
           publishSuccess(task)
+          handleDownload()
+          return
         }
 
         val initialState = State.Connecting(task.packageName, task.name)
