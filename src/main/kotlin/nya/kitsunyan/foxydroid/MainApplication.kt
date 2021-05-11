@@ -65,11 +65,8 @@ class MainApplication: Application() {
     Picasso.setSingletonInstance(Picasso.Builder(this)
       .downloader(OkHttp3Downloader(PicassoDownloader.Factory(Cache.getImagesDir(this)))).build())
 
-    // Modified by REV Robotics on 2021-05-10: Sync all repositories even if the database wasn't updated
     if (databaseUpdated) {
-      syncAll(force = true)
-    } else {
-      syncAll(force = false)
+      forceSyncAll()
     }
 
     Cache.cleanup(this)
@@ -149,7 +146,7 @@ class MainApplication: Application() {
         val updateUnstable = Preferences[Preferences.Key.UpdateUnstable]
         if (lastUpdateUnstable != updateUnstable) {
           lastUpdateUnstable = updateUnstable
-          syncAll(force = true)
+          forceSyncAll()
         }
       }
     }
@@ -209,24 +206,16 @@ class MainApplication: Application() {
     Downloader.proxy = proxy
   }
 
-  // Modified by REV Robotics on 2021-05-10 to support doing a non-forced sync on every application start
-  private fun syncAll(force: Boolean) {
-    if (force) {
-      Database.RepositoryAdapter.getAll(null).forEach {
-        if (it.lastModified.isNotEmpty() || it.entityTag.isNotEmpty()) {
-          Database.RepositoryAdapter.put(it.copy(lastModified = "", entityTag = ""))
-        }
-        // Line added by REV Robotics on 2021-04-30
-        ProductsFragment.markRepoAsNeverDownloaded(it.id)
+  private fun forceSyncAll() {
+    Database.RepositoryAdapter.getAll(null).forEach {
+      if (it.lastModified.isNotEmpty() || it.entityTag.isNotEmpty()) {
+        Database.RepositoryAdapter.put(it.copy(lastModified = "", entityTag = ""))
       }
-    }
-    val syncType = if (force) {
-      SyncService.SyncRequest.FORCE
-    } else {
-      SyncService.SyncRequest.MANUAL
+      // Line added by REV Robotics on 2021-04-30
+      ProductsFragment.markRepoAsNeverDownloaded(it.id)
     }
     Connection(SyncService::class.java, onBind = { connection, binder ->
-      binder.sync(syncType)
+      binder.sync(SyncService.SyncRequest.FORCE)
       connection.unbind(this)
     }).bind(this)
   }
