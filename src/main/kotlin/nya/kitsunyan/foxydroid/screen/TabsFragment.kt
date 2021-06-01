@@ -91,7 +91,7 @@ class TabsFragment: ScreenFragment() {
   // Added by REV Robotics on 2021-04-08 to allow only a single tab to be selected.
   // All other references to ProductsFragment.Source.values() in this file should probably be
   // replaced with a reference to selectableTabs.
-  private val showAllTabs = false
+  private val showAllTabs = Preferences[Preferences.Key.ShowAllTabs]
   private val selectableTabs = if (showAllTabs) {
     ProductsFragment.Source.values()
   } else {
@@ -192,11 +192,13 @@ class TabsFragment: ScreenFragment() {
         }
 
       // Repositories menu option disabled by REV Robotics on 2021-05-04
-      /*add(1, 0, 0, R.string.repositories)
-        .setOnMenuItemClickListener {
-          view.post { screenActivity.navigateRepositories() }
-          true
-        }*/
+      if (Preferences[Preferences.Key.ShowAllTabs]) {
+        add(1, 0, 0, R.string.repositories)
+            .setOnMenuItemClickListener {
+              view.post { screenActivity.navigateRepositories() }
+              true
+            }
+      }
 
       add(1, 0, 0, R.string.preferences)
         .setOnMenuItemClickListener {

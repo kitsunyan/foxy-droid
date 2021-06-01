@@ -84,6 +84,7 @@ class PreferencesFragment: ScreenFragment() {
       }
       addSwitch(Preferences.Key.IncompatibleVersions, getString(R.string.incompatible_versions),
         getString(R.string.incompatible_versions_summary))
+      addSwitch(Preferences.Key.ShowAllTabs, "Show all tabs", "Show \"Available\" and \"Installed\" tabs")
     }
 
     disposable = Preferences.observable.subscribe(this::updatePreference)

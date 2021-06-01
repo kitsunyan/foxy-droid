@@ -16,7 +16,7 @@ object Preferences {
   private val subject = PublishSubject.create<Key<*>>()
 
   private val keys = sequenceOf(Key.AutoSync, Key.IncompatibleVersions, Key.ProxyHost, Key.ProxyPort, Key.ProxyType,
-    Key.SortOrder, Key.Theme, Key.UpdateNotify, Key.UpdateUnstable).map { Pair(it.name, it) }.toMap()
+    Key.ShowAllTabs, Key.SortOrder, Key.Theme, Key.UpdateNotify, Key.UpdateUnstable).map { Pair(it.name, it) }.toMap()
 
   fun init(context: Context) {
     preferences = context.getSharedPreferences("${context.packageName}_preferences", Context.MODE_PRIVATE)
@@ -85,6 +85,7 @@ object Preferences {
     object ProxyHost: Key<String>("proxy_host", Value.StringValue("localhost"))
     object ProxyPort: Key<Int>("proxy_port", Value.IntValue(9050))
     object ProxyType: Key<Preferences.ProxyType>("proxy_type", Value.EnumerationValue(Preferences.ProxyType.Direct))
+    object ShowAllTabs: Key<Boolean>("show_all_tabs", Value.BooleanValue(false))
     object SortOrder: Key<Preferences.SortOrder>("sort_order", Value.EnumerationValue(Preferences.SortOrder.Update))
     object Theme: Key<Preferences.Theme>("theme", Value.EnumerationValue(if (Android.sdk(29))
       Preferences.Theme.System else Preferences.Theme.Light))
