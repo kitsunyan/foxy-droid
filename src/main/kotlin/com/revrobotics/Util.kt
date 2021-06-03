@@ -85,39 +85,43 @@ object LastUpdateOfAllReposTimestampTracker {
 
   fun markRepoAsJustDownloaded(repoId: Long) {
     RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, System.currentTimeMillis()).apply()
-    calculateLastDownloadOfAllReposTimestamp()
+    calculateLastDownloadOfAllReposTimestampInNewThread()
   }
 
   fun markRepoAsNeverDownloaded(repoId: Long) {
     RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, 0).apply()
-    calculateLastDownloadOfAllReposTimestamp()
+    calculateLastDownloadOfAllReposTimestampInNewThread()
+  }
+
+  private fun calculateLastDownloadOfAllReposTimestampInNewThread() {
+    thread {
+      calculateLastDownloadOfAllReposTimestamp()
+    }
   }
 
   private fun calculateLastDownloadOfAllReposTimestamp() {
-    thread {
-      var updatedTimestamp = false
-      synchronized(this) {
-        var oldestTimestamp = Long.MAX_VALUE
-        Database.RepositoryAdapter.getAll(null).asSequence()
-            .filter { it.enabled }
-            .forEach {
-              val timeRepoWasLastUpdated = RevConstants.SHARED_PREFS.getLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + it.id, 0)
-              if (timeRepoWasLastUpdated < oldestTimestamp) {
-                oldestTimestamp = timeRepoWasLastUpdated
-              }
+    var updatedTimestamp = false
+    synchronized(this) {
+      var oldestTimestamp = Long.MAX_VALUE
+      Database.RepositoryAdapter.getAll(null).asSequence()
+          .filter { it.enabled }
+          .forEach {
+            val timeRepoWasLastUpdated = RevConstants.SHARED_PREFS.getLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + it.id, 0)
+            if (timeRepoWasLastUpdated < oldestTimestamp) {
+              oldestTimestamp = timeRepoWasLastUpdated
             }
-
-        if (lastUpdateOfAllReposTimestampMs != oldestTimestamp) {
-          lastUpdateOfAllReposTimestampMs = oldestTimestamp
-          updatedTimestamp = true
-        }
-      }
-
-      if (updatedTimestamp) {
-        synchronized(timestampChangedCallbacks) {
-          for (callback in timestampChangedCallbacks) {
-            callback()
           }
+
+      if (lastUpdateOfAllReposTimestampMs != oldestTimestamp) {
+        lastUpdateOfAllReposTimestampMs = oldestTimestamp
+        updatedTimestamp = true
+      }
+    }
+
+    if (updatedTimestamp) {
+      synchronized(timestampChangedCallbacks) {
+        for (callback in timestampChangedCallbacks) {
+          callback()
         }
       }
     }
