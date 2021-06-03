@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
+import com.revrobotics.LastUpdateOfAllReposTracker
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
 import com.revrobotics.mainThreadHandler
@@ -24,7 +25,6 @@ import nya.kitsunyan.foxydroid.entity.InstalledItem
 import nya.kitsunyan.foxydroid.index.RepositoryUpdater
 import nya.kitsunyan.foxydroid.network.Downloader
 import nya.kitsunyan.foxydroid.network.PicassoDownloader
-import nya.kitsunyan.foxydroid.screen.ProductsFragment
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.service.SyncService
@@ -212,7 +212,7 @@ class MainApplication: Application() {
         Database.RepositoryAdapter.put(it.copy(lastModified = "", entityTag = ""))
       }
       // Line added by REV Robotics on 2021-04-30
-      ProductsFragment.markRepoAsNeverDownloaded(it.id)
+      LastUpdateOfAllReposTracker.markRepoAsNeverDownloaded(it.id)
     }
     Connection(SyncService::class.java, onBind = { connection, binder ->
       binder.sync(SyncService.SyncRequest.FORCE)
