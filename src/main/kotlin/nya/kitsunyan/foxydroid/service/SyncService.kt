@@ -12,6 +12,7 @@ import android.text.style.ForegroundColorSpan
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
+import com.revrobotics.LastUpdateOfAllReposTimestampTracker
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -26,7 +27,6 @@ import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.index.RepositoryUpdater
-import nya.kitsunyan.foxydroid.screen.ProductsFragment
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
@@ -114,7 +114,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       Database.RepositoryAdapter.put(repository.enable(enabled))
 
       // Line added by REV Robotics on 2021-04-30
-      ProductsFragment.markRepoAsNeverDownloaded(repository.id)
+      LastUpdateOfAllReposTimestampTracker.markRepoAsNeverDownloaded(repository.id)
 
       if (enabled) {
         if (repository.id != currentTask?.task?.repositoryId && !tasks.any { it.repositoryId == repository.id }) {
@@ -314,7 +314,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
               }
               if (throwable == null) {
                 // Added by REV Robotics on 2021-04-29: Mark the repo as having been just downloaded
-                ProductsFragment.markRepoAsJustDownloaded(repository.id)
+                LastUpdateOfAllReposTimestampTracker.markRepoAsJustDownloaded(repository.id)
                 // Added by REV Robotics on 2021-06-02: Clear any existing error notification for this repository
                 notificationManager.cancel("repository-${repository.id}", Common.NOTIFICATION_ID_SYNCING)
               }

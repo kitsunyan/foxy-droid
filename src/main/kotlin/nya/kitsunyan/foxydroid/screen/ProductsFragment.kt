@@ -18,6 +18,8 @@ import android.widget.Button
 import androidx.recyclerview.widget.RecyclerView
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
+import com.revrobotics.LastUpdateOfAllReposTimestampTracker
+import com.revrobotics.LastUpdateOfAllReposTimestampTracker.lastUpdateOfAllReposTimestampMs
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -34,7 +36,6 @@ import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 import nya.kitsunyan.foxydroid.widget.RecyclerFastScroller
-import kotlin.concurrent.thread
 
 class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
   companion object {
@@ -50,53 +51,8 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
     // Values and functions added by REV Robotics
     private const val JAN_1_2021_TIMESTAMP_MS = 1609459200000
-    private const val LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX = "lastUpdateCheckRepo"
     private val MAIN_HANDLER = Handler(Looper.getMainLooper())
     private val UPDATE_TAB_EMPTY_TEXT_UPDATE_TOKEN = Object()
-    private val LAST_DOWNLOAD_TIMESTAMP_CHANGED_CALLBACKS: MutableList<()->Unit> = ArrayList()
-    @Volatile
-    private var lastDownloadOfAllReposTimestamp: Long = 0
-      set(value) {
-        field = value
-        for (callback in LAST_DOWNLOAD_TIMESTAMP_CHANGED_CALLBACKS) {
-          callback()
-        }
-      }
-
-    fun markRepoAsJustDownloaded(repoId: Long) {
-      RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, System.currentTimeMillis()).apply()
-      calculateLastDownloadOfAllReposTimestamp()
-    }
-
-    fun markRepoAsNeverDownloaded(repoId: Long) {
-      RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, 0).apply()
-      calculateLastDownloadOfAllReposTimestamp()
-    }
-
-    private fun calculateLastDownloadOfAllReposTimestamp() {
-      thread {
-        synchronized(this) {
-          var oldestTimestamp = Long.MAX_VALUE
-          Database.RepositoryAdapter.getAll(null).asSequence()
-            .filter { it.enabled }
-            .forEach {
-              val timeRepoWasLastUpdated = RevConstants.SHARED_PREFS.getLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + it.id, 0)
-              if (timeRepoWasLastUpdated < oldestTimestamp) {
-                oldestTimestamp = timeRepoWasLastUpdated
-              }
-            }
-          // This if statement is to avoid calling the setter if the value hasn't changed
-          if (lastDownloadOfAllReposTimestamp != oldestTimestamp) {
-            lastDownloadOfAllReposTimestamp = oldestTimestamp
-          }
-        }
-      }
-    }
-
-
-    init {
-      calculateLastDownloadOfAllReposTimestamp()
-    }
   }
 
   enum class Source(val titleResId: Int, val sections: Boolean, val order: Boolean) {
@@ -154,7 +110,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     // Dynamic empty text for the update tab was added by REV Robotics on 2021-04-29
     if (source == Source.UPDATES) {
       updateEmptyTextForUpdateTab(true)
-      LAST_DOWNLOAD_TIMESTAMP_CHANGED_CALLBACKS.add(lastDownloadTimestampChangedCallback)
+      LastUpdateOfAllReposTimestampTracker.addTimestampChangedCallback(lastDownloadTimestampChangedCallback)
     }
 
     // The remainder of this function was reworked by REV Robotics on 2021-05-09 in order to support an Update ALl button
@@ -215,7 +171,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
     // Added by REV Robotics on 2021-04-29: Cancel future updates of the update tab's empty text
     MAIN_HANDLER.removeCallbacksAndMessages(UPDATE_TAB_EMPTY_TEXT_UPDATE_TOKEN)
-    LAST_DOWNLOAD_TIMESTAMP_CHANGED_CALLBACKS.remove(lastDownloadTimestampChangedCallback)
+    LastUpdateOfAllReposTimestampTracker.removeLastCompleteUpdateTimestampChangedCallback(lastDownloadTimestampChangedCallback)
 
     recyclerView = null
 
@@ -318,9 +274,9 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
   private fun getUpdatesTabEmptyText(): String {
     val asOfPrefix = " as of "
-    val msSinceTimestamp = System.currentTimeMillis() - lastDownloadOfAllReposTimestamp
+    val msSinceTimestamp = System.currentTimeMillis() - lastUpdateOfAllReposTimestampMs
 
-    if (lastDownloadOfAllReposTimestamp < JAN_1_2021_TIMESTAMP_MS) {
+    if (lastUpdateOfAllReposTimestampMs < JAN_1_2021_TIMESTAMP_MS) {
       // If we haven't checked for updates in an impossibly long time, assume we never have.
       return "Please connect to the Internet and check for updates"
     }
@@ -331,16 +287,16 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
         ""
       }
       msSinceTimestamp < HOUR_IN_MILLIS -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastDownloadOfAllReposTimestamp, System.currentTimeMillis(), MINUTE_IN_MILLIS)
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllReposTimestampMs, System.currentTimeMillis(), MINUTE_IN_MILLIS)
       }
       msSinceTimestamp < DAY_IN_MILLIS -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastDownloadOfAllReposTimestamp, System.currentTimeMillis(), HOUR_IN_MILLIS)
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllReposTimestampMs, System.currentTimeMillis(), HOUR_IN_MILLIS)
       }
       msSinceTimestamp < WEEK_IN_MILLIS -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastDownloadOfAllReposTimestamp, System.currentTimeMillis(), DAY_IN_MILLIS)
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllReposTimestampMs, System.currentTimeMillis(), DAY_IN_MILLIS)
       }
       else -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastDownloadOfAllReposTimestamp, System.currentTimeMillis(), WEEK_IN_MILLIS)
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllReposTimestampMs, System.currentTimeMillis(), WEEK_IN_MILLIS)
       }
     }
     return getString(R.string.all_applications_up_to_date) + howLongAgo
@@ -363,15 +319,14 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
         val product = adapter.getProductItem(i)
         when (product.packageName) {
           BuildConfig.APPLICATION_ID -> {
-            Log.d("Noah", "Deferring update for ${product.packageName}")
+            // Defer updating ourselves, as is explained later in the function
             thisApp = product
           }
           RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE -> {
-            Log.d("Noah", "Deferring update for ${product.packageName}")
+            // Defer updating the Driver Hub OS, as is explained later in the function
             driverHubOs = product
           }
           else -> {
-            Log.d("Noah", "Queueing download for ${product.packageName}")
             queueDownloadAndUpdate(product.packageName, downloadConnection)
           }
         }
@@ -390,11 +345,9 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       } else {
         // This app and the Driver Hub OS don't both need to be updated, so if one of them needs an update, queue it.
         thisApp?.let {
-          Log.d("Noah", "Queueing download for ${it.packageName}")
           queueDownloadAndUpdate(it.packageName, downloadConnection)
         }
         driverHubOs?.let {
-          Log.d("Noah", "Queueing download for ${it.packageName}")
           queueDownloadAndUpdate(it.packageName, downloadConnection)
         }
       }
