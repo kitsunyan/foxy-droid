@@ -64,7 +64,8 @@ class SyncService: ConnectionService<SyncService.Binder>() {
 
   private var updateNotificationBlockerFragment: WeakReference<Fragment>? = null
 
-  enum class SyncRequest { AUTO, MANUAL, FORCE }
+  // Modified by REV Robotics on 2021-06-03: added AUTO_WITH_FOREGROUND_NOTIFICATION entry
+  enum class SyncRequest { AUTO, AUTO_WITH_FOREGROUND_NOTIFICATION, MANUAL, FORCE }
 
   inner class Binder: android.os.Binder() {
     val finish: Observable<Unit>
@@ -78,6 +79,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       tasks += ids.asSequence().filter { it !in currentIds &&
         it != currentTask?.task?.repositoryId }.map { Task(it, manual) }
       handleNextTask(cancelledTask?.hasUpdates == true)
+      // Show a foreground notification for all SyncRequest types except for AUTO
       if (request != SyncRequest.AUTO && started == Started.AUTO) {
         started = Started.MANUAL
         startSelf()
