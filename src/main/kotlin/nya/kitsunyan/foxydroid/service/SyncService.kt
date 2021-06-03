@@ -9,6 +9,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
@@ -32,6 +33,7 @@ import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
 import java.lang.ref.WeakReference
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
 
@@ -415,6 +417,12 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     })
 
     override fun onStartJob(params: JobParameters): Boolean {
+      // Modified by REV Robotics on 2021-06-03: Skip JobScheduler-based automatic repo sync if repositories were synced in past 11 hours
+      if (LastUpdateOfAllReposTracker.timeSinceLastUpdateOfAllRepos < Duration.ofHours(11)) {
+        Log.i("SyncService.Job", "Skipping JobScheduler-based automatic repo sync, because the repositories have been synced within the last 11 hours")
+        return false
+      }
+
       syncParams = params
       syncConnection.bind(this)
       return true
