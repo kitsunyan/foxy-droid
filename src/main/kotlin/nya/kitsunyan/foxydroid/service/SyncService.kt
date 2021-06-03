@@ -12,7 +12,7 @@ import android.text.style.ForegroundColorSpan
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
-import com.revrobotics.LastUpdateOfAllReposTimestampTracker
+import com.revrobotics.LastUpdateOfAllReposTracker
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -114,7 +114,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       Database.RepositoryAdapter.put(repository.enable(enabled))
 
       // Line added by REV Robotics on 2021-04-30
-      LastUpdateOfAllReposTimestampTracker.markRepoAsNeverDownloaded(repository.id)
+      LastUpdateOfAllReposTracker.markRepoAsNeverDownloaded(repository.id)
 
       if (enabled) {
         if (repository.id != currentTask?.task?.repositoryId && !tasks.any { it.repositoryId == repository.id }) {
@@ -314,7 +314,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
               }
               if (throwable == null) {
                 // Added by REV Robotics on 2021-04-29: Mark the repo as having been just downloaded
-                LastUpdateOfAllReposTimestampTracker.markRepoAsJustDownloaded(repository.id)
+                LastUpdateOfAllReposTracker.markRepoAsJustDownloaded(repository.id)
                 // Added by REV Robotics on 2021-06-02: Clear any existing error notification for this repository
                 notificationManager.cancel("repository-${repository.id}", Common.NOTIFICATION_ID_SYNCING)
               }

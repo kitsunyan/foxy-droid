@@ -20,7 +20,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toolbar
 import androidx.fragment.app.DialogFragment
-import com.revrobotics.LastUpdateOfAllReposTimestampTracker
+import com.revrobotics.LastUpdateOfAllReposTracker
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
@@ -450,7 +450,7 @@ class EditRepositoryFragment(): ScreenFragment() {
         }
 
         // Line added by REV Robotics on 2021-04-30
-        LastUpdateOfAllReposTimestampTracker.markRepoAsNeverDownloaded(changedRepository.id)
+        LastUpdateOfAllReposTracker.markRepoAsNeverDownloaded(changedRepository.id)
 
         requireActivity().onBackPressed()
       }

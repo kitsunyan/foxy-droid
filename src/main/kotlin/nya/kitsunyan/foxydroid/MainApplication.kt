@@ -10,7 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
-import com.revrobotics.LastUpdateOfAllReposTimestampTracker
+import com.revrobotics.LastUpdateOfAllReposTracker
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
 import com.revrobotics.mainThreadHandler
@@ -212,7 +212,7 @@ class MainApplication: Application() {
         Database.RepositoryAdapter.put(it.copy(lastModified = "", entityTag = ""))
       }
       // Line added by REV Robotics on 2021-04-30
-      LastUpdateOfAllReposTimestampTracker.markRepoAsNeverDownloaded(it.id)
+      LastUpdateOfAllReposTracker.markRepoAsNeverDownloaded(it.id)
     }
     Connection(SyncService::class.java, onBind = { connection, binder ->
       binder.sync(SyncService.SyncRequest.FORCE)

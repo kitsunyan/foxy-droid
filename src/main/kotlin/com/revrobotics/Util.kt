@@ -7,6 +7,8 @@ import nya.kitsunyan.foxydroid.utility.extension.android.Android
 import android.os.Handler
 import android.os.Looper
 import android.util.ArraySet
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
@@ -55,12 +57,12 @@ fun queueDownloadAndUpdate(packageName: String, downloadConnection: Connection<D
   }
 }
 
-object LastUpdateOfAllReposTimestampTracker {
+object LastUpdateOfAllReposTracker {
   private const val LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX = "lastUpdateCheckRepo"
   
-  private val timestampChangedCallbacks: MutableSet<()->Unit> = ArraySet()
+  private val lastUpdateChangedCallbacks: MutableSet<()->Unit> = ArraySet()
 
-  var lastUpdateOfAllReposTimestampMs: Long = 0
+  var lastUpdateOfAllRepos: Instant = Instant.MIN
     private set
     get() {
       synchronized(this) {
@@ -68,59 +70,64 @@ object LastUpdateOfAllReposTimestampTracker {
       }
     }
 
+  val timeSinceLastUpdateOfAllRepos: Duration
+    get() {
+      return Duration.between(lastUpdateOfAllRepos, Instant.now())
+    }
+
   /**
    * Add a callback that will be called once the time that all repositories were last updated changes
    */
   fun addTimestampChangedCallback(callback: ()->Unit) {
-    synchronized(timestampChangedCallbacks) {
-      timestampChangedCallbacks.add(callback)
+    synchronized(lastUpdateChangedCallbacks) {
+      lastUpdateChangedCallbacks.add(callback)
     }
   }
 
-  fun removeLastCompleteUpdateTimestampChangedCallback(callback: ()->Unit) {
-    synchronized(timestampChangedCallbacks) {
-      timestampChangedCallbacks.remove(callback)
+  fun removeTimestampChangedCallback(callback: ()->Unit) {
+    synchronized(lastUpdateChangedCallbacks) {
+      lastUpdateChangedCallbacks.remove(callback)
     }
   }
 
   fun markRepoAsJustDownloaded(repoId: Long) {
-    RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, System.currentTimeMillis()).apply()
-    calculateLastDownloadOfAllReposTimestampInNewThread()
+    RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, Instant.now().toEpochMilli()).apply()
+    calculateLastDownloadOfAllReposInNewThread()
   }
 
   fun markRepoAsNeverDownloaded(repoId: Long) {
     RevConstants.SHARED_PREFS.edit().putLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + repoId, 0).apply()
-    calculateLastDownloadOfAllReposTimestampInNewThread()
+    calculateLastDownloadOfAllReposInNewThread()
   }
 
-  private fun calculateLastDownloadOfAllReposTimestampInNewThread() {
+  private fun calculateLastDownloadOfAllReposInNewThread() {
     thread {
-      calculateLastDownloadOfAllReposTimestamp()
+      calculateLastDownloadOfAllRepos()
     }
   }
 
-  private fun calculateLastDownloadOfAllReposTimestamp() {
-    var updatedTimestamp = false
+  private fun calculateLastDownloadOfAllRepos() {
+    var updated = false
     synchronized(this) {
-      var oldestTimestamp = Long.MAX_VALUE
+      var oldestRepoDownloadTime = Instant.MAX
       Database.RepositoryAdapter.getAll(null).asSequence()
           .filter { it.enabled }
           .forEach {
-            val timeRepoWasLastUpdated = RevConstants.SHARED_PREFS.getLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + it.id, 0)
-            if (timeRepoWasLastUpdated < oldestTimestamp) {
-              oldestTimestamp = timeRepoWasLastUpdated
+            val timeRepoWasLastUpdated = Instant.ofEpochMilli(RevConstants.SHARED_PREFS.getLong(LAST_REPO_DOWNLOAD_TIMESTAMP_PREF_PREFIX + it.id, 0))
+            if (timeRepoWasLastUpdated < oldestRepoDownloadTime) {
+              oldestRepoDownloadTime = timeRepoWasLastUpdated
             }
           }
 
-      if (lastUpdateOfAllReposTimestampMs != oldestTimestamp) {
-        lastUpdateOfAllReposTimestampMs = oldestTimestamp
-        updatedTimestamp = true
+      if (lastUpdateOfAllRepos != oldestRepoDownloadTime) {
+        lastUpdateOfAllRepos = oldestRepoDownloadTime
+        updated = true
       }
     }
 
-    if (updatedTimestamp) {
-      synchronized(timestampChangedCallbacks) {
-        for (callback in timestampChangedCallbacks) {
+    if (updated) {
+      synchronized(lastUpdateChangedCallbacks) {
+        for (callback in lastUpdateChangedCallbacks) {
           callback()
         }
       }
@@ -128,6 +135,6 @@ object LastUpdateOfAllReposTimestampTracker {
   }
   
   init {
-    calculateLastDownloadOfAllReposTimestamp()
+    calculateLastDownloadOfAllRepos()
   }
 }

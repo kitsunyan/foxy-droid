@@ -18,8 +18,9 @@ import android.widget.Button
 import androidx.recyclerview.widget.RecyclerView
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
-import com.revrobotics.LastUpdateOfAllReposTimestampTracker
-import com.revrobotics.LastUpdateOfAllReposTimestampTracker.lastUpdateOfAllReposTimestampMs
+import com.revrobotics.LastUpdateOfAllReposTracker
+import com.revrobotics.LastUpdateOfAllReposTracker.lastUpdateOfAllRepos
+import com.revrobotics.LastUpdateOfAllReposTracker.timeSinceLastUpdateOfAllRepos
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -36,6 +37,9 @@ import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 import nya.kitsunyan.foxydroid.widget.RecyclerFastScroller
+import java.time.Duration
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
   companion object {
@@ -50,7 +54,6 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     private const val STATE_LAYOUT_MANAGER = "layoutManager"
 
     // Values and functions added by REV Robotics
-    private const val JAN_1_2021_TIMESTAMP_MS = 1609459200000
     private val MAIN_HANDLER = Handler(Looper.getMainLooper())
     private val UPDATE_TAB_EMPTY_TEXT_UPDATE_TOKEN = Object()
   }
@@ -86,7 +89,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
   private var repositoriesDisposable: Disposable? = null
 
-  // downloadConnectionadded by REV Robotics on 2021-05-09
+  // downloadConnection added by REV Robotics on 2021-05-09
   private var downloadConnection: Connection<DownloadService.Binder, DownloadService>? = null
 
   private val request: CursorOwner.Request
@@ -110,7 +113,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     // Dynamic empty text for the update tab was added by REV Robotics on 2021-04-29
     if (source == Source.UPDATES) {
       updateEmptyTextForUpdateTab(true)
-      LastUpdateOfAllReposTimestampTracker.addTimestampChangedCallback(lastDownloadTimestampChangedCallback)
+      LastUpdateOfAllReposTracker.addTimestampChangedCallback(lastDownloadTimestampChangedCallback)
     }
 
     // The remainder of this function was reworked by REV Robotics on 2021-05-09 in order to support an Update ALl button
@@ -171,7 +174,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
     // Added by REV Robotics on 2021-04-29: Cancel future updates of the update tab's empty text
     MAIN_HANDLER.removeCallbacksAndMessages(UPDATE_TAB_EMPTY_TEXT_UPDATE_TOKEN)
-    LastUpdateOfAllReposTimestampTracker.removeLastCompleteUpdateTimestampChangedCallback(lastDownloadTimestampChangedCallback)
+    LastUpdateOfAllReposTracker.removeTimestampChangedCallback(lastDownloadTimestampChangedCallback)
 
     recyclerView = null
 
@@ -274,29 +277,28 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
   private fun getUpdatesTabEmptyText(): String {
     val asOfPrefix = " as of "
-    val msSinceTimestamp = System.currentTimeMillis() - lastUpdateOfAllReposTimestampMs
 
-    if (lastUpdateOfAllReposTimestampMs < JAN_1_2021_TIMESTAMP_MS) {
+    if (lastUpdateOfAllRepos < LocalDate.parse("2021-01-01").atStartOfDay().toInstant(ZoneOffset.UTC)) {
       // If we haven't checked for updates in an impossibly long time, assume we never have.
       return "Please connect to the Internet and check for updates"
     }
 
     // We have to tell getRelativeTimeSpanString() whether we want the results in minutes, hours, days, or weeks
     val howLongAgo = when {
-      msSinceTimestamp < 10 * MINUTE_IN_MILLIS -> { // Syncing repositories can take a while, so we have a ten minute grace window
+      timeSinceLastUpdateOfAllRepos < Duration.ofMinutes(10) -> { // Syncing repositories can take a while, so we have a ten minute grace window
         ""
       }
-      msSinceTimestamp < HOUR_IN_MILLIS -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllReposTimestampMs, System.currentTimeMillis(), MINUTE_IN_MILLIS)
+      timeSinceLastUpdateOfAllRepos < Duration.ofHours(1) -> {
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllRepos.toEpochMilli(), System.currentTimeMillis(), MINUTE_IN_MILLIS)
       }
-      msSinceTimestamp < DAY_IN_MILLIS -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllReposTimestampMs, System.currentTimeMillis(), HOUR_IN_MILLIS)
+      timeSinceLastUpdateOfAllRepos < Duration.ofDays(1) -> {
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllRepos.toEpochMilli(), System.currentTimeMillis(), HOUR_IN_MILLIS)
       }
-      msSinceTimestamp < WEEK_IN_MILLIS -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllReposTimestampMs, System.currentTimeMillis(), DAY_IN_MILLIS)
+      timeSinceLastUpdateOfAllRepos < Duration.ofDays(7) -> {
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllRepos.toEpochMilli(), System.currentTimeMillis(), DAY_IN_MILLIS)
       }
       else -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllReposTimestampMs, System.currentTimeMillis(), WEEK_IN_MILLIS)
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllRepos.toEpochMilli(), System.currentTimeMillis(), WEEK_IN_MILLIS)
       }
     }
     return getString(R.string.all_applications_up_to_date) + howLongAgo
