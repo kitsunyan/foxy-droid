@@ -312,9 +312,11 @@ class SyncService: ConnectionService<SyncService.Binder>() {
               if (throwable != null && task.manual) {
                 showNotificationError(repository, throwable as Exception)
               }
-              // Added by REV Robotics: Mark the repo as having been just downloaded
               if (throwable == null) {
+                // Added by REV Robotics on 2021-04-29: Mark the repo as having been just downloaded
                 ProductsFragment.markRepoAsJustDownloaded(repository.id)
+                // Added by REV Robotics on 2021-06-02: Clear any existing error notification for this repository
+                notificationManager.cancel("repository-${repository.id}", Common.NOTIFICATION_ID_SYNCING)
               }
               handleNextTask(result == true || hasUpdates)
             }
