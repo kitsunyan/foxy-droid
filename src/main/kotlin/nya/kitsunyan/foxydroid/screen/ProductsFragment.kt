@@ -298,7 +298,8 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
         asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllRepos.toEpochMilli(), System.currentTimeMillis(), DAY_IN_MILLIS)
       }
       else -> {
-        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllRepos.toEpochMilli(), System.currentTimeMillis(), WEEK_IN_MILLIS)
+        asOfPrefix + DateUtils.getRelativeTimeSpanString(lastUpdateOfAllRepos.toEpochMilli(), System.currentTimeMillis(), WEEK_IN_MILLIS) +
+            ".\n Please connect to the Internet and check for updates."
       }
     }
     return getString(R.string.all_applications_up_to_date) + howLongAgo
