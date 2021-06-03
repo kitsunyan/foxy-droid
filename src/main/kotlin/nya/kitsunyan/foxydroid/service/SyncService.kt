@@ -9,9 +9,11 @@ import android.content.Intent
 import android.graphics.Color
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
+import com.revrobotics.LastUpdateOfAllReposTracker
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -26,12 +28,12 @@ import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.index.RepositoryUpdater
-import nya.kitsunyan.foxydroid.screen.ProductsFragment
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
 import java.lang.ref.WeakReference
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
 
@@ -51,10 +53,11 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     object Finishing: State()
   }
 
-  private class Task(val repositoryId: Long, val manual: Boolean)
+  private class Task(val repositoryId: Long, val useForegroundService: Boolean)
   private data class CurrentTask(val task: Task?, val disposable: Disposable,
     val hasUpdates: Boolean, val lastState: State)
-  private enum class Started { NO, AUTO, MANUAL }
+  // Modified by REV Robotics on 2021-06-03: Renamed entries to clarify what they mean
+  private enum class Started { NO, BACKGROUND, FOREGROUND_SERVICE }
 
   private var started = Started.NO
   private val tasks = mutableListOf<Task>()
@@ -62,7 +65,8 @@ class SyncService: ConnectionService<SyncService.Binder>() {
 
   private var updateNotificationBlockerFragment: WeakReference<Fragment>? = null
 
-  enum class SyncRequest { AUTO, MANUAL, FORCE }
+  // Modified by REV Robotics on 2021-06-03: added AUTO_WITH_FOREGROUND_NOTIFICATION entry
+  enum class SyncRequest { AUTO, AUTO_WITH_FOREGROUND_NOTIFICATION, MANUAL, FORCE }
 
   inner class Binder: android.os.Binder() {
     val finish: Observable<Unit>
@@ -70,14 +74,15 @@ class SyncService: ConnectionService<SyncService.Binder>() {
 
     private fun sync(ids: List<Long>, request: SyncRequest) {
       val cancelledTask = cancelCurrentTask { request == SyncRequest.FORCE && it.task?.repositoryId in ids }
-      cancelTasks { !it.manual && it.repositoryId in ids }
+      cancelTasks { !it.useForegroundService && it.repositoryId in ids }
       val currentIds = tasks.asSequence().map { it.repositoryId }.toSet()
-      val manual = request != SyncRequest.AUTO
+      val useForegroundService = request != SyncRequest.AUTO
       tasks += ids.asSequence().filter { it !in currentIds &&
-        it != currentTask?.task?.repositoryId }.map { Task(it, manual) }
+        it != currentTask?.task?.repositoryId }.map { Task(it, useForegroundService) }
       handleNextTask(cancelledTask?.hasUpdates == true)
-      if (request != SyncRequest.AUTO && started == Started.AUTO) {
-        started = Started.MANUAL
+      // Show a foreground notification for all SyncRequest types except for AUTO
+      if (request != SyncRequest.AUTO && started == Started.BACKGROUND) {
+        started = Started.FOREGROUND_SERVICE
         startSelf()
         handleSetStarted()
         currentTask?.lastState?.let { publishForegroundState(true, it) }
@@ -97,8 +102,8 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     }
 
     fun cancelAuto(): Boolean {
-      val removed = cancelTasks { !it.manual }
-      val currentTask = cancelCurrentTask { it.task?.manual == false }
+      val removed = cancelTasks { !it.useForegroundService }
+      val currentTask = cancelCurrentTask { it.task?.useForegroundService == false }
       handleNextTask(currentTask?.hasUpdates == true)
       return removed || currentTask != null
     }
@@ -114,7 +119,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       Database.RepositoryAdapter.put(repository.enable(enabled))
 
       // Line added by REV Robotics on 2021-04-30
-      ProductsFragment.markRepoAsNeverDownloaded(repository.id)
+      LastUpdateOfAllReposTracker.markRepoAsNeverDownloaded(repository.id)
 
       if (enabled) {
         if (repository.id != currentTask?.task?.repositoryId && !tasks.any { it.repositoryId == repository.id }) {
@@ -231,7 +236,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
   private fun publishForegroundState(force: Boolean, state: State) {
     if (force || currentTask?.lastState != state) {
       currentTask = currentTask?.copy(lastState = state)
-      if (started == Started.MANUAL) {
+      if (started == Started.FOREGROUND_SERVICE) {
         startForeground(Common.NOTIFICATION_ID_SYNCING, stateNotificationBuilder.apply {
           when (state) {
             is State.Connecting -> {
@@ -289,9 +294,9 @@ class SyncService: ConnectionService<SyncService.Binder>() {
         val repository = Database.RepositoryAdapter.get(task.repositoryId)
         if (repository != null && repository.enabled) {
           val lastStarted = started
-          val newStarted = if (task.manual || lastStarted == Started.MANUAL) Started.MANUAL else Started.AUTO
+          val newStarted = if (task.useForegroundService || lastStarted == Started.FOREGROUND_SERVICE) Started.FOREGROUND_SERVICE else Started.BACKGROUND
           started = newStarted
-          if (newStarted == Started.MANUAL && lastStarted != Started.MANUAL) {
+          if (newStarted == Started.FOREGROUND_SERVICE && lastStarted != Started.FOREGROUND_SERVICE) {
             startSelf()
             handleSetStarted()
           }
@@ -309,12 +314,14 @@ class SyncService: ConnectionService<SyncService.Binder>() {
             .subscribe { result, throwable ->
               currentTask = null
               throwable?.printStackTrace()
-              if (throwable != null && task.manual) {
+              if (throwable != null && task.useForegroundService) {
                 showNotificationError(repository, throwable as Exception)
               }
-              // Added by REV Robotics: Mark the repo as having been just downloaded
               if (throwable == null) {
-                ProductsFragment.markRepoAsJustDownloaded(repository.id)
+                // Added by REV Robotics on 2021-04-29: Mark the repo as having been just downloaded
+                LastUpdateOfAllReposTracker.markRepoAsJustDownloaded(repository.id)
+                // Added by REV Robotics on 2021-06-02: Clear any existing error notification for this repository
+                notificationManager.cancel("repository-${repository.id}", Common.NOTIFICATION_ID_SYNCING)
               }
               handleNextTask(result == true || hasUpdates)
             }
@@ -342,7 +349,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
           currentTask = CurrentTask(null, disposable, true, State.Finishing)
         } else {
           finishSubject.onNext(Unit)
-          val needStop = started == Started.MANUAL
+          val needStop = started == Started.FOREGROUND_SERVICE
           started = Started.NO
           if (needStop) {
             stopForeground(true)
@@ -413,6 +420,12 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     })
 
     override fun onStartJob(params: JobParameters): Boolean {
+      // Modified by REV Robotics on 2021-06-03: Skip JobScheduler-based automatic repo sync if repositories were synced in past 11 hours
+      if (LastUpdateOfAllReposTracker.timeSinceLastUpdateOfAllRepos < Duration.ofHours(11)) {
+        Log.i("SyncService.Job", "Skipping JobScheduler-based automatic repo sync, because the repositories have been synced within the last 11 hours")
+        return false
+      }
+
       syncParams = params
       syncConnection.bind(this)
       return true

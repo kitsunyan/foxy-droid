@@ -77,7 +77,7 @@ abstract class ScreenActivity: FragmentActivity() {
 
     // Modified by REV Robotics on 2021-05-10: Sync repositories when activity is created
     Connection(SyncService::class.java, onBind = { connection, binder ->
-      binder.sync(SyncService.SyncRequest.MANUAL)
+      binder.sync(SyncService.SyncRequest.AUTO)
       connection.unbind(this)
     }).bind(this)
 

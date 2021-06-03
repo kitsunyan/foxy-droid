@@ -30,6 +30,12 @@
       </intent-filter>
 
     </receiver>
+    
+    <receiver android:name="com.revrobotics.InternetAvailableBroadcastReceiver">
+      <intent-filter>
+        <action android:name="com.revrobotics.revupdateinterface.INTERNET_AVAILABLE" />
+      </intent-filter>
+    </receiver>
 
     <activity
       android:name=".MainActivity"
