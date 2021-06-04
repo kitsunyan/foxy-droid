@@ -13,6 +13,7 @@ import android.content.pm.PackageInfo
 import com.revrobotics.LastUpdateOfAllReposTracker
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
+import com.revrobotics.displayStaleReposNotification
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
 import com.squareup.picasso.OkHttp3Downloader
@@ -231,6 +232,11 @@ class MainApplication: Application() {
 
   class BootReceiver: BroadcastReceiver() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
-    override fun onReceive(context: Context, intent: Intent) = Unit
+    override fun onReceive(context: Context, intent: Intent) {
+      // Check for stale repos added by REV Robotics on 2021-06-04
+      if (LastUpdateOfAllReposTracker.reposAreVeryStale) {
+        displayStaleReposNotification()
+      }
+    }
   }
 }

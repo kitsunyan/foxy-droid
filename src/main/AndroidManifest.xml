@@ -25,8 +25,9 @@
     <receiver
       android:name=".MainApplication$BootReceiver">
 
-      <intent-filter>
+      <intent-filter android:priority="100">
         <action android:name="android.intent.action.BOOT_COMPLETED" />
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
       </intent-filter>
 
     </receiver>
