@@ -341,7 +341,6 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
         // behavior is for the OS to already be downloaded before this app restarts due to it being updated.
         RevConstants.shouldAutoInstallOsOnNextLaunch = true
         RevConstants.shouldAutoInstallOSWhenDownloadCompletes = false
-        Log.d("Noah", "Queueing updates for OS and ourselves (${thisApp.packageName})")
 
         queueDownloadAndUpdate(RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE, downloadConnection)
         queueDownloadAndUpdate(thisApp.packageName, downloadConnection)

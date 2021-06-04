@@ -1,5 +1,10 @@
 package com.revrobotics
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
@@ -7,6 +12,11 @@ import nya.kitsunyan.foxydroid.utility.extension.android.Android
 import android.os.Handler
 import android.os.Looper
 import android.util.ArraySet
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import nya.kitsunyan.foxydroid.MainActivity
+import nya.kitsunyan.foxydroid.MainApplication
+import nya.kitsunyan.foxydroid.R
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Executors
@@ -15,12 +25,13 @@ import kotlin.concurrent.thread
 // This file was written by REV Robotics, but should only contain code that could be ported to upstream Foxy Droid.
 
 val mainThreadHandler = Handler(Looper.getMainLooper())
+val notificationManager = MainApplication.instance.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-private val executor = Executors.newSingleThreadExecutor()
+private val downloadQueuingExecutor = Executors.newSingleThreadExecutor()
 
 // queueDownloadAndUpdate function added by REV Robotics on 2021-05-09
 fun queueDownloadAndUpdate(packageName: String, downloadConnection: Connection<DownloadService.Binder, DownloadService>) {
-  executor.submit {
+  downloadQueuingExecutor.submit {
     val repositoryMap = Database.RepositoryAdapter.getAll(null)
         .asSequence()
         .map {
@@ -76,7 +87,15 @@ object LastUpdateOfAllReposTracker {
     }
 
   /**
-   * Add a callback that will be called once the time that all repositories were last updated changes
+   * @returns true when the repos have not been updated for 6 weeks or more.
+   */
+  val reposAreVeryStale: Boolean
+    get() {
+      return timeSinceLastUpdateOfAllRepos > durationOfWeeks(6)
+    }
+
+  /**
+   * Adds a callback that will be called once the time that all repositories were last updated changes.
    */
   fun addTimestampChangedCallback(callback: ()->Unit) {
     synchronized(lastUpdateChangedCallbacks) {
@@ -126,6 +145,10 @@ object LastUpdateOfAllReposTracker {
     }
 
     if (updated) {
+      if (!reposAreVeryStale) {
+        dismissStaleReposNotification()
+      }
+
       synchronized(lastUpdateChangedCallbacks) {
         for (callback in lastUpdateChangedCallbacks) {
           callback()
@@ -137,4 +160,36 @@ object LastUpdateOfAllReposTracker {
   init {
     calculateLastDownloadOfAllRepos()
   }
+}
+
+fun displayStaleReposNotification() {
+  val channel = NotificationChannel(
+      RevConstants.NOTIF_CHANNEL_ID_STALE_REPOS,
+      "Check for update reminders",
+      NotificationManager.IMPORTANCE_DEFAULT)
+  notificationManager.createNotificationChannel(channel)
+
+  val launchAppIntent = Intent(MainApplication.instance, MainActivity::class.java).apply {
+    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+  }
+  val pendingIntent = PendingIntent.getActivity(MainApplication.instance, 0, launchAppIntent, 0)
+
+  val notification = NotificationCompat.Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_ID_STALE_REPOS)
+      .setSmallIcon(R.drawable.ic_rev)
+      .setContentTitle("Check for updates")
+      .setStyle(NotificationCompat.BigTextStyle()
+          .bigText("Please connect to the Internet so that the Driver Hub can check for updates"))
+      .setContentText("Please connect to the Internet so that the Driver Hub can check for updates")
+      .setContentIntent(pendingIntent)
+      .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+      .build()
+  NotificationManagerCompat.from(MainApplication.instance).notify(RevConstants.NOTIF_ID_STALE_REPOS, notification)
+}
+
+fun dismissStaleReposNotification() {
+  notificationManager.cancel(RevConstants.NOTIF_ID_STALE_REPOS)
+}
+
+fun durationOfWeeks(weeks: Long): Duration {
+  return Duration.ofDays(7 * weeks)
 }
