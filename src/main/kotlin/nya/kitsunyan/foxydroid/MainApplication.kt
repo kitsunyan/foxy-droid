@@ -13,6 +13,8 @@ import android.content.pm.PackageInfo
 import com.revrobotics.LastUpdateOfAllReposTracker
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
+import com.revrobotics.dismissStaleReposNotification
+import com.revrobotics.dismissUpdatesNotification
 import com.revrobotics.displayStaleReposNotification
 import com.revrobotics.displayUpdatesNotification
 import com.revrobotics.mainThreadHandler
@@ -42,6 +44,25 @@ class MainApplication: Application() {
   // companion object added by REV Robotics on 2021-04-29
   companion object {
     lateinit var instance: MainApplication
+
+    // Function added by REV Robotics on 2021-06-07
+    private fun refreshUpdatesAndStaleReposNotifications() {
+      thread {
+        val productsAvailableForUpdate: List<ProductItem> = Database.ProductAdapter
+            .query(installed = true, updates = true, searchQuery = "", section = ProductItem.Section.All, order = ProductItem.Order.NAME, signal = null)
+            .use {
+              it.asSequence().map(Database.ProductAdapter::transformItem).toList()
+            }
+        if (productsAvailableForUpdate.isNotEmpty()) {
+          displayUpdatesNotification(productsAvailableForUpdate)
+        } else if (LastUpdateOfAllReposTracker.reposAreVeryStale) { // Check for stale repos added by REV Robotics on 2021-06-04
+          displayStaleReposNotification()
+        } else {
+          dismissStaleReposNotification()
+          dismissUpdatesNotification()
+        }
+      }
+    }
   }
 
   private fun PackageInfo.toInstalledItem(): InstalledItem {
@@ -105,6 +126,7 @@ class MainApplication: Application() {
               } else {
                 Database.InstalledAdapter.delete(packageName)
               }
+              refreshUpdatesAndStaleReposNotifications()
             }
           }
         }
@@ -237,18 +259,7 @@ class MainApplication: Application() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
       // Check for available app updates added by REV Robotics on 2021-06-07
-      thread {
-        val productsAvailableForUpdate: List<ProductItem> = Database.ProductAdapter
-            .query(installed = true, updates = true, searchQuery = "", section = ProductItem.Section.All, order = ProductItem.Order.NAME, signal = null)
-            .use {
-              it.asSequence().map(Database.ProductAdapter::transformItem).toList()
-            }
-        if (productsAvailableForUpdate.isNotEmpty()) {
-          displayUpdatesNotification(productsAvailableForUpdate)
-        } else if (LastUpdateOfAllReposTracker.reposAreVeryStale) { // Check for stale repos added by REV Robotics on 2021-06-04
-          displayStaleReposNotification()
-        }
-      }
+      refreshUpdatesAndStaleReposNotifications()
     }
   }
 }
