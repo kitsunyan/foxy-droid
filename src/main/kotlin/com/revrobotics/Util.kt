@@ -164,7 +164,7 @@ object LastUpdateOfAllReposTracker {
 
 fun displayStaleReposNotification() {
   val channel = NotificationChannel(
-      RevConstants.NOTIF_CHANNEL_ID_STALE_REPOS,
+      RevConstants.NOTIF_CHANNEL_STALE_REPOS,
       "Check for update reminders",
       NotificationManager.IMPORTANCE_DEFAULT)
   notificationManager.createNotificationChannel(channel)
@@ -174,7 +174,7 @@ fun displayStaleReposNotification() {
   }
   val pendingIntent = PendingIntent.getActivity(MainApplication.instance, 0, launchAppIntent, 0)
 
-  val notification = NotificationCompat.Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_ID_STALE_REPOS)
+  val notification = NotificationCompat.Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_STALE_REPOS)
       .setSmallIcon(R.drawable.ic_rev)
       .setContentTitle("Check for updates")
       .setStyle(NotificationCompat.BigTextStyle()

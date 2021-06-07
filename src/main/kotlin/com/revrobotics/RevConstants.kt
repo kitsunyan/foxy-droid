@@ -11,7 +11,7 @@ object RevConstants {
 
   const val JOB_ID_NOTIFY_ABOUT_STALE_REPOS = 2200
 
-  const val NOTIF_CHANNEL_ID_STALE_REPOS = "StaleRepos"
+  const val NOTIF_CHANNEL_STALE_REPOS = "StaleRepos"
   const val NOTIF_ID_STALE_REPOS = 2200
 
   val SHARED_PREFS: SharedPreferences = MainApplication.instance.getSharedPreferences("revrobotics", Context.MODE_PRIVATE)
