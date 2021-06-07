@@ -174,6 +174,7 @@ object LastUpdateOfAllReposTracker {
  * This function should ONLY be called if there are no updates known to be available
  */
 fun displayStaleReposNotification() {
+  dismissUpdatesNotification()
   NotificationChannel(RevConstants.NOTIF_CHANNEL_STALE_REPOS,
       "Check for update reminders", NotificationManager.IMPORTANCE_DEFAULT)
       .apply { lockscreenVisibility = Notification.VISIBILITY_PUBLIC }
@@ -192,6 +193,7 @@ fun displayStaleReposNotification() {
       .setContentText("Please connect to the Internet so that the Driver Hub can check for updates")
       .setContentIntent(pendingIntent)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+      .setOnlyAlertOnce(true)
       .build()
   NotificationManagerCompat.from(MainApplication.instance).notify(RevConstants.NOTIF_ID_STALE_REPOS, notification)
 }
@@ -251,5 +253,11 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
           }
         }
       })
+      .setOnlyAlertOnce(true)
+      .setVisibility(Notification.VISIBILITY_PUBLIC)
       .build())
+}
+
+fun dismissUpdatesNotification() {
+  notificationManager.cancel(Common.NOTIFICATION_ID_UPDATES)
 }
