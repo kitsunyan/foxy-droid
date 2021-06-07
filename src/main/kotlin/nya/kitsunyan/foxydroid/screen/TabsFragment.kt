@@ -31,6 +31,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.database.Database
@@ -91,7 +92,7 @@ class TabsFragment: ScreenFragment() {
   // Added by REV Robotics on 2021-04-08 to allow only a single tab to be selected.
   // All other references to ProductsFragment.Source.values() in this file should probably be
   // replaced with a reference to selectableTabs.
-  private val showAllTabs = false
+  private val showAllTabs = BuildConfig.ALL_TABS_CAN_BE_ENABLED && Preferences[Preferences.Key.ShowAllTabs]
   private val selectableTabs = if (showAllTabs) {
     ProductsFragment.Source.values()
   } else {
@@ -192,11 +193,13 @@ class TabsFragment: ScreenFragment() {
         }
 
       // Repositories menu option disabled by REV Robotics on 2021-05-04
-      /*add(1, 0, 0, R.string.repositories)
-        .setOnMenuItemClickListener {
-          view.post { screenActivity.navigateRepositories() }
-          true
-        }*/
+      if (showAllTabs) {
+        add(1, 0, 0, R.string.repositories)
+            .setOnMenuItemClickListener {
+              view.post { screenActivity.navigateRepositories() }
+              true
+            }
+      }
 
       add(1, 0, 0, R.string.preferences)
         .setOnMenuItemClickListener {
