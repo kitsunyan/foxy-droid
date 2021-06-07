@@ -160,9 +160,12 @@ class SyncService: ConnectionService<SyncService.Binder>() {
         getString(R.string.syncing), NotificationManager.IMPORTANCE_LOW)
         .apply { setShowBadge(false) }
         .let(notificationManager::createNotificationChannel)
-      NotificationChannel(Common.NOTIFICATION_CHANNEL_UPDATES,
-        getString(R.string.updates), NotificationManager.IMPORTANCE_LOW)
-        .let(notificationManager::createNotificationChannel)
+
+      // Modified by REV Robotics on 2021-06-07: Delete the old updates channel in favor of a new one.
+      // We want the importance level to be default instead of low, but we aren't able to change the
+      // importance level of an existing notification channel.
+      // The new channel gets created in displayUpdatesNotification(), as it may be needed before SyncService is created.
+      notificationManager.deleteNotificationChannel("updates")
     }
 
     stateDisposable = stateSubject

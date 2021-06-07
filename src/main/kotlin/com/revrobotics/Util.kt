@@ -1,5 +1,6 @@
 package com.revrobotics
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -173,11 +174,10 @@ object LastUpdateOfAllReposTracker {
  * This function should ONLY be called if there are no updates known to be available
  */
 fun displayStaleReposNotification() {
-  val channel = NotificationChannel(
-      RevConstants.NOTIF_CHANNEL_STALE_REPOS,
-      "Check for update reminders",
-      NotificationManager.IMPORTANCE_DEFAULT)
-  notificationManager.createNotificationChannel(channel)
+  NotificationChannel(RevConstants.NOTIF_CHANNEL_STALE_REPOS,
+      "Check for update reminders", NotificationManager.IMPORTANCE_DEFAULT)
+      .apply { lockscreenVisibility = Notification.VISIBILITY_PUBLIC }
+      .let(notificationManager::createNotificationChannel)
 
   val launchAppIntent = Intent(MainApplication.instance, MainActivity::class.java).apply {
     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -208,10 +208,18 @@ fun durationOfWeeks(weeks: Long): Duration {
 // This function has been modified in subsequent commits
 fun displayUpdatesNotification(productItems: List<ProductItem>) {
   dismissStaleReposNotification() // The stale repos notification should only be displayed if no updates are available
+
+  // For the Driver Hub Software Manager, we moved creation of the Updates notification channel to this function, since
+  // this function may be called before the SyncService is created.
+  NotificationChannel(RevConstants.NOTIF_CHANNEL_UPDATES,
+      MainApplication.instance.getString(R.string.updates), NotificationManager.IMPORTANCE_DEFAULT)
+      .apply { lockscreenVisibility = Notification.VISIBILITY_PUBLIC }
+      .let(notificationManager::createNotificationChannel)
+
   val maxUpdates = 5
   fun <T> T.applyHack(callback: T.() -> Unit): T = apply(callback)
   notificationManager.notify(Common.NOTIFICATION_ID_UPDATES, NotificationCompat
-      .Builder(MainApplication.instance, Common.NOTIFICATION_CHANNEL_UPDATES)
+      .Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_UPDATES)
       .setSmallIcon(R.drawable.ic_new_releases) // TODO(Noah): Use REV "R" icon
       .setContentTitle(MainApplication.instance.getString(R.string.new_updates_available))
       .setContentText(MainApplication.instance.resources.getQuantityString(R.plurals.new_updates_DESC_FORMAT,
