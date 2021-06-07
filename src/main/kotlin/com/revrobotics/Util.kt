@@ -217,13 +217,19 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
       .let(notificationManager::createNotificationChannel)
 
   val maxUpdates = 5
+  val shortDescription = if (productItems.size == 1) {
+    productItems[0].name
+  } else {
+    MainApplication.instance.resources.getQuantityString(R.plurals.new_updates_DESC_FORMAT,
+        productItems.size - 1, productItems[0].name, productItems.size - 1)
+  }
+
   fun <T> T.applyHack(callback: T.() -> Unit): T = apply(callback)
   notificationManager.notify(Common.NOTIFICATION_ID_UPDATES, NotificationCompat
       .Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_UPDATES)
       .setSmallIcon(R.drawable.ic_rev)
       .setContentTitle(MainApplication.instance.getString(R.string.new_updates_available))
-      .setContentText(MainApplication.instance.resources.getQuantityString(R.plurals.new_updates_DESC_FORMAT,
-          productItems.size, productItems.size)) // TODO(Noah): Include at least one app name
+      .setContentText(shortDescription)
       .setColor(ContextThemeWrapper(MainApplication.instance, R.style.Theme_Main_Light)
           .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
       .setContentIntent(PendingIntent.getActivity(MainApplication.instance, 0, Intent(MainApplication.instance, MainActivity::class.java)
