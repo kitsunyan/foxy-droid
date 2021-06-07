@@ -220,7 +220,7 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
   fun <T> T.applyHack(callback: T.() -> Unit): T = apply(callback)
   notificationManager.notify(Common.NOTIFICATION_ID_UPDATES, NotificationCompat
       .Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_UPDATES)
-      .setSmallIcon(R.drawable.ic_new_releases) // TODO(Noah): Use REV "R" icon
+      .setSmallIcon(R.drawable.ic_rev)
       .setContentTitle(MainApplication.instance.getString(R.string.new_updates_available))
       .setContentText(MainApplication.instance.resources.getQuantityString(R.plurals.new_updates_DESC_FORMAT,
           productItems.size, productItems.size)) // TODO(Noah): Include at least one app name
