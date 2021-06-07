@@ -6,14 +6,12 @@ import android.app.PendingIntent
 import android.app.job.JobParameters
 import android.app.job.JobService
 import android.content.Intent
-import android.graphics.Color
-import android.text.SpannableStringBuilder
-import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
 import com.revrobotics.LastUpdateOfAllReposTracker
+import com.revrobotics.displayUpdatesNotification
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -21,7 +19,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.PublishSubject
 import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.Common
-import nya.kitsunyan.foxydroid.MainActivity
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.database.Database
@@ -110,7 +107,10 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     fun setUpdateNotificationBlocker(fragment: Fragment?) {
       updateNotificationBlockerFragment = fragment?.let(::WeakReference)
       if (fragment != null) {
-        notificationManager.cancel(Common.NOTIFICATION_ID_UPDATES)
+        // Modified by REV Robotics on 2021-06-06: Don't cancel the updates available notification just because the user
+        // is on the updates tab
+
+        // notificationManager.cancel(Common.NOTIFICATION_ID_UPDATES)
       }
     }
 
@@ -340,8 +340,11 @@ class SyncService: ConnectionService<SyncService.Binder>() {
               throwable?.printStackTrace()
               currentTask = null
               handleNextTask(false)
-              val blocked = updateNotificationBlockerFragment?.get()?.isAdded == true
-              if (!blocked && result != null && result.isNotEmpty()) {
+
+              // Notification "blocked" logic removed by REV Robotics on 2021-06-06
+              // val blocked = updateNotificationBlockerFragment?.get()?.isAdded == true
+
+              if (/*!blocked &&*/ result != null && result.isNotEmpty()) {
                 displayUpdatesNotification(result)
               }
             }
@@ -359,6 +362,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     }
   }
 
+  /* Code commented out on 2021-06-06 by REV Robotics, as we have copied this function to Util.kt for external use
   private fun displayUpdatesNotification(productItems: List<ProductItem>) {
     val maxUpdates = 5
     fun <T> T.applyHack(callback: T.() -> Unit): T = apply(callback)
@@ -390,7 +394,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
         }
       })
       .build())
-  }
+  } */
 
   class Job: JobService() {
     private var syncParams: JobParameters? = null
