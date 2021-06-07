@@ -27,6 +27,7 @@
 
       <intent-filter android:priority="100">
         <action android:name="android.intent.action.BOOT_COMPLETED" />
+        <!-- Modified by REV Robotics on 2021-06-04: Treat a self-update event the same way as a boot completed event -->
         <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
       </intent-filter>
 
