@@ -20,6 +20,7 @@ import android.widget.Toolbar
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import io.reactivex.rxjava3.disposables.Disposable
+import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
@@ -84,7 +85,9 @@ class PreferencesFragment: ScreenFragment() {
       }
       addSwitch(Preferences.Key.IncompatibleVersions, getString(R.string.incompatible_versions),
         getString(R.string.incompatible_versions_summary))
-      addSwitch(Preferences.Key.ShowAllTabs, "Show all tabs", "Show \"Available\" and \"Installed\" tabs")
+      if (BuildConfig.ALL_TABS_CAN_BE_ENABLED) {
+        addSwitch(Preferences.Key.ShowAllTabs, "Show all tabs", "Show \"Available\" and \"Installed\" tabs")
+      }
     }
 
     disposable = Preferences.observable.subscribe(this::updatePreference)

@@ -113,6 +113,19 @@ android {
       }
     }
   }
+
+  // Flavor configuration added by REV Robotics on 2021-06-06
+  flavorDimensions "tabs"
+  productFlavors {
+    create("allTabsCanBeEnabled") {
+      dimension = "tabs"
+      buildConfigField('boolean', 'ALL_TABS_CAN_BE_ENABLED', 'true')
+    }
+    create("onlyUpdatesTab") {
+      dimension = "tabs"
+      buildConfigField('boolean', 'ALL_TABS_CAN_BE_ENABLED', 'false')
+    }
+  }
 }
 
 repositories {
