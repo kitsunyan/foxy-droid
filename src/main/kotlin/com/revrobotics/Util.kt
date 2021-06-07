@@ -226,6 +226,23 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
         productItems.size - 1, productItems[0].name, productItems.size - 1)
   }
 
+  val updateTabIntent = Intent(MainApplication.instance, MainActivity::class.java)
+      .apply { action = MainActivity.ACTION_UPDATES }
+  val updateTabPendingIntent = PendingIntent.getActivity(
+      MainApplication.instance,
+      0,
+      updateTabIntent,
+      PendingIntent.FLAG_UPDATE_CURRENT)
+
+  val updateAllIntent = Intent(MainApplication.instance, MainActivity::class.java)
+      .apply { action = MainActivity.ACTION_UPDATE_ALL }
+  val updateAllPendingIntent = PendingIntent.getActivity(
+      MainApplication.instance,
+      0,
+      updateAllIntent,
+      PendingIntent.FLAG_UPDATE_CURRENT)
+
+
   fun <T> T.applyHack(callback: T.() -> Unit): T = apply(callback)
   notificationManager.notify(Common.NOTIFICATION_ID_UPDATES, NotificationCompat
       .Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_UPDATES)
@@ -234,8 +251,7 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
       .setContentText(shortDescription)
       .setColor(ContextThemeWrapper(MainApplication.instance, R.style.Theme_Main_Light)
           .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
-      .setContentIntent(PendingIntent.getActivity(MainApplication.instance, 0, Intent(MainApplication.instance, MainActivity::class.java)
-          .setAction(MainActivity.ACTION_UPDATES), PendingIntent.FLAG_UPDATE_CURRENT))
+      .setContentIntent(updateTabPendingIntent)
       .setStyle(NotificationCompat.InboxStyle().applyHack {
         for (productItem in productItems.take(maxUpdates)) {
           val builder = SpannableStringBuilder(productItem.name)
@@ -255,9 +271,7 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
       })
       .setOnlyAlertOnce(true)
       .setVisibility(Notification.VISIBILITY_PUBLIC)
-      .addAction(R.drawable.ic_launch, "Update All",
-          PendingIntent.getActivity(MainApplication.instance, 0, Intent(MainApplication.instance, MainActivity::class.java)
-              .setAction(MainActivity.ACTION_UPDATE_ALL), PendingIntent.FLAG_UPDATE_CURRENT))
+      .addAction(R.drawable.ic_launch, "Update All", updateAllPendingIntent)
       .build())
 }
 
