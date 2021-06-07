@@ -233,6 +233,7 @@ class MainApplication: Application() {
   class BootReceiver: BroadcastReceiver() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
+      // TODO(Noah): If updates are available, display that notification, and do NOT display the stale repos notification
       // Check for stale repos added by REV Robotics on 2021-06-04
       if (LastUpdateOfAllReposTracker.reposAreVeryStale) {
         displayStaleReposNotification()
