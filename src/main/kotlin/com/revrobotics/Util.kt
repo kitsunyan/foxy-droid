@@ -255,6 +255,9 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
       })
       .setOnlyAlertOnce(true)
       .setVisibility(Notification.VISIBILITY_PUBLIC)
+      .addAction(R.drawable.ic_launch, "Update All",
+          PendingIntent.getActivity(MainApplication.instance, 0, Intent(MainApplication.instance, MainActivity::class.java)
+              .setAction(MainActivity.ACTION_UPDATE_ALL), PendingIntent.FLAG_UPDATE_CURRENT))
       .build())
 }
 
