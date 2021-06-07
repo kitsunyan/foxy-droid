@@ -11,6 +11,7 @@ import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
 import com.revrobotics.LastUpdateOfAllReposTracker
+import com.revrobotics.RevConstants
 import com.revrobotics.displayUpdatesNotification
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -215,6 +216,8 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       .setColor(ContextThemeWrapper(this, R.style.Theme_Main_Light)
         .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
       .setContentTitle(getString(R.string.could_not_sync_FORMAT, repository.name))
+      // Explicit grouping added by REV Robotics on 2021-06-07, to avoid undesirable grouping imposed by Android
+      .setGroup(RevConstants.NOTIF_GROUP_SYNC_FAILED)
       .setContentText(getString(when (exception) {
         is RepositoryUpdater.UpdateException -> when (exception.errorType) {
           RepositoryUpdater.ErrorType.NETWORK -> R.string.network_error_DESC
