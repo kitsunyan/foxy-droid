@@ -14,6 +14,7 @@ import com.revrobotics.LastUpdateOfAllReposTracker
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
 import com.revrobotics.displayStaleReposNotification
+import com.revrobotics.displayUpdatesNotification
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
 import com.squareup.picasso.OkHttp3Downloader
@@ -23,6 +24,7 @@ import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.content.ProductPreferences
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.InstalledItem
+import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.index.RepositoryUpdater
 import nya.kitsunyan.foxydroid.network.Downloader
 import nya.kitsunyan.foxydroid.network.PicassoDownloader
@@ -33,6 +35,7 @@ import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import java.net.InetSocketAddress
 import java.net.Proxy
+import kotlin.concurrent.thread
 
 @Suppress("unused")
 class MainApplication: Application() {
@@ -233,10 +236,18 @@ class MainApplication: Application() {
   class BootReceiver: BroadcastReceiver() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
-      // TODO(Noah): If updates are available, display that notification, and do NOT display the stale repos notification
-      // Check for stale repos added by REV Robotics on 2021-06-04
-      if (LastUpdateOfAllReposTracker.reposAreVeryStale) {
-        displayStaleReposNotification()
+      // Check for available app updates added by REV Robotics on 2021-06-07
+      thread {
+        val productsAvailableForUpdate: List<ProductItem> = Database.ProductAdapter
+            .query(installed = true, updates = true, searchQuery = "", section = ProductItem.Section.All, order = ProductItem.Order.NAME, signal = null)
+            .use {
+              it.asSequence().map(Database.ProductAdapter::transformItem).toList()
+            }
+        if (productsAvailableForUpdate.isNotEmpty()) {
+          displayUpdatesNotification(productsAvailableForUpdate)
+        } else if (LastUpdateOfAllReposTracker.reposAreVeryStale) { // Check for stale repos added by REV Robotics on 2021-06-04
+          displayStaleReposNotification()
+        }
       }
     }
   }
