@@ -170,7 +170,7 @@ object LastUpdateOfAllReposTracker {
 }
 
 /**
- * This function should ONLY be called if there are no updates available
+ * This function should ONLY be called if there are no updates known to be available
  */
 fun displayStaleReposNotification() {
   val channel = NotificationChannel(
@@ -215,7 +215,7 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
       .setSmallIcon(R.drawable.ic_new_releases) // TODO(Noah): Use REV "R" icon
       .setContentTitle(MainApplication.instance.getString(R.string.new_updates_available))
       .setContentText(MainApplication.instance.resources.getQuantityString(R.plurals.new_updates_DESC_FORMAT,
-          productItems.size, productItems.size))
+          productItems.size, productItems.size)) // TODO(Noah): Include at least one app name
       .setColor(ContextThemeWrapper(MainApplication.instance, R.style.Theme_Main_Light)
           .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
       .setContentIntent(PendingIntent.getActivity(MainApplication.instance, 0, Intent(MainApplication.instance, MainActivity::class.java)

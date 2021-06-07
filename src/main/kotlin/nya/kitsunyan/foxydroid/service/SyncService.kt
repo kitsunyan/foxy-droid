@@ -286,7 +286,8 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     stateNotificationBuilder.setWhen(System.currentTimeMillis())
   }
 
-  private fun handleNextTask(hasUpdates: Boolean) {
+  // updatesAvailable parameter renamed to aRepoHasBeenUpdated by REV Robotics on 2021-06-06
+  private fun handleNextTask(aRepoHasBeenUpdated: Boolean) {
     if (currentTask == null) {
       if (tasks.isNotEmpty()) {
         val task = tasks.removeAt(0)
@@ -322,14 +323,14 @@ class SyncService: ConnectionService<SyncService.Binder>() {
                 // Added by REV Robotics on 2021-06-02: Clear any existing error notification for this repository
                 notificationManager.cancel("repository-${repository.id}", Common.NOTIFICATION_ID_SYNCING)
               }
-              handleNextTask(result == true || hasUpdates)
+              handleNextTask(result == true || aRepoHasBeenUpdated)
             }
-          currentTask = CurrentTask(task, disposable, hasUpdates, initialState)
+          currentTask = CurrentTask(task, disposable, aRepoHasBeenUpdated, initialState)
         } else {
-          handleNextTask(hasUpdates)
+          handleNextTask(aRepoHasBeenUpdated)
         }
       } else if (started != Started.NO) {
-        if (hasUpdates && Preferences[Preferences.Key.UpdateNotify]) {
+        if (aRepoHasBeenUpdated && Preferences[Preferences.Key.UpdateNotify]) {
           val disposable = RxUtils
             .querySingle { Database.ProductAdapter
               .query(true, true, "", ProductItem.Section.All, ProductItem.Order.NAME, it)
