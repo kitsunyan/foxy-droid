@@ -32,6 +32,7 @@ abstract class ScreenActivity: FragmentActivity() {
 
   sealed class SpecialIntent {
     object Updates: SpecialIntent()
+    object UpdateAll: SpecialIntent() // Added by REV Robotics on 2021-06-07
     class Install(val packageName: String?, val cacheFileName: String?): SpecialIntent()
   }
 
@@ -220,6 +221,15 @@ abstract class ScreenActivity: FragmentActivity() {
           specialIntent.cacheFileName?.let(::startPackageInstaller)
         }
         Unit
+      }
+      // SpecialIntent.UpdateAll added by REV Robotics on 2021-06-07
+      is SpecialIntent.UpdateAll -> {
+        if (currentFragment !is TabsFragment) {
+          fragmentStack.clear()
+          replaceFragment(TabsFragment(), true)
+        }
+        val tabsFragment = currentFragment as TabsFragment
+        tabsFragment.initiateUpdateAll()
       }
     }::class
   }

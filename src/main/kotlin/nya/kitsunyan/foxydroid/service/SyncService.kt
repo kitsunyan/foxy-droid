@@ -6,14 +6,13 @@ import android.app.PendingIntent
 import android.app.job.JobParameters
 import android.app.job.JobService
 import android.content.Intent
-import android.graphics.Color
-import android.text.SpannableStringBuilder
-import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
 import com.revrobotics.LastUpdateOfAllReposTracker
+import com.revrobotics.RevConstants
+import com.revrobotics.displayUpdatesNotification
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -21,7 +20,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.PublishSubject
 import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.Common
-import nya.kitsunyan.foxydroid.MainActivity
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.database.Database
@@ -110,7 +108,10 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     fun setUpdateNotificationBlocker(fragment: Fragment?) {
       updateNotificationBlockerFragment = fragment?.let(::WeakReference)
       if (fragment != null) {
-        notificationManager.cancel(Common.NOTIFICATION_ID_UPDATES)
+        // Modified by REV Robotics on 2021-06-06: Don't cancel the updates available notification just because the user
+        // is on the updates tab
+
+        // notificationManager.cancel(Common.NOTIFICATION_ID_UPDATES)
       }
     }
 
@@ -160,9 +161,12 @@ class SyncService: ConnectionService<SyncService.Binder>() {
         getString(R.string.syncing), NotificationManager.IMPORTANCE_LOW)
         .apply { setShowBadge(false) }
         .let(notificationManager::createNotificationChannel)
-      NotificationChannel(Common.NOTIFICATION_CHANNEL_UPDATES,
-        getString(R.string.updates), NotificationManager.IMPORTANCE_LOW)
-        .let(notificationManager::createNotificationChannel)
+
+      // Modified by REV Robotics on 2021-06-07: Delete the old updates channel in favor of a new one.
+      // We want the importance level to be default instead of low, but we aren't able to change the
+      // importance level of an existing notification channel.
+      // The new channel gets created in displayUpdatesNotification(), as it may be needed before SyncService is created.
+      notificationManager.deleteNotificationChannel("updates")
     }
 
     stateDisposable = stateSubject
@@ -212,6 +216,8 @@ class SyncService: ConnectionService<SyncService.Binder>() {
       .setColor(ContextThemeWrapper(this, R.style.Theme_Main_Light)
         .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
       .setContentTitle(getString(R.string.could_not_sync_FORMAT, repository.name))
+      // Explicit grouping added by REV Robotics on 2021-06-07, to avoid undesirable grouping imposed by Android
+      .setGroup(RevConstants.NOTIF_GROUP_SYNC_FAILED)
       .setContentText(getString(when (exception) {
         is RepositoryUpdater.UpdateException -> when (exception.errorType) {
           RepositoryUpdater.ErrorType.NETWORK -> R.string.network_error_DESC
@@ -286,7 +292,8 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     stateNotificationBuilder.setWhen(System.currentTimeMillis())
   }
 
-  private fun handleNextTask(hasUpdates: Boolean) {
+  // updatesAvailable parameter renamed to aRepoHasBeenUpdated by REV Robotics on 2021-06-06
+  private fun handleNextTask(aRepoHasBeenUpdated: Boolean) {
     if (currentTask == null) {
       if (tasks.isNotEmpty()) {
         val task = tasks.removeAt(0)
@@ -322,14 +329,14 @@ class SyncService: ConnectionService<SyncService.Binder>() {
                 // Added by REV Robotics on 2021-06-02: Clear any existing error notification for this repository
                 notificationManager.cancel("repository-${repository.id}", Common.NOTIFICATION_ID_SYNCING)
               }
-              handleNextTask(result == true || hasUpdates)
+              handleNextTask(result == true || aRepoHasBeenUpdated)
             }
-          currentTask = CurrentTask(task, disposable, hasUpdates, initialState)
+          currentTask = CurrentTask(task, disposable, aRepoHasBeenUpdated, initialState)
         } else {
-          handleNextTask(hasUpdates)
+          handleNextTask(aRepoHasBeenUpdated)
         }
       } else if (started != Started.NO) {
-        if (hasUpdates && Preferences[Preferences.Key.UpdateNotify]) {
+        if (aRepoHasBeenUpdated && Preferences[Preferences.Key.UpdateNotify]) {
           val disposable = RxUtils
             .querySingle { Database.ProductAdapter
               .query(true, true, "", ProductItem.Section.All, ProductItem.Order.NAME, it)
@@ -340,8 +347,11 @@ class SyncService: ConnectionService<SyncService.Binder>() {
               throwable?.printStackTrace()
               currentTask = null
               handleNextTask(false)
-              val blocked = updateNotificationBlockerFragment?.get()?.isAdded == true
-              if (!blocked && result != null && result.isNotEmpty()) {
+
+              // Notification "blocked" logic removed by REV Robotics on 2021-06-06
+              // val blocked = updateNotificationBlockerFragment?.get()?.isAdded == true
+
+              if (/*!blocked &&*/ result != null && result.isNotEmpty()) {
                 displayUpdatesNotification(result)
               }
             }
@@ -359,6 +369,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
     }
   }
 
+  /* Code commented out on 2021-06-06 by REV Robotics, as we have copied this function to Util.kt for external use
   private fun displayUpdatesNotification(productItems: List<ProductItem>) {
     val maxUpdates = 5
     fun <T> T.applyHack(callback: T.() -> Unit): T = apply(callback)
@@ -390,7 +401,7 @@ class SyncService: ConnectionService<SyncService.Binder>() {
         }
       })
       .build())
-  }
+  } */
 
   class Job: JobService() {
     private var syncParams: JobParameters? = null

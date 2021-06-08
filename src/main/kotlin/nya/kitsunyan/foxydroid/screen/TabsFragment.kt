@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -27,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.revrobotics.mainThreadHandler
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -403,6 +405,17 @@ class TabsFragment: ScreenFragment() {
   }
 
   internal fun selectUpdates() = selectUpdatesInternal(true)
+
+  // Function added by REV Robotics on 2021-06-07
+  internal fun initiateUpdateAll() {
+    selectUpdatesInternal(true)
+    val button = viewPager?.findViewById<Button>(R.id.updateAllButton)
+    if (button == null) {
+      mainThreadHandler.postDelayed(::initiateUpdateAll, 200)
+    } else {
+      button.callOnClick()
+    }
+  }
 
   private fun selectUpdatesInternal(allowSmooth: Boolean) {
     if (view != null) {

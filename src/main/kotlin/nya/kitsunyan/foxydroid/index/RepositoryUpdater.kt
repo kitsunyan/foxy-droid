@@ -93,7 +93,10 @@ object RepositoryUpdater {
         when {
           result.isNotChanged -> {
             file.delete()
-            Single.just(false)
+            // Modified by REV Robotics on 2021-06-06 to provide true instead of false.
+            // If the server indicates that its data hasn't changed, that should be interpreted as a successful repo
+            // update, not a failure.
+            Single.just(true)
           }
           !result.success -> {
             file.delete()

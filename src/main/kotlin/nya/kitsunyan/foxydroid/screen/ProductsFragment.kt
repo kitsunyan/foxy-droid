@@ -85,7 +85,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
 
   private var recyclerView: RecyclerView? = null
   // updateAllButton added by REV Robotics on 2021-05-09
-  private var updateAllButton: Button? = null
+  var updateAllButton: Button? = null
 
   private var repositoriesDisposable: Disposable? = null
 

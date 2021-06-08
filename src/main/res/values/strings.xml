@@ -83,9 +83,10 @@
   <string name="network_error_DESC">Network error.</string>
   <string name="never">Never</string>
   <string name="new_updates_available">New updates available</string>
+  <!--  Updates available notification description modified by REV Robotics on 2021-06-07  -->
   <plurals name="new_updates_DESC_FORMAT">
-    <item quantity="one">%d new update.</item>
-    <item quantity="other">%d new updates.</item>
+    <item quantity="one">%s and %d other</item>
+    <item quantity="other">%s and %d others</item>
   </plurals>
   <string name="no_applications_available">No applications available</string>
   <string name="no_applications_installed">No applications installed</string>

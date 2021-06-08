@@ -1,22 +1,30 @@
 package com.revrobotics
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.extension.android.Android
 import android.os.Handler
 import android.os.Looper
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.util.ArraySet
+import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import nya.kitsunyan.foxydroid.Common
 import nya.kitsunyan.foxydroid.MainActivity
 import nya.kitsunyan.foxydroid.MainApplication
 import nya.kitsunyan.foxydroid.R
+import nya.kitsunyan.foxydroid.entity.ProductItem
+import nya.kitsunyan.foxydroid.utility.extension.resources.getColorFromAttr
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Executors
@@ -162,19 +170,22 @@ object LastUpdateOfAllReposTracker {
   }
 }
 
+/**
+ * This function should ONLY be called if there are no updates known to be available
+ */
 fun displayStaleReposNotification() {
-  val channel = NotificationChannel(
-      RevConstants.NOTIF_CHANNEL_ID_STALE_REPOS,
-      "Check for update reminders",
-      NotificationManager.IMPORTANCE_DEFAULT)
-  notificationManager.createNotificationChannel(channel)
+  dismissUpdatesNotification()
+  NotificationChannel(RevConstants.NOTIF_CHANNEL_STALE_REPOS,
+      "Check for update reminders", NotificationManager.IMPORTANCE_DEFAULT)
+      .apply { lockscreenVisibility = Notification.VISIBILITY_PUBLIC }
+      .let(notificationManager::createNotificationChannel)
 
   val launchAppIntent = Intent(MainApplication.instance, MainActivity::class.java).apply {
     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
   }
   val pendingIntent = PendingIntent.getActivity(MainApplication.instance, 0, launchAppIntent, 0)
 
-  val notification = NotificationCompat.Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_ID_STALE_REPOS)
+  val notification = NotificationCompat.Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_STALE_REPOS)
       .setSmallIcon(R.drawable.ic_rev)
       .setContentTitle("Check for updates")
       .setStyle(NotificationCompat.BigTextStyle()
@@ -182,6 +193,7 @@ fun displayStaleReposNotification() {
       .setContentText("Please connect to the Internet so that the Driver Hub can check for updates")
       .setContentIntent(pendingIntent)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+      .setOnlyAlertOnce(true)
       .build()
   NotificationManagerCompat.from(MainApplication.instance).notify(RevConstants.NOTIF_ID_STALE_REPOS, notification)
 }
@@ -192,4 +204,77 @@ fun dismissStaleReposNotification() {
 
 fun durationOfWeeks(weeks: Long): Duration {
   return Duration.ofDays(7 * weeks)
+}
+
+// Copied from SyncService on 2021-06-06
+// This function has been modified in subsequent commits
+fun displayUpdatesNotification(productItems: List<ProductItem>) {
+  dismissStaleReposNotification() // The stale repos notification should only be displayed if no updates are available
+
+  // For the Driver Hub Software Manager, we moved creation of the Updates notification channel to this function, since
+  // this function may be called before the SyncService is created.
+  NotificationChannel(RevConstants.NOTIF_CHANNEL_UPDATES,
+      MainApplication.instance.getString(R.string.updates), NotificationManager.IMPORTANCE_DEFAULT)
+      .apply { lockscreenVisibility = Notification.VISIBILITY_PUBLIC }
+      .let(notificationManager::createNotificationChannel)
+
+  val maxUpdates = 5
+  val shortDescription = if (productItems.size == 1) {
+    productItems[0].name
+  } else {
+    MainApplication.instance.resources.getQuantityString(R.plurals.new_updates_DESC_FORMAT,
+        productItems.size - 1, productItems[0].name, productItems.size - 1)
+  }
+
+  val updateTabIntent = Intent(MainApplication.instance, MainActivity::class.java)
+      .apply { action = MainActivity.ACTION_UPDATES }
+  val updateTabPendingIntent = PendingIntent.getActivity(
+      MainApplication.instance,
+      0,
+      updateTabIntent,
+      PendingIntent.FLAG_UPDATE_CURRENT)
+
+  val updateAllIntent = Intent(MainApplication.instance, MainActivity::class.java)
+      .apply { action = MainActivity.ACTION_UPDATE_ALL }
+  val updateAllPendingIntent = PendingIntent.getActivity(
+      MainApplication.instance,
+      0,
+      updateAllIntent,
+      PendingIntent.FLAG_UPDATE_CURRENT)
+
+
+  fun <T> T.applyHack(callback: T.() -> Unit): T = apply(callback)
+  notificationManager.notify(Common.NOTIFICATION_ID_UPDATES, NotificationCompat
+      .Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_UPDATES)
+      .setSmallIcon(R.drawable.ic_rev)
+      .setContentTitle(MainApplication.instance.getString(R.string.new_updates_available))
+      .setContentText(shortDescription)
+      .setColor(ContextThemeWrapper(MainApplication.instance, R.style.Theme_Main_Light)
+          .getColorFromAttr(android.R.attr.colorAccent).defaultColor)
+      .setContentIntent(updateTabPendingIntent)
+      .setStyle(NotificationCompat.InboxStyle().applyHack {
+        for (productItem in productItems.take(maxUpdates)) {
+          val builder = SpannableStringBuilder(productItem.name)
+          builder.setSpan(ForegroundColorSpan(Color.BLACK), 0, builder.length,
+              SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
+          builder.append(' ').append(productItem.version)
+          addLine(builder)
+        }
+        if (productItems.size > maxUpdates) {
+          val summary = MainApplication.instance.getString(R.string.plus_more_FORMAT, productItems.size - maxUpdates)
+          if (Android.sdk(24)) {
+            addLine(summary)
+          } else {
+            setSummaryText(summary)
+          }
+        }
+      })
+      .setOnlyAlertOnce(true)
+      .setVisibility(Notification.VISIBILITY_PUBLIC)
+      .addAction(R.drawable.ic_launch, "Update All", updateAllPendingIntent)
+      .build())
+}
+
+fun dismissUpdatesNotification() {
+  notificationManager.cancel(Common.NOTIFICATION_ID_UPDATES)
 }
