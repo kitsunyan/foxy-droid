@@ -154,6 +154,7 @@ object LastUpdateOfAllReposTracker {
 
     if (updated) {
       if (!reposAreVeryStale) {
+        RevConstants.userDismissedStaleReposNotification = false // If the repos go stale again, we want the notification to show up
         dismissStaleReposNotification()
       }
 
@@ -175,6 +176,7 @@ object LastUpdateOfAllReposTracker {
  */
 fun displayStaleReposNotification() {
   dismissUpdatesNotification()
+  RevConstants.userDismissedStaleReposNotification = false
   NotificationChannel(RevConstants.NOTIF_CHANNEL_STALE_REPOS,
       "Check for update reminders", NotificationManager.IMPORTANCE_DEFAULT)
       .apply { lockscreenVisibility = Notification.VISIBILITY_PUBLIC }
@@ -183,7 +185,17 @@ fun displayStaleReposNotification() {
   val launchAppIntent = Intent(MainApplication.instance, MainActivity::class.java).apply {
     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
   }
-  val pendingIntent = PendingIntent.getActivity(MainApplication.instance, 0, launchAppIntent, 0)
+  val launchAppPendingIntent = PendingIntent.getActivity(MainApplication.instance, 0, launchAppIntent, 0)
+
+  val notificationDismissedIntent = Intent(MainApplication.instance, MainApplication.NotificationDismissedReceiver::class.java)
+      .apply {
+        putExtra(RevConstants.EXTRA_DISMISSED_NOTIF_ID, RevConstants.NOTIF_ID_STALE_REPOS)
+      }
+  val notificationDismissedPendingIntent = PendingIntent.getBroadcast(
+      MainApplication.instance,
+      47926, // We just need to use a number that won't be used as a request code isn't used elsewhere.
+      notificationDismissedIntent,
+      PendingIntent.FLAG_UPDATE_CURRENT)
 
   val notification = NotificationCompat.Builder(MainApplication.instance, RevConstants.NOTIF_CHANNEL_STALE_REPOS)
       .setSmallIcon(R.drawable.ic_rev)
@@ -191,9 +203,10 @@ fun displayStaleReposNotification() {
       .setStyle(NotificationCompat.BigTextStyle()
           .bigText("Please connect to the Internet so that the Driver Hub can check for updates"))
       .setContentText("Please connect to the Internet so that the Driver Hub can check for updates")
-      .setContentIntent(pendingIntent)
+      .setContentIntent(launchAppPendingIntent)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
       .setOnlyAlertOnce(true)
+      .setDeleteIntent(notificationDismissedPendingIntent)
       .build()
   NotificationManagerCompat.from(MainApplication.instance).notify(RevConstants.NOTIF_ID_STALE_REPOS, notification)
 }
@@ -210,6 +223,7 @@ fun durationOfWeeks(weeks: Long): Duration {
 // This function has been modified in subsequent commits
 fun displayUpdatesNotification(productItems: List<ProductItem>) {
   dismissStaleReposNotification() // The stale repos notification should only be displayed if no updates are available
+  RevConstants.dismissedUpdateNotificationPackages = emptySet() // Make sure this notification is marked as un-dismissed
 
   // For the Driver Hub Software Manager, we moved creation of the Updates notification channel to this function, since
   // this function may be called before the SyncService is created.
@@ -242,6 +256,16 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
       updateAllIntent,
       PendingIntent.FLAG_UPDATE_CURRENT)
 
+  val notificationDismissedIntent = Intent(MainApplication.instance, MainApplication.NotificationDismissedReceiver::class.java)
+      .apply {
+        putExtra(RevConstants.EXTRA_DISMISSED_NOTIF_ID, Common.NOTIFICATION_ID_UPDATES)
+        putExtra(RevConstants.EXTRA_DISMISSED_NOTIF_UPDATES_LIST, productItems.map { it.packageName }.toTypedArray())
+      }
+  val notificationDismissedPendingIntent = PendingIntent.getBroadcast(
+      MainApplication.instance,
+      982518, // We just need to use a number that won't be used as a request code elsewhere.
+      notificationDismissedIntent,
+      PendingIntent.FLAG_UPDATE_CURRENT)
 
   fun <T> T.applyHack(callback: T.() -> Unit): T = apply(callback)
   notificationManager.notify(Common.NOTIFICATION_ID_UPDATES, NotificationCompat
@@ -272,6 +296,7 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
       .setOnlyAlertOnce(true)
       .setVisibility(Notification.VISIBILITY_PUBLIC)
       .addAction(R.drawable.ic_launch, "Update All", updateAllPendingIntent)
+      .setDeleteIntent(notificationDismissedPendingIntent)
       .build())
 }
 

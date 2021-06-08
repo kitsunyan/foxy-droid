@@ -46,6 +46,7 @@ class MainApplication: Application() {
     lateinit var instance: MainApplication
 
     // Function added by REV Robotics on 2021-06-07
+    // TODO(Noah): Evaluate if we should just move this logic to a function in Util
     private fun refreshUpdatesAndStaleReposNotifications() {
       thread {
         val productsAvailableForUpdate: List<ProductItem> = Database.ProductAdapter
@@ -54,9 +55,18 @@ class MainApplication: Application() {
               it.asSequence().map(Database.ProductAdapter::transformItem).toList()
             }
         if (productsAvailableForUpdate.isNotEmpty()) {
-          displayUpdatesNotification(productsAvailableForUpdate)
+          // If any product available for update has not been included in a dismissed Updates notification, that means
+          // there is new information, and we should show the Updates notification.
+          for (packageAvailableForUpdate in productsAvailableForUpdate.map { it.packageName }) {
+            if (packageAvailableForUpdate !in RevConstants.dismissedUpdateNotificationPackages) {
+              // TODO(Noah): If dismissedUpdateNotificationPackages is not empty, note the number of new updates in the notification
+              displayUpdatesNotification(productsAvailableForUpdate)
+            }
+          }
         } else if (LastUpdateOfAllReposTracker.reposAreVeryStale) { // Check for stale repos added by REV Robotics on 2021-06-04
-          displayStaleReposNotification()
+          if (!RevConstants.userDismissedStaleReposNotification) {
+            displayStaleReposNotification()
+          }
         } else {
           dismissStaleReposNotification()
           dismissUpdatesNotification()
@@ -258,8 +268,31 @@ class MainApplication: Application() {
   class BootReceiver: BroadcastReceiver() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
+      // Forget whether the user dismissed the Updates and Stale Repos notifications (added by REV Robotics on 2021-06-07)
+      RevConstants.dismissedUpdateNotificationPackages = emptySet()
+      RevConstants.userDismissedStaleReposNotification = false
+
       // Check for available app updates added by REV Robotics on 2021-06-07
       refreshUpdatesAndStaleReposNotifications()
+    }
+  }
+
+  // NotificationDismissedReceiver added by REV Robotics on 2021-06-07
+  class NotificationDismissedReceiver: BroadcastReceiver() {
+    @Suppress("MoveVariableDeclarationIntoWhen")
+    override fun onReceive(context: Context?, intent: Intent?) {
+      // Save information about the notification that just got dismissed, for use in future decisions about whether to
+      // display the notification again
+      val dismissedNotificationId = intent?.getIntExtra(RevConstants.EXTRA_DISMISSED_NOTIF_ID, -1) ?: -1
+      when (dismissedNotificationId) {
+        Common.NOTIFICATION_ID_UPDATES -> {
+          val updatesList = intent?.getStringArrayExtra(RevConstants.EXTRA_DISMISSED_NOTIF_UPDATES_LIST).orEmpty()
+          RevConstants.dismissedUpdateNotificationPackages = updatesList.toSet()
+        }
+        RevConstants.NOTIF_ID_STALE_REPOS -> {
+          RevConstants.userDismissedStaleReposNotification = true
+        }
+      }
     }
   }
 }
