@@ -12,7 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.fragment.app.Fragment
 import com.revrobotics.LastUpdateOfAllReposTracker
 import com.revrobotics.RevConstants
-import com.revrobotics.displayUpdatesNotification
+import com.revrobotics.refreshUpdatesAndStaleReposNotifications
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -348,12 +348,9 @@ class SyncService: ConnectionService<SyncService.Binder>() {
               currentTask = null
               handleNextTask(false)
 
-              // Notification "blocked" logic removed by REV Robotics on 2021-06-06
-              // val blocked = updateNotificationBlockerFragment?.get()?.isAdded == true
+              // Modified by REV Robotics on 2021-06-09 to use shared notification logic
+              refreshUpdatesAndStaleReposNotifications(result)
 
-              if (/*!blocked &&*/ result != null && result.isNotEmpty()) {
-                displayUpdatesNotification(result)
-              }
             }
           currentTask = CurrentTask(null, disposable, true, State.Finishing)
         } else {

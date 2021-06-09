@@ -171,10 +171,37 @@ object LastUpdateOfAllReposTracker {
   }
 }
 
+fun durationOfWeeks(weeks: Long): Duration {
+  return Duration.ofDays(7 * weeks)
+}
+
+/**
+ * This should be called even if productsAvailableForUpdate is empty
+ */
+fun refreshUpdatesAndStaleReposNotifications(productsAvailableForUpdate: List<ProductItem>) {
+  if (productsAvailableForUpdate.isNotEmpty()) {
+    // If any product available for update has not been included in a dismissed Updates notification, that means
+    // there is new information, and we should show the Updates notification.
+    for (packageAvailableForUpdate in productsAvailableForUpdate.map { it.packageName }) {
+      if (packageAvailableForUpdate !in RevConstants.dismissedUpdateNotificationPackages) {
+        // TODO(Noah): If dismissedUpdateNotificationPackages is not empty, note the number of new updates in the notification
+        displayUpdatesNotification(productsAvailableForUpdate)
+      }
+    }
+  } else if (LastUpdateOfAllReposTracker.reposAreVeryStale) { // Check for stale repos added by REV Robotics on 2021-06-04
+    if (!RevConstants.userDismissedStaleReposNotification) {
+      displayStaleReposNotification()
+    }
+  } else {
+    dismissStaleReposNotification()
+    dismissUpdatesNotification()
+  }
+}
+
 /**
  * This function should ONLY be called if there are no updates known to be available
  */
-fun displayStaleReposNotification() {
+private fun displayStaleReposNotification() {
   dismissUpdatesNotification()
   RevConstants.userDismissedStaleReposNotification = false
   NotificationChannel(RevConstants.NOTIF_CHANNEL_STALE_REPOS,
@@ -211,17 +238,13 @@ fun displayStaleReposNotification() {
   NotificationManagerCompat.from(MainApplication.instance).notify(RevConstants.NOTIF_ID_STALE_REPOS, notification)
 }
 
-fun dismissStaleReposNotification() {
+private fun dismissStaleReposNotification() {
   notificationManager.cancel(RevConstants.NOTIF_ID_STALE_REPOS)
-}
-
-fun durationOfWeeks(weeks: Long): Duration {
-  return Duration.ofDays(7 * weeks)
 }
 
 // Copied from SyncService on 2021-06-06
 // This function has been modified in subsequent commits
-fun displayUpdatesNotification(productItems: List<ProductItem>) {
+private fun displayUpdatesNotification(productItems: List<ProductItem>) {
   dismissStaleReposNotification() // The stale repos notification should only be displayed if no updates are available
   RevConstants.dismissedUpdateNotificationPackages = emptySet() // Make sure this notification is marked as un-dismissed
 
@@ -300,6 +323,6 @@ fun displayUpdatesNotification(productItems: List<ProductItem>) {
       .build())
 }
 
-fun dismissUpdatesNotification() {
+private fun dismissUpdatesNotification() {
   notificationManager.cancel(Common.NOTIFICATION_ID_UPDATES)
 }
