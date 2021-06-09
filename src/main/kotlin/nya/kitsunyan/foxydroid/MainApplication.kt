@@ -13,12 +13,9 @@ import android.content.pm.PackageInfo
 import com.revrobotics.LastUpdateOfAllReposTracker
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
-import com.revrobotics.dismissStaleReposNotification
-import com.revrobotics.dismissUpdatesNotification
-import com.revrobotics.displayStaleReposNotification
-import com.revrobotics.displayUpdatesNotification
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
+import com.revrobotics.refreshUpdatesAndStaleReposNotifications
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
 import nya.kitsunyan.foxydroid.content.Cache
@@ -44,25 +41,6 @@ class MainApplication: Application() {
   // companion object added by REV Robotics on 2021-04-29
   companion object {
     lateinit var instance: MainApplication
-
-    // Function added by REV Robotics on 2021-06-07
-    private fun refreshUpdatesAndStaleReposNotifications() {
-      thread {
-        val productsAvailableForUpdate: List<ProductItem> = Database.ProductAdapter
-            .query(installed = true, updates = true, searchQuery = "", section = ProductItem.Section.All, order = ProductItem.Order.NAME, signal = null)
-            .use {
-              it.asSequence().map(Database.ProductAdapter::transformItem).toList()
-            }
-        if (productsAvailableForUpdate.isNotEmpty()) {
-          displayUpdatesNotification(productsAvailableForUpdate)
-        } else if (LastUpdateOfAllReposTracker.reposAreVeryStale) { // Check for stale repos added by REV Robotics on 2021-06-04
-          displayStaleReposNotification()
-        } else {
-          dismissStaleReposNotification()
-          dismissUpdatesNotification()
-        }
-      }
-    }
   }
 
   private fun PackageInfo.toInstalledItem(): InstalledItem {
@@ -126,7 +104,14 @@ class MainApplication: Application() {
               } else {
                 Database.InstalledAdapter.delete(packageName)
               }
-              refreshUpdatesAndStaleReposNotifications()
+              thread {
+                val productsAvailableForUpdate: List<ProductItem> = Database.ProductAdapter
+                    .query(installed = true, updates = true, searchQuery = "", section = ProductItem.Section.All, order = ProductItem.Order.NAME, signal = null)
+                    .use {
+                      it.asSequence().map(Database.ProductAdapter::transformItem).toList()
+                    }
+                refreshUpdatesAndStaleReposNotifications(productsAvailableForUpdate)
+              }
             }
           }
         }
@@ -258,8 +243,38 @@ class MainApplication: Application() {
   class BootReceiver: BroadcastReceiver() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
+      // Forget whether the user dismissed the Updates and Stale Repos notifications (added by REV Robotics on 2021-06-07)
+      RevConstants.dismissedUpdateNotificationPackages = emptySet()
+      RevConstants.userDismissedStaleReposNotification = false
+
       // Check for available app updates added by REV Robotics on 2021-06-07
-      refreshUpdatesAndStaleReposNotifications()
+      thread {
+        val productsAvailableForUpdate: List<ProductItem> = Database.ProductAdapter
+            .query(installed = true, updates = true, searchQuery = "", section = ProductItem.Section.All, order = ProductItem.Order.NAME, signal = null)
+            .use {
+              it.asSequence().map(Database.ProductAdapter::transformItem).toList()
+            }
+        refreshUpdatesAndStaleReposNotifications(productsAvailableForUpdate)
+      }
+    }
+  }
+
+  // NotificationDismissedReceiver added by REV Robotics on 2021-06-07
+  class NotificationDismissedReceiver: BroadcastReceiver() {
+    @Suppress("MoveVariableDeclarationIntoWhen")
+    override fun onReceive(context: Context?, intent: Intent?) {
+      // Save information about the notification that just got dismissed, for use in future decisions about whether to
+      // display the notification again
+      val dismissedNotificationId = intent?.getIntExtra(RevConstants.EXTRA_DISMISSED_NOTIF_ID, -1) ?: -1
+      when (dismissedNotificationId) {
+        Common.NOTIFICATION_ID_UPDATES -> {
+          val updatesList = intent?.getStringArrayExtra(RevConstants.EXTRA_DISMISSED_NOTIF_UPDATES_LIST).orEmpty()
+          RevConstants.dismissedUpdateNotificationPackages = updatesList.toSet()
+        }
+        RevConstants.NOTIF_ID_STALE_REPOS -> {
+          RevConstants.userDismissedStaleReposNotification = true
+        }
+      }
     }
   }
 }

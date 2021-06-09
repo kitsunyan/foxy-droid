@@ -32,6 +32,8 @@
       </intent-filter>
 
     </receiver>
+
+    <receiver android:name=".MainApplication$NotificationDismissedReceiver" />
     
     <receiver android:name="com.revrobotics.InternetAvailableBroadcastReceiver">
       <intent-filter>
