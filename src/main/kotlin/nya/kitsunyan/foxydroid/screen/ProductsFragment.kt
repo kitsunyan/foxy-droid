@@ -116,7 +116,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       LastUpdateOfAllReposTracker.addTimestampChangedCallback(lastDownloadTimestampChangedCallback)
     }
 
-    // The remainder of this function was reworked by REV Robotics on 2021-05-09 in order to support an Update ALl button
+    // The remainder of this function was reworked by REV Robotics on 2021-05-09 in order to support an Update All button
 
     downloadConnection = Connection(DownloadService::class.java)
     downloadConnection?.bind(requireContext())

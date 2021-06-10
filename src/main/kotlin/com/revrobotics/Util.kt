@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.ConnectivityManager
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
@@ -34,6 +35,8 @@ import kotlin.concurrent.thread
 
 val mainThreadHandler = Handler(Looper.getMainLooper())
 val notificationManager = MainApplication.instance.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+val connectivityManager = MainApplication.instance.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
 
 private val downloadQueuingExecutor = Executors.newSingleThreadExecutor()
 
@@ -61,8 +64,8 @@ fun queueDownloadAndUpdate(packageName: String, downloadConnection: Connection<D
     val release  = if (multipleCompatibleReleases) {
       compatibleReleases!!
           .filter { it.platforms.contains(Android.primaryPlatform) }
-          .minBy { it.platforms.size }
-          ?: compatibleReleases.minBy { it.platforms.size }
+          .minByOrNull { it.platforms.size }
+          ?: compatibleReleases.minByOrNull { it.platforms.size }
           ?: compatibleReleases.firstOrNull()
     } else {
       compatibleReleases?.firstOrNull()
