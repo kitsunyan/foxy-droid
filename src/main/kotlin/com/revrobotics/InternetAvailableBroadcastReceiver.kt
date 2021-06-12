@@ -4,9 +4,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import nya.kitsunyan.foxydroid.MainActivity
 import nya.kitsunyan.foxydroid.MainApplication
+import nya.kitsunyan.foxydroid.entity.Release
+import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.service.Connection
+import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.service.SyncService
+import nya.kitsunyan.foxydroid.utility.extension.json.Json
 
 /**
  * This class receives broadcast notifications that Internet is available from the RevUpdateInterface, which is always
@@ -30,6 +35,33 @@ class InternetAvailableBroadcastReceiver : BroadcastReceiver() {
           binder.sync(SyncService.SyncRequest.AUTO_WITH_FOREGROUND_NOTIFICATION)
           connection.unbind(MainApplication.instance)
         }).bind(MainApplication.instance)
+        // TODO(Noah): In the dialog, show that we are connected to the Internet, but are syncing.
+        // TODO(Noah): If a specific release was requested, execute desired action immediately
+        // TODO(Noah): When sync finishes, execute desired action
+      } else {
+        Log.i(tag, "Executing desired action")
+        val desiredAction = desiredActionAfterInternetConnected
+        if (desiredAction != null) {
+          desiredActionAfterInternetConnected = null
+          RequestInternetDialogFragment.instance?.dismiss()
+          when (desiredAction) {
+            UpdateAll -> {
+              context.startActivity(
+                  Intent(MainApplication.instance, MainActivity::class.java)
+                      .apply { action = MainActivity.ACTION_UPDATE_ALL })
+            }
+            is InstallApk -> {
+              Connection(DownloadService::class.java, onBind = { connection, _ ->
+                connection.binder?.enqueue(
+                    desiredAction.packageName,
+                    desiredAction.productName,
+                    Repository.deserialize(desiredAction.repositoryId, Json.factory.createParser(desiredAction.serializedRepository)),
+                    Release.deserialize(Json.factory.createParser(desiredAction.serializedRelease)))
+                connection.unbind(context)
+              }).bind(context)
+            }
+          }
+        }
       }
     }
   }

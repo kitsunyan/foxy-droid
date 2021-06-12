@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
@@ -36,11 +37,17 @@ import kotlin.concurrent.thread
 val mainThreadHandler = Handler(Looper.getMainLooper())
 val notificationManager = MainApplication.instance.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 val connectivityManager = MainApplication.instance.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
+val internetAvailable: Boolean
+  get() = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+@Volatile var desiredActionAfterInternetConnected: DesiredAction? = null // This is reset to null when RequestInternetDialogFragment is cancelled
 
 private val downloadQueuingExecutor = Executors.newSingleThreadExecutor()
 
-// queueDownloadAndUpdate function added by REV Robotics on 2021-05-09
+sealed class DesiredAction
+object UpdateAll: DesiredAction()
+data class InstallApk(val packageName: String, val productName: String, val repositoryId: Long, val serializedRepository: String, val serializedRelease: String): DesiredAction()
+// TODO(Noah): Distinguish between "install latest" and "install specific version"
+
 fun queueDownloadAndUpdate(packageName: String, downloadConnection: Connection<DownloadService.Binder, DownloadService>) {
   downloadQueuingExecutor.submit {
     val repositoryMap = Database.RepositoryAdapter.getAll(null)

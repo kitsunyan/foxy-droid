@@ -2,7 +2,6 @@ package nya.kitsunyan.foxydroid.screen
 
 import android.content.Context
 import android.content.Intent
-import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcel
@@ -14,7 +13,6 @@ import android.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.revrobotics.RevUpdater
-import com.revrobotics.connectivityManager
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
@@ -268,10 +266,6 @@ abstract class ScreenActivity: FragmentActivity() {
   internal fun navigateAddRepository() = pushFragment(EditRepositoryFragment(null))
   internal fun navigateRepository(repositoryId: Long) = pushFragment(RepositoryFragment(repositoryId))
   internal fun navigateEditRepository(repositoryId: Long) = pushFragment(EditRepositoryFragment(repositoryId))
-
-  // TODO(Noah): New simplified plan: If no Internet on relevant tap, display dialog, and note desired action.
-  //             When we learn of Internet connection via BroadcastReceiver, wait for sync to finish if applicable (show this status in the dialog), then perform desired action (update all or update single)
-  //             When we learn of Internet connection via ConnectivityManager, wait 5 seconds to see if we're going to hear from the BroadcastReceiver
 
   // onPause() and onResume() overrides added by REV Robotics on 2021-05-04
   override fun onResume() {

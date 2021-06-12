@@ -19,8 +19,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.revrobotics.RequestInternetDialogFragment
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
+import com.revrobotics.InstallApk
+import com.revrobotics.desiredActionAfterInternetConnected
+import com.revrobotics.internetAvailable
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -38,7 +42,9 @@ import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
+import nya.kitsunyan.foxydroid.utility.extension.json.Json
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
+import java.io.StringWriter
 
 class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
   companion object {
@@ -376,7 +382,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         }
         val binder = downloadConnection.binder
         if (productRepository != null && release != null && binder != null) {
-          binder.enqueue(packageName, productRepository.first.name, productRepository.second, release)
+          handleDownloadClick(binder, productRepository, release)
         }
         Unit
       }
@@ -456,8 +462,9 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       else -> {
         val productRepository = products.asSequence().filter { it.first.releases.any { it === release } }.firstOrNull()
         if (productRepository != null) {
-          downloadConnection.binder?.enqueue(packageName, productRepository.first.name,
-            productRepository.second, release)
+          downloadConnection.binder?.let {
+            handleDownloadClick(it, productRepository, release)
+          }
         }
       }
     }
@@ -500,6 +507,25 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
           .startLauncherActivity(names[position]) }
         .setNegativeButton(R.string.cancel, null)
         .create()
+    }
+  }
+
+  // handleDownloadClick function added by REV Robotics on 2021-06-12
+  private fun handleDownloadClick(downloadServiceBinder: DownloadService.Binder, productRepository: Pair<Product, Repository>, release: Release) {
+    if (internetAvailable) {
+      downloadServiceBinder.enqueue(packageName, productRepository.first.name,
+          productRepository.second, release)
+    } else {
+      val serializedRepository: String = StringWriter().let { stringWriter ->
+        productRepository.second.serialize(Json.factory.createGenerator(stringWriter))
+        stringWriter.toString()
+      }
+      val serializedRelease: String = StringWriter().let { stringWriter ->
+        release.serialize(Json.factory.createGenerator(stringWriter))
+        stringWriter.toString()
+      }
+      desiredActionAfterInternetConnected = InstallApk(packageName, productRepository.first.name, productRepository.first.repositoryId, serializedRepository, serializedRelease)
+      RequestInternetDialogFragment().show(childFragmentManager, null)
     }
   }
 }
