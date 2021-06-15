@@ -25,9 +25,37 @@ class InternetAvailableBroadcastReceiver : BroadcastReceiver() {
 
   override fun onReceive(context: Context, intent: Intent) {
     if ("com.revrobotics.revupdateinterface.INTERNET_AVAILABLE" == intent.action) {
-      Log.i(tag, "Internet is available");
+      Log.i(tag, "Internet is available")
+
+      // TODO(Noah): Only execute the desired action immediately if the repository has been updated in the last 12 hours,
+      //             or if a specific release was requested.
+      //             Otherwise, wait to perform it until after the automatic sync.
+      Log.i(tag, "Executing desired action")
+      val desiredAction = desiredActionAfterInternetConnected
+      if (desiredAction != null) {
+        desiredActionAfterInternetConnected = null
+        RequestInternetDialogFragment.instance?.dismiss()
+        when (desiredAction) {
+          UpdateAll -> {
+            context.startActivity(
+                Intent(MainApplication.instance, MainActivity::class.java)
+                    .apply { action = MainActivity.ACTION_UPDATE_ALL })
+          }
+          is InstallApk -> {
+            Connection(DownloadService::class.java, onBind = { connection, _ ->
+              connection.binder?.enqueue(
+                  desiredAction.packageName,
+                  desiredAction.productName,
+                  Repository.deserialize(desiredAction.repositoryId, Json.factory.createParser(desiredAction.serializedRepository)),
+                  Release.deserialize(Json.factory.createParser(desiredAction.serializedRelease)))
+              connection.unbind(context)
+            }).bind(context)
+          }
+        }
+      }
 
       if (LastUpdateOfAllReposTracker.timeSinceLastUpdateOfAllRepos.toHours() > 12) {
+        // TODO(Noah): In the wait for Internet dialog, show that we are connected to the Internet, but are syncing.
         Log.i(tag, "It has been more than 12 hours since all repositories were updated; initiating repository sync")
         Connection(SyncService::class.java, onBind = { connection, binder ->
           // We want to have the foreground notification, because otherwise the app isn't guaranteed to stay running
@@ -35,33 +63,8 @@ class InternetAvailableBroadcastReceiver : BroadcastReceiver() {
           binder.sync(SyncService.SyncRequest.AUTO_WITH_FOREGROUND_NOTIFICATION)
           connection.unbind(MainApplication.instance)
         }).bind(MainApplication.instance)
-        // TODO(Noah): In the dialog, show that we are connected to the Internet, but are syncing.
-        // TODO(Noah): If a specific release was requested, execute desired action immediately
-        // TODO(Noah): When sync finishes, execute desired action
       } else {
-        Log.i(tag, "Executing desired action")
-        val desiredAction = desiredActionAfterInternetConnected
-        if (desiredAction != null) {
-          desiredActionAfterInternetConnected = null
-          RequestInternetDialogFragment.instance?.dismiss()
-          when (desiredAction) {
-            UpdateAll -> {
-              context.startActivity(
-                  Intent(MainApplication.instance, MainActivity::class.java)
-                      .apply { action = MainActivity.ACTION_UPDATE_ALL })
-            }
-            is InstallApk -> {
-              Connection(DownloadService::class.java, onBind = { connection, _ ->
-                connection.binder?.enqueue(
-                    desiredAction.packageName,
-                    desiredAction.productName,
-                    Repository.deserialize(desiredAction.repositoryId, Json.factory.createParser(desiredAction.serializedRepository)),
-                    Release.deserialize(Json.factory.createParser(desiredAction.serializedRelease)))
-                connection.unbind(context)
-              }).bind(context)
-            }
-          }
-        }
+        // TODO(Noah): Move the desired action execution to this block
       }
     }
   }
