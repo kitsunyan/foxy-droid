@@ -19,8 +19,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.revrobotics.RequestInternetDialogFragment
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
+import com.revrobotics.InstallApk
+import com.revrobotics.actionWaitingForInternetConnection
+import com.revrobotics.internetAvailable
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -376,7 +380,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         }
         val binder = downloadConnection.binder
         if (productRepository != null && release != null && binder != null) {
-          binder.enqueue(packageName, productRepository.first.name, productRepository.second, release)
+          handleDownloadClick(binder, productRepository, release)
         }
         Unit
       }
@@ -456,8 +460,9 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       else -> {
         val productRepository = products.asSequence().filter { it.first.releases.any { it === release } }.firstOrNull()
         if (productRepository != null) {
-          downloadConnection.binder?.enqueue(packageName, productRepository.first.name,
-            productRepository.second, release)
+          downloadConnection.binder?.let {
+            handleDownloadClick(it, productRepository, release)
+          }
         }
       }
     }
@@ -500,6 +505,17 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
           .startLauncherActivity(names[position]) }
         .setNegativeButton(R.string.cancel, null)
         .create()
+    }
+  }
+
+  // handleDownloadClick function added by REV Robotics on 2021-06-12
+  private fun handleDownloadClick(downloadServiceBinder: DownloadService.Binder, productRepository: Pair<Product, Repository>, release: Release) {
+    if (internetAvailable) {
+      downloadServiceBinder.enqueue(packageName, productRepository.first.name,
+          productRepository.second, release)
+    } else {
+      actionWaitingForInternetConnection = InstallApk(packageName, productRepository.first.name, productRepository.second, release)
+      RequestInternetDialogFragment().show(childFragmentManager, null)
     }
   }
 }

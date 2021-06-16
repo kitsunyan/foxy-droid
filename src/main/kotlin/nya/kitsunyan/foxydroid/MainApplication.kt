@@ -232,6 +232,8 @@ class MainApplication: Application() {
   }
 
   // installOsUpdate() function added by REV Robotics on 2021-05-10
+  // Normally, we'd want to verify that we have Internet access before queueing a download, but the OS update file
+  // should already be downloaded to the cache at this point.
   private fun installOsUpdate() {
     Connection(DownloadService::class.java, onBind = { connection, _ ->
       mainThreadHandler.postDelayed(::installOsUpdate, 1000)

@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
@@ -24,6 +26,8 @@ import nya.kitsunyan.foxydroid.MainActivity
 import nya.kitsunyan.foxydroid.MainApplication
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.entity.ProductItem
+import nya.kitsunyan.foxydroid.entity.Release
+import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.utility.extension.resources.getColorFromAttr
 import java.time.Duration
 import java.time.Instant
@@ -34,10 +38,21 @@ import kotlin.concurrent.thread
 
 val mainThreadHandler = Handler(Looper.getMainLooper())
 val notificationManager = MainApplication.instance.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+val connectivityManager = MainApplication.instance.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+val internetAvailable: Boolean
+  get() = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+@Volatile var actionWaitingForInternetConnection: ActionWaitingForInternetConnection? = null // This is reset to null when RequestInternetDialogFragment is cancelled
 
 private val downloadQueuingExecutor = Executors.newSingleThreadExecutor()
 
-// queueDownloadAndUpdate function added by REV Robotics on 2021-05-09
+sealed class ActionWaitingForInternetConnection
+object UpdateAll: ActionWaitingForInternetConnection()
+data class InstallApk(val packageName: String,
+                      val productName: String,
+                      val repository: Repository,
+                      val release: Release): ActionWaitingForInternetConnection()
+// TODO(Noah): Distinguish between "install latest" and "install specific version"
+
 fun queueDownloadAndUpdate(packageName: String, downloadConnection: Connection<DownloadService.Binder, DownloadService>) {
   downloadQueuingExecutor.submit {
     val repositoryMap = Database.RepositoryAdapter.getAll(null)
@@ -61,8 +76,8 @@ fun queueDownloadAndUpdate(packageName: String, downloadConnection: Connection<D
     val release  = if (multipleCompatibleReleases) {
       compatibleReleases!!
           .filter { it.platforms.contains(Android.primaryPlatform) }
-          .minBy { it.platforms.size }
-          ?: compatibleReleases.minBy { it.platforms.size }
+          .minByOrNull { it.platforms.size }
+          ?: compatibleReleases.minByOrNull { it.platforms.size }
           ?: compatibleReleases.firstOrNull()
     } else {
       compatibleReleases?.firstOrNull()

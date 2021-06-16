@@ -21,6 +21,10 @@ import com.revrobotics.RevUpdater
 import com.revrobotics.LastUpdateOfAllReposTracker
 import com.revrobotics.LastUpdateOfAllReposTracker.lastUpdateOfAllRepos
 import com.revrobotics.LastUpdateOfAllReposTracker.timeSinceLastUpdateOfAllRepos
+import com.revrobotics.RequestInternetDialogFragment
+import com.revrobotics.UpdateAll
+import com.revrobotics.actionWaitingForInternetConnection
+import com.revrobotics.internetAvailable
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -116,7 +120,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
       LastUpdateOfAllReposTracker.addTimestampChangedCallback(lastDownloadTimestampChangedCallback)
     }
 
-    // The remainder of this function was reworked by REV Robotics on 2021-05-09 in order to support an Update ALl button
+    // The remainder of this function was reworked by REV Robotics on 2021-05-09 in order to support an Update All button
 
     downloadConnection = Connection(DownloadService::class.java)
     downloadConnection?.bind(requireContext())
@@ -134,15 +138,20 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     RecyclerFastScroller(recyclerView)
 
     updateAllButton.setOnClickListener {
-      updateAllButton.isEnabled = false
-      updateAllButton.text = "Updating all software"
-      RevUpdater.updatingAllSoftware = true
-      val messagePart1 = "Downloading and installing all updates."
-      val messagePart2 = "Download progress is displayed in the notification shade, and installation progress is displayed here."
-      RevUpdater.showOrUpdateDialog("$messagePart1\n\n$messagePart2", activity!!)
-      RevUpdater.dialogPrefix = "$messagePart1 $messagePart2\n\n"
-      updateAll()
-      // TODO(Noah): Reset the text and enable the button when all updates are installed
+      if (internetAvailable) {
+        updateAllButton.isEnabled = false
+        updateAllButton.text = "Updating all software"
+        RevUpdater.updatingAllSoftware = true
+        val messagePart1 = "Downloading and installing all updates."
+        val messagePart2 = "Download progress is displayed in the notification shade, and installation progress is displayed here."
+        RevUpdater.showOrUpdateDialog("$messagePart1\n\n$messagePart2", activity!!)
+        RevUpdater.dialogPrefix = "$messagePart1 $messagePart2\n\n"
+        updateAll()
+        // TODO(Noah): Reset the text and enable the button when all updates are installed
+      } else {
+        actionWaitingForInternetConnection = UpdateAll
+        RequestInternetDialogFragment().show(childFragmentManager, null)
+      }
     }
 
     this.recyclerView = recyclerView
@@ -276,14 +285,14 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
   }
 
   private fun getUpdatesTabEmptyText(): String {
-    val asOfPrefix = " as of "
-
+    // TODO(Noah): If currently syncing, state that.
     if (lastUpdateOfAllRepos < LocalDate.parse("2021-01-01").atStartOfDay().toInstant(ZoneOffset.UTC)) {
       // If we haven't checked for updates in an impossibly long time, assume we never have.
       return "Please connect to the Internet and check for updates"
     }
 
     // We have to tell getRelativeTimeSpanString() whether we want the results in minutes, hours, days, or weeks
+    val asOfPrefix = " as of "
     val howLongAgo = when {
       timeSinceLastUpdateOfAllRepos < Duration.ofMinutes(10) -> { // Syncing repositories can take a while, so we have a ten minute grace window
         ""
