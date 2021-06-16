@@ -23,7 +23,7 @@ import com.revrobotics.LastUpdateOfAllReposTracker.lastUpdateOfAllRepos
 import com.revrobotics.LastUpdateOfAllReposTracker.timeSinceLastUpdateOfAllRepos
 import com.revrobotics.RequestInternetDialogFragment
 import com.revrobotics.UpdateAll
-import com.revrobotics.desiredActionAfterInternetConnected
+import com.revrobotics.actionWaitingForInternetConnection
 import com.revrobotics.internetAvailable
 import com.revrobotics.mainThreadHandler
 import com.revrobotics.queueDownloadAndUpdate
@@ -149,7 +149,7 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
         updateAll()
         // TODO(Noah): Reset the text and enable the button when all updates are installed
       } else {
-        desiredActionAfterInternetConnected = UpdateAll
+        actionWaitingForInternetConnection = UpdateAll
         RequestInternetDialogFragment().show(childFragmentManager, null)
       }
     }

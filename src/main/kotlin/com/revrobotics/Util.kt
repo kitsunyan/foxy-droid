@@ -41,16 +41,16 @@ val notificationManager = MainApplication.instance.getSystemService(Context.NOTI
 val connectivityManager = MainApplication.instance.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 val internetAvailable: Boolean
   get() = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
-@Volatile var desiredActionAfterInternetConnected: DesiredAction? = null // This is reset to null when RequestInternetDialogFragment is cancelled
+@Volatile var actionWaitingForInternetConnection: ActionWaitingForInternetConnection? = null // This is reset to null when RequestInternetDialogFragment is cancelled
 
 private val downloadQueuingExecutor = Executors.newSingleThreadExecutor()
 
-sealed class DesiredAction
-object UpdateAll: DesiredAction()
+sealed class ActionWaitingForInternetConnection
+object UpdateAll: ActionWaitingForInternetConnection()
 data class InstallApk(val packageName: String,
                       val productName: String,
                       val repository: Repository,
-                      val release: Release): DesiredAction()
+                      val release: Release): ActionWaitingForInternetConnection()
 // TODO(Noah): Distinguish between "install latest" and "install specific version"
 
 fun queueDownloadAndUpdate(packageName: String, downloadConnection: Connection<DownloadService.Binder, DownloadService>) {

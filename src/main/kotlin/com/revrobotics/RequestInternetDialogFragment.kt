@@ -19,7 +19,7 @@ class RequestInternetDialogFragment: DialogFragment() {
           .setMessage("Please connect to the Internet")
           .setNegativeButton("Cancel", null)
           .setOnDismissListener {
-            desiredActionAfterInternetConnected = null
+            actionWaitingForInternetConnection = null
             instance = null
           }
           // We use a null listener, and later override the underlying onClickListener, so the dialog doesn't get dismissed

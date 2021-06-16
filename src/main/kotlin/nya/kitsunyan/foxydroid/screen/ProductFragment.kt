@@ -23,7 +23,7 @@ import com.revrobotics.RequestInternetDialogFragment
 import com.revrobotics.RevConstants
 import com.revrobotics.RevUpdater
 import com.revrobotics.InstallApk
-import com.revrobotics.desiredActionAfterInternetConnected
+import com.revrobotics.actionWaitingForInternetConnection
 import com.revrobotics.internetAvailable
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -42,9 +42,7 @@ import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.Utils
 import nya.kitsunyan.foxydroid.utility.extension.android.*
-import nya.kitsunyan.foxydroid.utility.extension.json.Json
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
-import java.io.StringWriter
 
 class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
   companion object {
@@ -516,7 +514,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       downloadServiceBinder.enqueue(packageName, productRepository.first.name,
           productRepository.second, release)
     } else {
-      desiredActionAfterInternetConnected = InstallApk(packageName, productRepository.first.name, productRepository.second, release)
+      actionWaitingForInternetConnection = InstallApk(packageName, productRepository.first.name, productRepository.second, release)
       RequestInternetDialogFragment().show(childFragmentManager, null)
     }
   }

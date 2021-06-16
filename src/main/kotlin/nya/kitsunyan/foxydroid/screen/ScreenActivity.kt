@@ -17,7 +17,7 @@ import com.revrobotics.InstallApk
 import com.revrobotics.RequestInternetDialogFragment
 import com.revrobotics.RevUpdater
 import com.revrobotics.UpdateAll
-import com.revrobotics.desiredActionAfterInternetConnected
+import com.revrobotics.actionWaitingForInternetConnection
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
@@ -242,9 +242,9 @@ abstract class ScreenActivity: FragmentActivity() {
       // SpecialIntent.PerformActionWaitingOnInternet added by REV Robotics on 2021-06-15
       is SpecialIntent.PerformActionWaitingOnInternet -> {
         Log.i(TAG, "Performing action that was waiting for an Internet connection to be established")
-        val desiredAction = desiredActionAfterInternetConnected
+        val desiredAction = actionWaitingForInternetConnection
         if (desiredAction != null) {
-          desiredActionAfterInternetConnected = null
+          actionWaitingForInternetConnection = null
           RequestInternetDialogFragment.instance?.dismiss()
           when (desiredAction) {
             UpdateAll -> {
