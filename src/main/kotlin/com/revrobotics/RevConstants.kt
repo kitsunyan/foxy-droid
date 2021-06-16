@@ -38,6 +38,7 @@ object RevConstants {
 
   var shouldAutoInstallOsOnNextLaunch: Boolean
     get() {
+      // TODO(Noah): This should probably default to false
       return SHARED_PREFS.getBoolean(PREF_AUTO_INSTALL_OS_ON_NEXT_LAUNCH, true)
     }
     set(value) {
