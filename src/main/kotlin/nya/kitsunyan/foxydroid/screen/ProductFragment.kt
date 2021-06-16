@@ -516,15 +516,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       downloadServiceBinder.enqueue(packageName, productRepository.first.name,
           productRepository.second, release)
     } else {
-      val serializedRepository: String = StringWriter().let { stringWriter ->
-        productRepository.second.serialize(Json.factory.createGenerator(stringWriter))
-        stringWriter.toString()
-      }
-      val serializedRelease: String = StringWriter().let { stringWriter ->
-        release.serialize(Json.factory.createGenerator(stringWriter))
-        stringWriter.toString()
-      }
-      desiredActionAfterInternetConnected = InstallApk(packageName, productRepository.first.name, productRepository.first.repositoryId, serializedRepository, serializedRelease)
+      desiredActionAfterInternetConnected = InstallApk(packageName, productRepository.first.name, productRepository.second, release)
       RequestInternetDialogFragment().show(childFragmentManager, null)
     }
   }

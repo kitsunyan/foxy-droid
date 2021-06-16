@@ -26,6 +26,8 @@ import nya.kitsunyan.foxydroid.MainActivity
 import nya.kitsunyan.foxydroid.MainApplication
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.entity.ProductItem
+import nya.kitsunyan.foxydroid.entity.Release
+import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.utility.extension.resources.getColorFromAttr
 import java.time.Duration
 import java.time.Instant
@@ -45,7 +47,10 @@ private val downloadQueuingExecutor = Executors.newSingleThreadExecutor()
 
 sealed class DesiredAction
 object UpdateAll: DesiredAction()
-data class InstallApk(val packageName: String, val productName: String, val repositoryId: Long, val serializedRepository: String, val serializedRelease: String): DesiredAction()
+data class InstallApk(val packageName: String,
+                      val productName: String,
+                      val repository: Repository,
+                      val release: Release): DesiredAction()
 // TODO(Noah): Distinguish between "install latest" and "install specific version"
 
 fun queueDownloadAndUpdate(packageName: String, downloadConnection: Connection<DownloadService.Binder, DownloadService>) {
