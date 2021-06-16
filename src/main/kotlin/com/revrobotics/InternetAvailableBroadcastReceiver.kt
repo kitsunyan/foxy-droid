@@ -23,17 +23,19 @@ class InternetAvailableBroadcastReceiver : BroadcastReceiver() {
     if ("com.revrobotics.revupdateinterface.INTERNET_AVAILABLE" == intent.action) {
       Log.i(tag, "Internet is available")
 
-      // Tell the main activity to perform the action that was waiting for an Internet connection
-      context.startActivity(
-          Intent(MainApplication.instance, MainActivity::class.java)
-              .apply {
-                action = MainActivity.ACTION_PERFORM_ACTION_WAITING_ON_INTERNET
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-              })
+      if (actionWaitingForInternetConnection != null) {
+        // Tell the main activity to perform the action that was waiting for an Internet connection
+        context.startActivity(
+            Intent(MainApplication.instance, MainActivity::class.java)
+                .apply {
+                  action = MainActivity.ACTION_PERFORM_ACTION_WAITING_ON_INTERNET
+                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                })
 
-      // TODO(Noah): Only execute the desired action immediately if the repository has been updated in the last 12 hours,
-      //             or if a specific release was requested.
-      //             Otherwise, wait to perform it until after the automatic sync.
+        // TODO(Noah): Only execute the desired action immediately if the repository has been updated in the last 12 hours,
+        //             or if a specific release was requested.
+        //             Otherwise, wait to perform it until after the automatic sync.
+      }
 
       if (LastUpdateOfAllReposTracker.timeSinceLastUpdateOfAllRepos.toHours() > 12) {
         // TODO(Noah): In the wait for Internet dialog, show that we are connected to the Internet, but are syncing.
