@@ -19,6 +19,7 @@ import android.widget.TextView
 import android.widget.Toolbar
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import com.topjohnwu.superuser.Shell
 import io.reactivex.rxjava3.disposables.Disposable
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
@@ -82,6 +83,8 @@ class PreferencesFragment: ScreenFragment() {
           is Preferences.Theme.Dark -> getString(R.string.dark)
         }
       }
+      if (Shell.getShell().isRoot) addSwitch(Preferences.Key.RootInstalation, getString(R.string.root_installation),
+        getString(R.string.root_installation_summary))
       addSwitch(Preferences.Key.IncompatibleVersions, getString(R.string.incompatible_versions),
         getString(R.string.incompatible_versions_summary))
     }
