@@ -20,7 +20,8 @@
     tools:ignore="GoogleAppIndexingWarning">
 
     <receiver
-      android:name=".MainApplication$BootReceiver">
+      android:name=".MainApplication$BootReceiver"
+      android:exported="false">
 
       <intent-filter>
         <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -31,7 +32,8 @@
     <activity
       android:name=".MainActivity"
       android:launchMode="singleTask"
-      android:windowSoftInputMode="adjustResize">
+      android:windowSoftInputMode="adjustResize"
+      android:exported="true">
 
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
