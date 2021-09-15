@@ -338,8 +338,8 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         val release = if (compatibleReleases.size >= 2) {
           compatibleReleases
             .filter { it.platforms.contains(Android.primaryPlatform) }
-            .minBy { it.platforms.size }
-            ?: compatibleReleases.minBy { it.platforms.size }
+            .minByOrNull { it.platforms.size }
+            ?: compatibleReleases.minByOrNull { it.platforms.size }
             ?: compatibleReleases.firstOrNull()
         } else {
           compatibleReleases.firstOrNull()
