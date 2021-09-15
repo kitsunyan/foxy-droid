@@ -116,13 +116,14 @@ repositories {
 }
 
 dependencies {
-  implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:' + versions.kotlin
-  implementation 'androidx.fragment:fragment:1.2.5'
+  implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:' + versions.kotlin
+  implementation 'androidx.fragment:fragment-ktx:1.3.6'
   implementation 'androidx.viewpager2:viewpager2:1.0.0'
   implementation 'androidx.vectordrawable:vectordrawable:1.1.0'
-  implementation 'com.squareup.okhttp3:okhttp:4.7.2'
-  implementation 'io.reactivex.rxjava3:rxjava:3.0.4'
+  implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.2'
+  implementation 'io.reactivex.rxjava3:rxjava:3.1.1'
   implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
-  implementation 'com.fasterxml.jackson.core:jackson-core:2.11.0'
-  implementation 'com.squareup.picasso:picasso:2.71828'
+  implementation 'io.reactivex.rxjava3:rxkotlin:3.0.1'
+  implementation 'com.fasterxml.jackson.core:jackson-core:2.12.5'
+  implementation 'com.squareup.picasso:picasso:2.8'
 }
