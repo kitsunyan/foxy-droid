@@ -22,7 +22,7 @@ object Database {
     val helper = Helper(context)
     db = helper.writableDatabase
     if (helper.created) {
-      for (repository in Repository.defaultRepositories) {
+      for (repository in Repository.defaultRepositories.sortedBy { it.name }) {
         RepositoryAdapter.put(repository)
       }
     }
