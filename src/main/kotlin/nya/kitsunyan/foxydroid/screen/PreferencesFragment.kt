@@ -83,7 +83,7 @@ class PreferencesFragment: ScreenFragment() {
           is Preferences.Theme.Dark -> getString(R.string.dark)
         }
       }
-      if (Shell.getShell().isRoot) addSwitch(Preferences.Key.RootInstalation, getString(R.string.root_installation),
+      addSwitch(Preferences.Key.RootInstallation, getString(R.string.root_installation),
         getString(R.string.root_installation_summary))
       addSwitch(Preferences.Key.IncompatibleVersions, getString(R.string.incompatible_versions),
         getString(R.string.incompatible_versions_summary))
@@ -113,6 +113,7 @@ class PreferencesFragment: ScreenFragment() {
       preferences[Preferences.Key.ProxyHost]?.setEnabled(enabled)
       preferences[Preferences.Key.ProxyPort]?.setEnabled(enabled)
     }
+    preferences[Preferences.Key.RootInstallation]?.setEnabled(Shell.getShell().isRoot)
     if (key == Preferences.Key.Theme) {
       requireActivity().recreate()
     }
