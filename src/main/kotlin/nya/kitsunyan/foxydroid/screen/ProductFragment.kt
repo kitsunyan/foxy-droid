@@ -34,6 +34,7 @@ import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.Utils
+import nya.kitsunyan.foxydroid.utility.Utils.startPackageInstaller
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 
