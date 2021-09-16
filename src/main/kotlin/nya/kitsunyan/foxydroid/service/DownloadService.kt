@@ -9,6 +9,7 @@ import android.content.Intent
 import android.net.Uri
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
+import com.topjohnwu.superuser.Shell
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -18,6 +19,7 @@ import nya.kitsunyan.foxydroid.Common
 import nya.kitsunyan.foxydroid.MainActivity
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Cache
+import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.entity.Release
 import nya.kitsunyan.foxydroid.entity.Repository
 import nya.kitsunyan.foxydroid.network.Downloader
@@ -234,9 +236,12 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
   private fun publishSuccess(task: Task) {
     var consumed = false
     stateSubject.onNext(State.Success(task.packageName, task.name, task.release) { consumed = true })
-    if (!consumed) {
-      showNotificationInstall(task)
-    }
+    if (consumed || (Preferences[Preferences.Key.RootInstallation] && Shell.getShell().isRoot))
+      PendingIntent.getBroadcast(this, 0, Intent(this, Receiver::class.java)
+        .setAction("$ACTION_INSTALL.${task.packageName}")
+        .putExtra(EXTRA_CACHE_FILE_NAME, task.release.cacheFileName), PendingIntent.FLAG_UPDATE_CURRENT)
+        .send()
+    else showNotificationInstall(task)
   }
 
   private fun validatePackage(task: Task, file: File): ValidationError? {
