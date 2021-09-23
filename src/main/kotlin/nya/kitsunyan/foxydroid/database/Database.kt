@@ -9,6 +9,7 @@ import android.os.CancellationSignal
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import io.reactivex.rxjava3.core.Observable
+import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.entity.InstalledItem
 import nya.kitsunyan.foxydroid.entity.Product
 import nya.kitsunyan.foxydroid.entity.ProductItem
@@ -26,7 +27,22 @@ object Database {
         RepositoryAdapter.put(repository)
       }
     }
-    return helper.created || helper.updated
+
+    // Modified by REV Robotics to add REV staging repo for pre-existing databases
+    // TODO(Noah): This is a hack, that would ideally be removed in favor of a generic solution to adding new default repos
+    var updated = helper.updated
+    if (BuildConfig.DEBUG) {
+      val stagingRepoMissing = RepositoryAdapter
+          .getAll(null)
+          .none { it.address == Repository.REV_ROBOTICS_STAGING_REPO_ADDRESS }
+
+      if (stagingRepoMissing) {
+        RepositoryAdapter.put(Repository.REV_ROBOTICS_STAGING_REPO)
+        updated = true
+      }
+    }
+
+    return helper.created || updated
   }
 
   private lateinit var db: SQLiteDatabase
