@@ -48,7 +48,7 @@ data class Repository(val id: Long, val address: String, val mirrors: List<Strin
     const val REV_ROBOTICS_MAIN_REPO_ADDRESS = "https://software-metadata.revrobotics.com/fdroid-repo"
     const val REV_ROBOTICS_STAGING_REPO_ADDRESS = "https://staging--rev-robotics-software-metadata.netlify.app/fdroid-repo"
 
-    val REV_ROBOTICS_STAGING_REPO =  defaultRepository(REV_ROBOTICS_STAGING_REPO_ADDRESS, "REV Robotics staging repo",
+    val REV_ROBOTICS_STAGING_REPO_DEFAULT =  defaultRepository(REV_ROBOTICS_STAGING_REPO_ADDRESS, "REV Robotics staging repo",
           "The staging repository for apps and operating system updates built or distributed by REV Robotics",
           20000, false, "2803D3952C3C0DDF3AD20F05632B79CC0A4001D928CBABFF521A606BF557B37F", "")
 

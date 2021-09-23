@@ -28,16 +28,32 @@ object Database {
       }
     }
 
-    // Modified by REV Robotics to add REV staging repo for pre-existing databases
-    // TODO(Noah): This is a hack, that would ideally be removed in favor of a generic solution to adding new default repos
+    // Code added by REV Robotics to set up the main and staging repos
+    // If this is a debug build, add the staging repo if necessary, enable it, and disable the main repo
+    // If this is a release build, enable the main repo, and disable the staging repo (if present)
     var updated = helper.updated
-    if (BuildConfig.DEBUG) {
-      val stagingRepoMissing = RepositoryAdapter
-          .getAll(null)
-          .none { it.address == Repository.REV_ROBOTICS_STAGING_REPO_ADDRESS }
 
-      if (stagingRepoMissing) {
-        RepositoryAdapter.put(Repository.REV_ROBOTICS_STAGING_REPO)
+    val existingRepos = RepositoryAdapter.getAll(null)
+    val mainRepo = existingRepos.find { it.address == Repository.REV_ROBOTICS_MAIN_REPO_ADDRESS }
+    var stagingRepo = existingRepos.find { it.address == Repository.REV_ROBOTICS_STAGING_REPO_ADDRESS }
+
+    if (BuildConfig.DEBUG && stagingRepo == null) {
+      stagingRepo = RepositoryAdapter.put(Repository.REV_ROBOTICS_STAGING_REPO_DEFAULT)
+      updated = true
+    }
+
+    mainRepo?.let {
+      // The main repo state should be the opposite of the DEBUG state
+      if (it.enabled == BuildConfig.DEBUG) {
+        RepositoryAdapter.put(it.enable(!BuildConfig.DEBUG))
+        updated = true
+      }
+    }
+
+    stagingRepo?.let {
+      // The staging repo state should be the same as the DEBUG state
+      if (it.enabled != BuildConfig.DEBUG) {
+        RepositoryAdapter.put(it.enable(BuildConfig.DEBUG))
         updated = true
       }
     }

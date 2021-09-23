@@ -156,17 +156,6 @@ class SyncService: ConnectionService<SyncService.Binder>() {
   override fun onCreate() {
     super.onCreate()
 
-    // Loop added by REV Robotics
-    // On debug builds, enable staging and disable main
-    // On release builds, disable staging and enable main
-    for (repository in Database.RepositoryAdapter.getAll(null)) {
-      if (repository.address == Repository.REV_ROBOTICS_MAIN_REPO_ADDRESS) {
-        binder.setEnabled(repository, !BuildConfig.DEBUG)
-      } else if (repository.address == Repository.REV_ROBOTICS_STAGING_REPO_ADDRESS) {
-        binder.setEnabled(repository, BuildConfig.DEBUG)
-      }
-    }
-
     if (Android.sdk(26)) {
       NotificationChannel(Common.NOTIFICATION_CHANNEL_SYNCING,
         getString(R.string.syncing), NotificationManager.IMPORTANCE_LOW)
