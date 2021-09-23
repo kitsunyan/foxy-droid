@@ -9,6 +9,7 @@ import android.os.CancellationSignal
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import io.reactivex.rxjava3.core.Observable
+import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.entity.InstalledItem
 import nya.kitsunyan.foxydroid.entity.Product
 import nya.kitsunyan.foxydroid.entity.ProductItem
@@ -26,7 +27,38 @@ object Database {
         RepositoryAdapter.put(repository)
       }
     }
-    return helper.created || helper.updated
+
+    // Code added by REV Robotics to set up the main and staging repos
+    // If this is a debug build, add the staging repo if necessary, enable it, and disable the main repo
+    // If this is a release build, enable the main repo, and disable the staging repo (if present)
+    var updated = helper.updated
+
+    val existingRepos = RepositoryAdapter.getAll(null)
+    val mainRepo = existingRepos.find { it.address == Repository.REV_ROBOTICS_MAIN_REPO_ADDRESS }
+    var stagingRepo = existingRepos.find { it.address == Repository.REV_ROBOTICS_STAGING_REPO_ADDRESS }
+
+    if (BuildConfig.DEBUG && stagingRepo == null) {
+      stagingRepo = RepositoryAdapter.put(Repository.REV_ROBOTICS_STAGING_REPO_DEFAULT)
+      updated = true
+    }
+
+    mainRepo?.let {
+      // The main repo state should be the opposite of the DEBUG state
+      if (it.enabled == BuildConfig.DEBUG) {
+        RepositoryAdapter.put(it.enable(!BuildConfig.DEBUG))
+        updated = true
+      }
+    }
+
+    stagingRepo?.let {
+      // The staging repo state should be the same as the DEBUG state
+      if (it.enabled != BuildConfig.DEBUG) {
+        RepositoryAdapter.put(it.enable(BuildConfig.DEBUG))
+        updated = true
+      }
+    }
+
+    return helper.created || updated
   }
 
   private lateinit var db: SQLiteDatabase
