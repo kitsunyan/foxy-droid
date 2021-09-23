@@ -108,8 +108,7 @@ data class Repository(val id: Long, val address: String, val mirrors: List<Strin
       defaultRepository(REV_ROBOTICS_MAIN_REPO_ADDRESS, "REV Robotics",
         "The official update repository for apps and operating system updates built or distributed by REV Robotics",
         20000, true, "2803D3952C3C0DDF3AD20F05632B79CC0A4001D928CBABFF521A606BF557B37F", "")
-    },
-    run {
+    }, run {
       defaultRepository("https://f-droid.org/repo", "F-Droid", "The official F-Droid Free Software repository. " +
         "Everything in this repository is always built from the source code.",
         21, false, "43238D512C1E5EB2D6569F4A3AFBF5523418B82E0A3ED1552770ABB9A9C9CCAB", "")
