@@ -56,7 +56,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
 
   private enum class Action(val id: Int, val adapterAction: ProductAdapter.Action, val iconResId: Int) {
     INSTALL(1, ProductAdapter.Action.INSTALL, R.drawable.ic_archive),
-    UPDATE(2, ProductAdapter.Action.UPDATE, R.drawable.ic_archive),
+    UPDATE(2, ProductAdapter.Action.UPDATE, R.drawable.ic_update),
     LAUNCH(3, ProductAdapter.Action.LAUNCH, R.drawable.ic_launch),
     DETAILS(4, ProductAdapter.Action.DETAILS, R.drawable.ic_tune),
     UNINSTALL(5, ProductAdapter.Action.UNINSTALL, R.drawable.ic_delete)
