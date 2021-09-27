@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.Signature
 import android.content.res.Configuration
 import android.graphics.drawable.Drawable
@@ -16,6 +17,11 @@ import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
+import nya.kitsunyan.foxydroid.entity.InstalledItem
+import nya.kitsunyan.foxydroid.entity.Product
+import nya.kitsunyan.foxydroid.entity.Repository
+import nya.kitsunyan.foxydroid.service.Connection
+import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
@@ -155,5 +161,29 @@ object Utils {
       }
     }
     return ""
+  }
+
+  fun PackageInfo.toInstalledItem(): InstalledItem {
+    val signatureString = singleSignature?.let(Utils::calculateHash).orEmpty()
+    return InstalledItem(packageName, versionName.orEmpty(), versionCodeCompat, signatureString)
+  }
+
+  fun startInstallUpdateAction(installedItem: InstalledItem?, products: List<Pair<Product, Repository>>, downloadConnection: Connection<DownloadService.Binder, DownloadService>) {
+    val pairProductRepository = Product.findSuggested(products, installedItem) { it.first }
+    val compatibleReleases = pairProductRepository?.first?.selectedReleases.orEmpty()
+      .filter { installedItem == null || installedItem.signature == it.signature }
+    val release = if (compatibleReleases.size >= 2) {
+      compatibleReleases
+        .filter { it.platforms.contains(Android.primaryPlatform) }
+        .minByOrNull { it.platforms.size }
+        ?: compatibleReleases.minByOrNull { it.platforms.size }
+        ?: compatibleReleases.firstOrNull()
+    } else {
+      compatibleReleases.firstOrNull()
+    }
+    val binder = downloadConnection.binder
+    if (pairProductRepository != null && release != null && binder != null) {
+      binder.enqueue(installedItem?.packageName ?: "", pairProductRepository.first.name, pairProductRepository.second, release)
+    }
   }
 }
