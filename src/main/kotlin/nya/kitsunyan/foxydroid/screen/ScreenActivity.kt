@@ -202,10 +202,6 @@ abstract class ScreenActivity: FragmentActivity() {
       is SpecialIntent.Install -> {
         val packageName = specialIntent.packageName
         if (!packageName.isNullOrEmpty()) {
-          val fragment = currentFragment
-          if (fragment !is ProductFragment || fragment.packageName != packageName) {
-            pushFragment(ProductFragment(packageName))
-          }
           specialIntent.cacheFileName?.let { startPackageInstaller(it) }
         }
         Unit
