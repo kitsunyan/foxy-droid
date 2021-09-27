@@ -17,6 +17,7 @@ import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.json.*
 import java.io.ByteArrayOutputStream
 
+// TODO migrate to Room
 object Database {
   fun init(context: Context): Boolean {
     val helper = Helper(context)

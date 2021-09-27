@@ -165,5 +165,6 @@
   <string name="website">Website</string>
     <string name="root_installation">Root installation</string>
   <string name="root_installation_summary">Install apps automatically using root permission</string>
+    <string name="update_all">Update all</string>
 
 </resources>
