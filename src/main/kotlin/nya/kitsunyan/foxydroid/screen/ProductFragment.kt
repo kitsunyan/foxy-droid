@@ -333,7 +333,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       ProductAdapter.Action.INSTALL,
       ProductAdapter.Action.UPDATE -> {
         val installedItem = installed?.installedItem
-        Utils.startInstallUpdateAction(installedItem, products, downloadConnection)
+        Utils.startInstallUpdateAction(packageName, installedItem, products, downloadConnection)
       }
       ProductAdapter.Action.LAUNCH -> {
         val launcherActivities = installed?.launcherActivities.orEmpty()

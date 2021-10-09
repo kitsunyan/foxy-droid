@@ -168,7 +168,12 @@ object Utils {
     return InstalledItem(packageName, versionName.orEmpty(), versionCodeCompat, signatureString)
   }
 
-  fun startInstallUpdateAction(installedItem: InstalledItem?, products: List<Pair<Product, Repository>>, downloadConnection: Connection<DownloadService.Binder, DownloadService>) {
+  fun startInstallUpdateAction(
+    packageName: String,
+    installedItem: InstalledItem?,
+    products: List<Pair<Product, Repository>>,
+    downloadConnection: Connection<DownloadService.Binder, DownloadService>
+  ) {
     val pairProductRepository = Product.findSuggested(products, installedItem) { it.first }
     val compatibleReleases = pairProductRepository?.first?.selectedReleases.orEmpty()
       .filter { installedItem == null || installedItem.signature == it.signature }
@@ -183,7 +188,7 @@ object Utils {
     }
     val binder = downloadConnection.binder
     if (pairProductRepository != null && release != null && binder != null) {
-      binder.enqueue(installedItem?.packageName ?: "", pairProductRepository.first.name, pairProductRepository.second, release)
+      binder.enqueue(packageName, pairProductRepository.first.name, pairProductRepository.second, release)
     }
   }
 }
