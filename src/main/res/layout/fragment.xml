@@ -24,6 +24,16 @@
       android:layout_width="match_parent"
       android:layout_height="wrap_content" />
 
+    <Button
+        android:id="@+id/update_all"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="?android:colorPrimary"
+        android:drawableEnd="@drawable/ic_update"
+        android:fontFamily="sans-serif-medium"
+        android:padding="8dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:text="@string/update_all" />
   </LinearLayout>
 
   <FrameLayout

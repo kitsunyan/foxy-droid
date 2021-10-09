@@ -1,7 +1,9 @@
 package nya.kitsunyan.foxydroid.screen
 
 import android.animation.ValueAnimator
+import android.app.AlertDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.ColorFilter
@@ -16,13 +18,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.SearchView
-import android.widget.TextView
-import android.widget.Toolbar
+import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.findFragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -33,6 +31,7 @@ import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
+import nya.kitsunyan.foxydroid.database.CursorOwner
 import nya.kitsunyan.foxydroid.database.Database
 import nya.kitsunyan.foxydroid.entity.ProductItem
 import nya.kitsunyan.foxydroid.service.Connection
@@ -61,6 +60,7 @@ class TabsFragment: ScreenFragment() {
     val sectionChange = view.findViewById<View>(R.id.section_change)!!
     val sectionName = view.findViewById<TextView>(R.id.section_name)!!
     val sectionIcon = view.findViewById<ImageView>(R.id.section_icon)!!
+    val updateAll = view.findViewById<Button>(R.id.update_all)!! // TODO update visibility based on need
   }
 
   private var searchMenuItem: MenuItem? = null
@@ -69,6 +69,7 @@ class TabsFragment: ScreenFragment() {
   private var layout: Layout? = null
   private var sectionsList: RecyclerView? = null
   private var viewPager: ViewPager2? = null
+  private var productsList: MutableList<ProductItem> = mutableListOf() // TODO to keep a list of updated apps
 
   private var showSections = false
     set(value) {
@@ -220,6 +221,7 @@ class TabsFragment: ScreenFragment() {
     section = savedInstanceState?.getParcelable(STATE_SECTION) ?: ProductItem.Section.All
     layout.sectionChange.setOnClickListener { showSections = sections
       .any { it !is ProductItem.Section.All } && !showSections }
+    layout.updateAll.setOnClickListener { updateAll() }
 
     updateOrder()
     sortOrderDisposable = Preferences.observable.subscribe {
@@ -462,16 +464,38 @@ class TabsFragment: ScreenFragment() {
     }
   }
 
+  fun updateAll() {
+    AlertDialog.Builder(requireContext())
+      .setTitle(R.string.update_all)
+      .setMessage(productsList.joinToString(",") { it.name }) // TODO or maybe use a checklist
+      .setPositiveButton(android.R.string.yes) { _: DialogInterface, _: Int ->
+        productsList.forEach {
+          // TODO startUpdateInstallAction for each (selected) app after accomulating the needed info
+        }
+      }
+      .setNegativeButton(android.R.string.no, null)
+      .create()
+      .show()
+  }
+
   private val pageChangeCallback = object: ViewPager2.OnPageChangeCallback() {
     override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
       val layout = layout!!
-      val fromSections = ProductsFragment.Source.values()[position].sections
-      val toSections = if (positionOffset <= 0f) fromSections else
-        ProductsFragment.Source.values()[position + 1].sections
-      val offset = if (fromSections != toSections) {
+      val from = ProductsFragment.Source.values()[position]
+      val to = ProductsFragment.Source.values()[if (positionOffset <= 0f) position else position + 1]
+      val fromSections = from.sections
+      val fromUpdates = from.updates
+      val toSections = to.sections
+      val toUpdates = to.updates
+      val sectionsOffset = if (fromSections != toSections) {
         if (fromSections) 1f - positionOffset else positionOffset
       } else {
         if (fromSections) 1f else 0f
+      }
+      val updatesOffset = if (fromUpdates != toUpdates) {
+        if (fromUpdates) 1f - positionOffset else positionOffset
+      } else {
+        if (fromUpdates) 1f else 0f
       }
       (layout.tabs.background as TabsBackgroundDrawable)
         .update(position + positionOffset, layout.tabs.childCount)
@@ -479,10 +503,15 @@ class TabsFragment: ScreenFragment() {
       val child = layout.sectionLayout.getChildAt(0)
       val height = child.layoutParams.height
       assert(height > 0)
-      val currentHeight = (offset * height).roundToInt()
-      if (layout.sectionLayout.layoutParams.height != currentHeight) {
-        layout.sectionLayout.layoutParams.height = currentHeight
+      val sectionsCurrentHeight = (sectionsOffset * height).roundToInt()
+      if (layout.sectionLayout.layoutParams.height != sectionsCurrentHeight) {
+        layout.sectionLayout.layoutParams.height = sectionsCurrentHeight
         layout.sectionLayout.requestLayout()
+      }
+      val updatesCurrentHeight = (updatesOffset * height).roundToInt()
+      if (layout.updateAll.layoutParams.height != updatesCurrentHeight) {
+        layout.updateAll.layoutParams.height = updatesCurrentHeight
+        layout.updateAll.requestLayout()
       }
     }
 

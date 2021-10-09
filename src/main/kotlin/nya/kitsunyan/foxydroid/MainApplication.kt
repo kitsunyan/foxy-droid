@@ -9,31 +9,25 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageInfo
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
 import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.content.ProductPreferences
 import nya.kitsunyan.foxydroid.database.Database
-import nya.kitsunyan.foxydroid.entity.InstalledItem
 import nya.kitsunyan.foxydroid.index.RepositoryUpdater
 import nya.kitsunyan.foxydroid.network.Downloader
 import nya.kitsunyan.foxydroid.network.PicassoDownloader
 import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.SyncService
 import nya.kitsunyan.foxydroid.utility.Utils
+import nya.kitsunyan.foxydroid.utility.Utils.toInstalledItem
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import java.net.InetSocketAddress
 import java.net.Proxy
 
 @Suppress("unused")
 class MainApplication: Application() {
-  private fun PackageInfo.toInstalledItem(): InstalledItem {
-    val signatureString = singleSignature?.let(Utils::calculateHash).orEmpty()
-    return InstalledItem(packageName, versionName.orEmpty(), versionCodeCompat, signatureString)
-  }
-
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(Utils.configureLocale(base))
   }

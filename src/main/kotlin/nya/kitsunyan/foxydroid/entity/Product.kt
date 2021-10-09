@@ -129,7 +129,7 @@ data class Product(val repositoryId: Long, val packageName: String, val name: St
 
   companion object {
     fun <T> findSuggested(products: List<T>, installedItem: InstalledItem?, extract: (T) -> Product): T? {
-      return products.maxWith(compareBy({ extract(it).compatible &&
+      return products.maxWithOrNull(compareBy({ extract(it).compatible &&
         (installedItem == null || installedItem.signature in extract(it).signatures) }, { extract(it).versionCode }))
     }
 

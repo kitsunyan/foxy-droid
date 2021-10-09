@@ -34,6 +34,7 @@ import nya.kitsunyan.foxydroid.service.Connection
 import nya.kitsunyan.foxydroid.service.DownloadService
 import nya.kitsunyan.foxydroid.utility.RxUtils
 import nya.kitsunyan.foxydroid.utility.Utils
+import nya.kitsunyan.foxydroid.utility.Utils.startPackageInstaller
 import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.widget.DividerItemDecoration
 
@@ -55,7 +56,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
 
   private enum class Action(val id: Int, val adapterAction: ProductAdapter.Action, val iconResId: Int) {
     INSTALL(1, ProductAdapter.Action.INSTALL, R.drawable.ic_archive),
-    UPDATE(2, ProductAdapter.Action.UPDATE, R.drawable.ic_archive),
+    UPDATE(2, ProductAdapter.Action.UPDATE, R.drawable.ic_update),
     LAUNCH(3, ProductAdapter.Action.LAUNCH, R.drawable.ic_launch),
     DETAILS(4, ProductAdapter.Action.DETAILS, R.drawable.ic_tune),
     UNINSTALL(5, ProductAdapter.Action.UNINSTALL, R.drawable.ic_delete)
@@ -332,23 +333,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       ProductAdapter.Action.INSTALL,
       ProductAdapter.Action.UPDATE -> {
         val installedItem = installed?.installedItem
-        val productRepository = Product.findSuggested(products, installedItem) { it.first }
-        val compatibleReleases = productRepository?.first?.selectedReleases.orEmpty()
-          .filter { installedItem == null || installedItem.signature == it.signature }
-        val release = if (compatibleReleases.size >= 2) {
-          compatibleReleases
-            .filter { it.platforms.contains(Android.primaryPlatform) }
-            .minBy { it.platforms.size }
-            ?: compatibleReleases.minBy { it.platforms.size }
-            ?: compatibleReleases.firstOrNull()
-        } else {
-          compatibleReleases.firstOrNull()
-        }
-        val binder = downloadConnection.binder
-        if (productRepository != null && release != null && binder != null) {
-          binder.enqueue(packageName, productRepository.first.name, productRepository.second, release)
-        }
-        Unit
+        Utils.startInstallUpdateAction(packageName, installedItem, products, downloadConnection)
       }
       ProductAdapter.Action.LAUNCH -> {
         val launcherActivities = installed?.launcherActivities.orEmpty()

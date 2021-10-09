@@ -2,7 +2,6 @@ package nya.kitsunyan.foxydroid.screen
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Parcel
 import android.view.View
@@ -13,12 +12,11 @@ import android.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import nya.kitsunyan.foxydroid.R
-import nya.kitsunyan.foxydroid.content.Cache
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.database.CursorOwner
 import nya.kitsunyan.foxydroid.utility.KParcelable
 import nya.kitsunyan.foxydroid.utility.Utils
-import nya.kitsunyan.foxydroid.utility.extension.android.*
+import nya.kitsunyan.foxydroid.utility.Utils.startPackageInstaller
 import nya.kitsunyan.foxydroid.utility.extension.resources.*
 import nya.kitsunyan.foxydroid.utility.extension.text.*
 
@@ -204,11 +202,7 @@ abstract class ScreenActivity: FragmentActivity() {
       is SpecialIntent.Install -> {
         val packageName = specialIntent.packageName
         if (!packageName.isNullOrEmpty()) {
-          val fragment = currentFragment
-          if (fragment !is ProductFragment || fragment.packageName != packageName) {
-            pushFragment(ProductFragment(packageName))
-          }
-          specialIntent.cacheFileName?.let(::startPackageInstaller)
+          specialIntent.cacheFileName?.let { startPackageInstaller(it) }
         }
         Unit
       }
@@ -227,18 +221,6 @@ abstract class ScreenActivity: FragmentActivity() {
         }
       }
     }
-  }
-
-  internal fun startPackageInstaller(cacheFileName: String) {
-    val (uri, flags) = if (Android.sdk(24)) {
-      Pair(Cache.getReleaseUri(this, cacheFileName), Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    } else {
-      Pair(Uri.fromFile(Cache.getReleaseFile(this, cacheFileName)), 0)
-    }
-    // TODO Handle deprecation
-    @Suppress("DEPRECATION")
-    startActivity(Intent(Intent.ACTION_INSTALL_PACKAGE)
-      .setDataAndType(uri, "application/vnd.android.package-archive").setFlags(flags))
   }
 
   internal fun navigateProduct(packageName: String) = pushFragment(ProductFragment(packageName))

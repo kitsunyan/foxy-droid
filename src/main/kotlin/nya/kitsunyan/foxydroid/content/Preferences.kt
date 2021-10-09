@@ -15,7 +15,7 @@ object Preferences {
 
   private val subject = PublishSubject.create<Key<*>>()
 
-  private val keys = sequenceOf(Key.AutoSync, Key.IncompatibleVersions, Key.ProxyHost, Key.ProxyPort, Key.ProxyType,
+  private val keys = sequenceOf(Key.AutoSync, Key.IncompatibleVersions, Key.RootInstallation, Key.ProxyHost, Key.ProxyPort, Key.ProxyType,
     Key.SortOrder, Key.Theme, Key.UpdateNotify, Key.UpdateUnstable).map { Pair(it.name, it) }.toMap()
 
   fun init(context: Context) {
@@ -82,6 +82,7 @@ object Preferences {
   sealed class Key<T>(val name: String, val default: Value<T>) {
     object AutoSync: Key<Preferences.AutoSync>("auto_sync", Value.EnumerationValue(Preferences.AutoSync.Wifi))
     object IncompatibleVersions: Key<Boolean>("incompatible_versions", Value.BooleanValue(false))
+    object RootInstallation : Key<Boolean>("root_installation",Value.BooleanValue(false))
     object ProxyHost: Key<String>("proxy_host", Value.StringValue("localhost"))
     object ProxyPort: Key<Int>("proxy_port", Value.IntValue(9050))
     object ProxyType: Key<Preferences.ProxyType>("proxy_type", Value.EnumerationValue(Preferences.ProxyType.Direct))

@@ -30,10 +30,10 @@ class ProductsFragment(): ScreenFragment(), CursorOwner.Callback {
     private const val STATE_LAYOUT_MANAGER = "layoutManager"
   }
 
-  enum class Source(val titleResId: Int, val sections: Boolean, val order: Boolean) {
-    AVAILABLE(R.string.available, true, true),
-    INSTALLED(R.string.installed, false, false),
-    UPDATES(R.string.updates, false, false)
+  enum class Source(val titleResId: Int, val sections: Boolean, val order: Boolean, val updates: Boolean) {
+    AVAILABLE(R.string.available, true, true, false),
+    INSTALLED(R.string.installed, false, false, false),
+    UPDATES(R.string.updates, false, false, true)
   }
 
   constructor(source: Source): this() {

@@ -17,12 +17,13 @@ import nya.kitsunyan.foxydroid.utility.extension.android.*
 import nya.kitsunyan.foxydroid.utility.extension.json.*
 import java.io.ByteArrayOutputStream
 
+// TODO migrate to Room
 object Database {
   fun init(context: Context): Boolean {
     val helper = Helper(context)
     db = helper.writableDatabase
     if (helper.created) {
-      for (repository in Repository.defaultRepositories) {
+      for (repository in Repository.defaultRepositories.sortedBy { it.name }) {
         RepositoryAdapter.put(repository)
       }
     }
