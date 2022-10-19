@@ -1,7 +1,7 @@
 buildscript {
   ext.versions = [
-    android: '3.4.1',
-    kotlin: '1.3.72'
+    android: '4.1.1',
+    kotlin: '1.4.32'
   ]
 
   repositories {
@@ -23,12 +23,15 @@ android {
   buildToolsVersion '29.0.3'
 
   defaultConfig {
-    archivesBaseName = 'foxy-droid'
-    applicationId 'nya.kitsunyan.foxydroid'
-    minSdkVersion 21
+    // archive name, application ID, minSdk, targetSdk, and version information have been modified
+    // by REV Robotics.
+    archivesBaseName = 'SoftwareManager'
+    applicationId 'com.revrobotics.softwaremanager'
+    minSdkVersion 29
+    //noinspection OldTargetApi
     targetSdkVersion 29
-    versionCode 4
-    versionName '1.3'
+    versionCode 2
+    versionName '1.0.1'
 
     def languages = [ 'en' ]
     buildConfigField 'String[]', 'LANGUAGES', '{ "' + languages.join('", "') + '" }'
@@ -85,10 +88,11 @@ android {
     keystoreProperties.load(keystorePropertiesFile.newDataInputStream())
 
     def signing = [
-      storeFile: keystoreProperties['store.file'],
-      storePassword: keystoreProperties['store.password'],
-      keyAlias: keystoreProperties['key.alias'],
-      keyPassword: keystoreProperties['key.password']
+      // Modified by REV Robotics on 2021-05-05 to use Google-recommended property names
+      storeFile: keystoreProperties['storeFile'],
+      storePassword: keystoreProperties['storePassword'],
+      keyAlias: keystoreProperties['keyAlias'],
+      keyPassword: keystoreProperties['keyPassword']
     ]
 
     if (!signing.any { _, v -> v == null }) {
@@ -98,7 +102,8 @@ android {
           storePassword signing.storePassword
           keyAlias signing.keyAlias
           keyPassword signing.keyPassword
-          v2SigningEnabled false
+          // v2SigningEnabled set to true by REV Robotics on 2021-05-05
+          v2SigningEnabled true
         }
       }
 
@@ -106,6 +111,19 @@ android {
         debug.signingConfig signingConfigs.primary
         release.signingConfig signingConfigs.primary
       }
+    }
+  }
+
+  // Flavor configuration added by REV Robotics on 2021-06-06
+  flavorDimensions "tabs"
+  productFlavors {
+    create("allTabsCanBeEnabled") {
+      dimension = "tabs"
+      buildConfigField('boolean', 'ALL_TABS_CAN_BE_ENABLED', 'true')
+    }
+    create("onlyUpdatesTab") {
+      dimension = "tabs"
+      buildConfigField('boolean', 'ALL_TABS_CAN_BE_ENABLED', 'false')
     }
   }
 }

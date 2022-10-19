@@ -45,6 +45,13 @@ data class Repository(val id: Long, val address: String, val mirrors: List<Strin
   }
 
   companion object {
+    const val REV_ROBOTICS_MAIN_REPO_ADDRESS = "https://software-metadata.revrobotics.com/fdroid-repo"
+    const val REV_ROBOTICS_STAGING_REPO_ADDRESS = "https://staging--rev-robotics-software-metadata.netlify.app/fdroid-repo"
+
+    val REV_ROBOTICS_STAGING_REPO_DEFAULT =  defaultRepository(REV_ROBOTICS_STAGING_REPO_ADDRESS, "REV Robotics staging repo",
+          "The staging repository for apps and operating system updates built or distributed by REV Robotics",
+          20000, false, "2803D3952C3C0DDF3AD20F05632B79CC0A4001D928CBABFF521A606BF557B37F", "")
+
     fun deserialize(id: Long, parser: JsonParser): Repository {
       var address = ""
       var mirrors = emptyList<String>()
@@ -94,10 +101,17 @@ data class Repository(val id: Long, val address: String, val mirrors: List<Strin
         fingerprint, "", "", 0L, 0L, authentication)
     }
 
+    // TODO(Noah): When the user enables the app store, enable the F-Droid repository.
+    //             When the user disables the app store, disable all non-REV repositories.
+    // REV Robotics repo added and F-Droid repository disabled on 2021-05-03
     val defaultRepositories = listOf(run {
+      defaultRepository(REV_ROBOTICS_MAIN_REPO_ADDRESS, "REV Robotics",
+        "The official update repository for apps and operating system updates built or distributed by REV Robotics",
+        20000, true, "2803D3952C3C0DDF3AD20F05632B79CC0A4001D928CBABFF521A606BF557B37F", "")
+    }, run {
       defaultRepository("https://f-droid.org/repo", "F-Droid", "The official F-Droid Free Software repository. " +
         "Everything in this repository is always built from the source code.",
-        21, true, "43238D512C1E5EB2D6569F4A3AFBF5523418B82E0A3ED1552770ABB9A9C9CCAB", "")
+        21, false, "43238D512C1E5EB2D6569F4A3AFBF5523418B82E0A3ED1552770ABB9A9C9CCAB", "")
     }, run {
       defaultRepository("https://f-droid.org/archive", "F-Droid Archive", "The archive of the official F-Droid Free " +
         "Software repository. Apps here are old and can contain known vulnerabilities and security issues!",

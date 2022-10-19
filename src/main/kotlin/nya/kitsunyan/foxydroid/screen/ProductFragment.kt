@@ -8,6 +8,7 @@ import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -18,6 +19,12 @@ import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.revrobotics.RequestInternetDialogFragment
+import com.revrobotics.RevConstants
+import com.revrobotics.RevUpdater
+import com.revrobotics.InstallApk
+import com.revrobotics.actionWaitingForInternetConnection
+import com.revrobotics.internetAvailable
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -202,6 +209,17 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     downloadConnection.bind(requireContext())
   }
 
+  // onResume() and onPause() added by REV Robotics on 2021-05-03
+  override fun onResume() {
+    super.onResume()
+    RevUpdater.currentlyDisplayedPackageName = packageName
+  }
+
+  override fun onPause() {
+    super.onPause()
+    RevUpdater.currentlyDisplayedPackageName = null
+  }
+
   override fun onDestroyView() {
     super.onDestroyView()
 
@@ -249,17 +267,20 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     if (canLaunch) {
       actions += Action.LAUNCH
     }
-    if (installed != null) {
+    // Modified by REV Robotics on 2021-05-04 to hide details button for Driver Hub OS
+    if (installed != null && packageName != RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
       actions += Action.DETAILS
     }
-    if (canUninstall) {
+    // Modified by REV Robotics on 2021-05-04 to hide uninstall button for Driver Hub OS
+    if (canUninstall && packageName != RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE) {
       actions += Action.UNINSTALL
     }
     val primaryAction = when {
       canUpdate -> Action.UPDATE
       canLaunch -> Action.LAUNCH
       canInstall -> Action.INSTALL
-      installed != null -> Action.DETAILS
+      // Modified by REV Robotics on 2021-05-04 to hide details button for Driver Hub OS
+      installed != null && packageName != RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE -> Action.DETAILS
       else -> null
     }
 
@@ -310,7 +331,20 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
     (recyclerView?.adapter as? ProductAdapter)?.setStatus(status)
     if (state is DownloadService.State.Success && isResumed) {
       state.consume()
-      screenActivity.startPackageInstaller(state.release.cacheFileName)
+
+      // Modified by REV Robotics on 2021-05-03:  When the application is targeting API 23+
+      // (meaning it supports runtime permissions), update using ControlHubUpdater instead of
+      // calling screenActivity.startPackageInstaller()
+      val cacheFileName = state.release.cacheFileName
+      if (state.release.targetSdkVersion < 23) {
+        screenActivity.startPackageInstaller(cacheFileName)
+      } else {
+        if (state.packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE && !RevConstants.shouldAutoInstallOSWhenDownloadCompletes) {
+          Log.i(RevUpdater.TAG, "The Driver Hub OS has finished downloading, but we are not going to install it at this time")
+        } else {
+          RevUpdater.performUpdateUsingControlHubUpdater(cacheFileName, packageName, state.release.version)
+        }
+      }
     }
   }
 
@@ -346,7 +380,7 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
         }
         val binder = downloadConnection.binder
         if (productRepository != null && release != null && binder != null) {
-          binder.enqueue(packageName, productRepository.first.name, productRepository.second, release)
+          handleDownloadClick(binder, productRepository, release)
         }
         Unit
       }
@@ -426,8 +460,9 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
       else -> {
         val productRepository = products.asSequence().filter { it.first.releases.any { it === release } }.firstOrNull()
         if (productRepository != null) {
-          downloadConnection.binder?.enqueue(packageName, productRepository.first.name,
-            productRepository.second, release)
+          downloadConnection.binder?.let {
+            handleDownloadClick(it, productRepository, release)
+          }
         }
       }
     }
@@ -470,6 +505,17 @@ class ProductFragment(): ScreenFragment(), ProductAdapter.Callbacks {
           .startLauncherActivity(names[position]) }
         .setNegativeButton(R.string.cancel, null)
         .create()
+    }
+  }
+
+  // handleDownloadClick function added by REV Robotics on 2021-06-12
+  private fun handleDownloadClick(downloadServiceBinder: DownloadService.Binder, productRepository: Pair<Product, Repository>, release: Release) {
+    if (internetAvailable) {
+      downloadServiceBinder.enqueue(packageName, productRepository.first.name,
+          productRepository.second, release)
+    } else {
+      actionWaitingForInternetConnection = InstallApk(packageName, productRepository.first.name, productRepository.second, release)
+      RequestInternetDialogFragment().show(childFragmentManager, null)
     }
   }
 }

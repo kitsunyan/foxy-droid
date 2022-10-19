@@ -587,12 +587,17 @@ class ProductAdapter(private val callbacks: Callbacks, private val columns: Int)
     if (productRepository != null) {
       items += Item.HeaderItem(productRepository.second, productRepository.first)
 
-      if (installedItem != null) {
+      // Ignore update switches disabled by REV Robotics on 2021-05-04
+
+      // I have no issue with users wanting to opt-out of being bugged about a particular update. However, doing that
+      // currently has a side effect of the application reporting that all apps are up-to-date, which would be false.
+
+      /*if (installedItem != null) {
         items.add(Item.SwitchItem(SwitchType.IGNORE_ALL_UPDATES, packageName, productRepository.first.versionCode))
         if (productRepository.first.canUpdate(installedItem)) {
           items.add(Item.SwitchItem(SwitchType.IGNORE_THIS_UPDATE, packageName, productRepository.first.versionCode))
         }
-      }
+      }*/
 
       val textViewHolder = TextViewHolder(context)
       val textViewWidthSpec = context.resources.displayMetrics.widthPixels

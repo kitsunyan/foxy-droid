@@ -10,6 +10,12 @@
   <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
   <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
+  <!-- Added by REV Robotics on 2021-04-28 -->
+  <uses-permission android:name="com.revrobotics.permission.UPDATE_CONTROL_HUB" />
+
+  <!-- Added by REV Robotics on 2021-06-09 -->
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
   <application
     android:name=".MainApplication"
     android:label="@string/application_name"
@@ -22,10 +28,20 @@
     <receiver
       android:name=".MainApplication$BootReceiver">
 
-      <intent-filter>
+      <intent-filter android:priority="100">
         <action android:name="android.intent.action.BOOT_COMPLETED" />
+        <!-- Modified by REV Robotics on 2021-06-04: Treat a self-update event the same way as a boot completed event -->
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
       </intent-filter>
 
+    </receiver>
+
+    <receiver android:name=".MainApplication$NotificationDismissedReceiver" />
+    
+    <receiver android:name="com.revrobotics.InternetAvailableBroadcastReceiver">
+      <intent-filter>
+        <action android:name="com.revrobotics.revupdateinterface.INTERNET_AVAILABLE" />
+      </intent-filter>
     </receiver>
 
     <activity

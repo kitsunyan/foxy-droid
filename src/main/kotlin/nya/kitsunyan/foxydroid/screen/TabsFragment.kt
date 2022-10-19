@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -27,10 +28,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.revrobotics.mainThreadHandler
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import nya.kitsunyan.foxydroid.BuildConfig
 import nya.kitsunyan.foxydroid.R
 import nya.kitsunyan.foxydroid.content.Preferences
 import nya.kitsunyan.foxydroid.database.Database
@@ -88,9 +91,21 @@ class TabsFragment: ScreenFragment() {
   private var sections = listOf<ProductItem.Section>(ProductItem.Section.All)
   private var section: ProductItem.Section = ProductItem.Section.All
 
+  // Added by REV Robotics on 2021-04-08 to allow only a single tab to be selected.
+  // All other references to ProductsFragment.Source.values() in this file should probably be
+  // replaced with a reference to selectableTabs.
+  private val showAllTabs = BuildConfig.ALL_TABS_CAN_BE_ENABLED && Preferences[Preferences.Key.ShowAllTabs]
+  private val selectableTabs = if (showAllTabs) {
+    ProductsFragment.Source.values()
+  } else {
+    // As of today (2021-04-08), the indices of this array must match the indices of
+    // ProductsFragment.Source.values() in order for everything to work correctly.
+    arrayOf(ProductsFragment.Source.UPDATES)
+  }
+
   private val syncConnection = Connection(SyncService::class.java, onBind = { _, _ ->
     viewPager?.let {
-      val source = ProductsFragment.Source.values()[it.currentItem]
+      val source = selectableTabs[it.currentItem]
       updateUpdateNotificationBlocker(source)
     }
   })
@@ -115,9 +130,16 @@ class TabsFragment: ScreenFragment() {
 
     syncConnection.bind(requireContext())
 
+    // Modified by REV Robotics on 2021-05-06: When tabs are hidden,
+    // include a description of what the user is looking at in the title
     val toolbar = view.findViewById<Toolbar>(R.id.toolbar)!!
     screenActivity.onToolbarCreated(toolbar)
-    toolbar.setTitle(R.string.application_name)
+    var title = getString(R.string.application_name)
+    if (!showAllTabs) {
+      // TODO(Noah): Instead of appending to the title, add to the header that contains the Update All button
+      title += " - Available Updates"
+    }
+    toolbar.title = title
     // Move focus from SearchView to Toolbar
     toolbar.isFocusableInTouchMode = true
 
@@ -172,11 +194,14 @@ class TabsFragment: ScreenFragment() {
           true
         }
 
-      add(1, 0, 0, R.string.repositories)
-        .setOnMenuItemClickListener {
-          view.post { screenActivity.navigateRepositories() }
-          true
-        }
+      // Repositories menu option disabled by REV Robotics on 2021-05-04
+      if (showAllTabs) {
+        add(1, 0, 0, R.string.repositories)
+            .setOnMenuItemClickListener {
+              view.post { screenActivity.navigateRepositories() }
+              true
+            }
+      }
 
       add(1, 0, 0, R.string.preferences)
         .setOnMenuItemClickListener {
@@ -193,9 +218,17 @@ class TabsFragment: ScreenFragment() {
     val layout = Layout(view)
     this.layout = layout
 
+    // Added by REV Robotics on 2021-04-29 to hide the tab bar when there is only one tab
+    layout.tabs.visibility = if (selectableTabs.size <=1) {
+      View.GONE
+    } else {
+      View.VISIBLE
+    }
+
     layout.tabs.background = TabsBackgroundDrawable(layout.tabs.context,
       layout.tabs.layoutDirection == View.LAYOUT_DIRECTION_RTL)
-    ProductsFragment.Source.values().forEach {
+
+    selectableTabs.forEach {
       val tab = TextView(layout.tabs.context)
       val selectedColor = tab.context.getColorFromAttr(android.R.attr.textColorPrimary).defaultColor
       val normalColor = tab.context.getColorFromAttr(android.R.attr.textColorSecondary).defaultColor
@@ -233,9 +266,9 @@ class TabsFragment: ScreenFragment() {
     viewPager = ViewPager2(content.context).apply {
       id = R.id.fragment_pager
       adapter = object: FragmentStateAdapter(this@TabsFragment) {
-        override fun getItemCount(): Int = ProductsFragment.Source.values().size
-        override fun createFragment(position: Int): Fragment = ProductsFragment(ProductsFragment
-          .Source.values()[position])
+        override fun getItemCount(): Int = selectableTabs.size
+        override fun createFragment(position: Int): Fragment = ProductsFragment(
+                selectableTabs[position])
       }
       content.addView(this, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
       registerOnPageChangeCallback(pageChangeCallback)
@@ -373,6 +406,17 @@ class TabsFragment: ScreenFragment() {
 
   internal fun selectUpdates() = selectUpdatesInternal(true)
 
+  // Function added by REV Robotics on 2021-06-07
+  internal fun initiateUpdateAll() {
+    selectUpdatesInternal(true)
+    val button = viewPager?.findViewById<Button>(R.id.updateAllButton)
+    if (button == null) {
+      mainThreadHandler.postDelayed(::initiateUpdateAll, 200)
+    } else {
+      button.callOnClick()
+    }
+  }
+
   private fun selectUpdatesInternal(allowSmooth: Boolean) {
     if (view != null) {
       val viewPager = viewPager
@@ -465,9 +509,9 @@ class TabsFragment: ScreenFragment() {
   private val pageChangeCallback = object: ViewPager2.OnPageChangeCallback() {
     override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
       val layout = layout!!
-      val fromSections = ProductsFragment.Source.values()[position].sections
+      val fromSections = selectableTabs[position].sections
       val toSections = if (positionOffset <= 0f) fromSections else
-        ProductsFragment.Source.values()[position + 1].sections
+        selectableTabs[position + 1].sections
       val offset = if (fromSections != toSections) {
         if (fromSections) 1f - positionOffset else positionOffset
       } else {
@@ -487,7 +531,7 @@ class TabsFragment: ScreenFragment() {
     }
 
     override fun onPageSelected(position: Int) {
-      val source = ProductsFragment.Source.values()[position]
+      val source = selectableTabs[position]
       updateUpdateNotificationBlocker(source)
       sortOrderMenu!!.first.isVisible = source.order
       syncRepositoriesMenuItem!!.setShowAsActionFlags(if (!source.order ||
@@ -499,7 +543,7 @@ class TabsFragment: ScreenFragment() {
     }
 
     override fun onPageScrollStateChanged(state: Int) {
-      val source = ProductsFragment.Source.values()[viewPager!!.currentItem]
+      val source = selectableTabs[viewPager!!.currentItem]
       layout!!.sectionChange.isEnabled = state != ViewPager2.SCROLL_STATE_DRAGGING && source.sections
       if (state == ViewPager2.SCROLL_STATE_IDLE) {
         // onPageSelected can be called earlier than fragments created

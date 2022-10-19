@@ -7,8 +7,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.ContextThemeWrapper
 import androidx.core.app.NotificationCompat
+import com.revrobotics.RevConstants
+import com.revrobotics.RevUpdater
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -93,18 +96,18 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
 
     fun enqueue(packageName: String, name: String, repository: Repository, release: Release) {
       val task = Task(packageName, name, release, release.getDownloadUrl(repository), repository.authentication)
-      if (Cache.getReleaseFile(this@DownloadService, release.cacheFileName).exists()) {
-        publishSuccess(task)
+
+      // Modified by REV Robotics on 2021-05-09:
+      // To make sure that app updates are installed in the same order as their downloads are queued, we moved the check
+      // for if the file already exists to the point at which the file's download would normally begin.
+      cancelTasks(packageName)
+      cancelCurrentTask(packageName)
+      notificationManager.cancel(task.notificationTag, Common.NOTIFICATION_ID_DOWNLOADING)
+      tasks += task
+      if (currentTask == null) {
+        handleDownload()
       } else {
-        cancelTasks(packageName)
-        cancelCurrentTask(packageName)
-        notificationManager.cancel(task.notificationTag, Common.NOTIFICATION_ID_DOWNLOADING)
-        tasks += task
-        if (currentTask == null) {
-          handleDownload()
-        } else {
-          stateSubject.onNext(State.Pending(packageName, name))
-        }
+        stateSubject.onNext(State.Pending(packageName, name))
       }
     }
 
@@ -235,7 +238,18 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
     var consumed = false
     stateSubject.onNext(State.Success(task.packageName, task.name, task.release) { consumed = true })
     if (!consumed) {
-      showNotificationInstall(task)
+      // Modified by REV Robotics on 05-03-2021: When the application is targeting API 23+ (meaning it supports runtime
+      // permissions), update in the background using ControlHubUpdater instead of just showing a notification
+
+      if (task.release.targetSdkVersion < 23) {
+        showNotificationInstall(task)
+      } else {
+        if (task.packageName == RevConstants.DRIVER_HUB_OS_CONTAINER_PACKAGE && !RevConstants.shouldAutoInstallOSWhenDownloadCompletes) {
+          Log.i(RevUpdater.TAG, "The Driver Hub OS has finished downloading, but we are not going to install it at this time")
+        } else {
+          RevUpdater.performUpdateUsingControlHubUpdater(task.release.cacheFileName, task.packageName, task.release.version)
+        }
+      }
     }
   }
 
@@ -326,6 +340,19 @@ class DownloadService: ConnectionService<DownloadService.Binder>() {
           started = true
           startSelf()
         }
+
+        // Modified by REV Robotics on 2021-05-09:
+        // To make sure that app updates are installed in the same order as their downloads are queued, we moved the
+        // check for if the file already exists from the point at which the file download is queued to here, where the
+        // download would normally begin.
+        // TODO(Noah): It still seems like this isn't working correctly. Investigate and fix.
+        if (Cache.getReleaseFile(this, task.release.cacheFileName).exists()) {
+          currentTask = null
+          publishSuccess(task)
+          handleDownload()
+          return
+        }
+
         val initialState = State.Connecting(task.packageName, task.name)
         stateNotificationBuilder.setWhen(System.currentTimeMillis())
         publishForegroundState(true, initialState)
